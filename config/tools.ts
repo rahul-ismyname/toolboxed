@@ -43,7 +43,8 @@ import {
     Layers,
     ImagePlus,
     Timer,
-    LucideIcon
+    LucideIcon,
+    Wallet
 } from 'lucide-react';
 
 export type ToolCategory = 'Health' | 'Developer' | 'Business' | 'Utility' | 'Design';
@@ -410,5 +411,21 @@ export const tools: Tool[] = [
         category: 'Utility',
         icon: BarChart3,
         path: '/text-statistics'
+    },
+    {
+        slug: 'family-spending-analyzer',
+        name: 'Family Spending Analyzer',
+        description: 'Track income, expenses, and analyze family budget with PDF/CSV export.',
+        category: 'Business',
+        icon: Wallet,
+        path: '/family-spending-analyzer'
+    },
+    {
+        slug: 'paint-app',
+        name: 'Paint App',
+        description: 'A full-featured digital canvas for sketching and drawing.',
+        category: 'Design',
+        icon: Palette,
+        path: '/paint-app'
     }
 ];
