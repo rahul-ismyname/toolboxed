@@ -59,10 +59,13 @@ export default function RootLayout({
 
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-50 antialiased`}>
+      <body
+        className={`${inter.variable} font-sans bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-50 antialiased`}
+        suppressHydrationWarning
+      >
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >

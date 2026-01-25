@@ -6,6 +6,14 @@ import {
     Shield,
     Key,
     TrendingUp,
+    QrCode,
+    Type,
+    Link2,
+    Coins,
+    Scale,
+    Palette,
+    Activity,
+    Clock,
     LucideIcon
 } from 'lucide-react';
 
@@ -21,6 +29,70 @@ export interface Tool {
 }
 
 export const tools: Tool[] = [
+    {
+        slug: 'qr-generator',
+        name: 'QR Code Generator',
+        description: 'Generate customizable QR codes for URLs, text, and Wi-Fi instanty.',
+        category: 'Utility',
+        icon: QrCode,
+        path: '/qr-generator'
+    },
+    {
+        slug: 'lorem-ipsum',
+        name: 'Lorem Ipsum Generator',
+        description: 'Generate placeholder text for your designs in paragraphs, sentences, or words.',
+        category: 'Developer',
+        icon: Type,
+        path: '/lorem-ipsum'
+    },
+    {
+        slug: 'url-encoder',
+        name: 'URL Encoder / Decoder',
+        description: 'Safely encode or decode URLs to handle special characters correctly.',
+        category: 'Developer',
+        icon: Link2,
+        path: '/url-encoder'
+    },
+    {
+        slug: 'currency-converter',
+        name: 'Currency Converter',
+        description: 'Real-time exchange rates for 150+ global currencies.',
+        category: 'Business',
+        icon: Coins,
+        path: '/currency-converter'
+    },
+    {
+        slug: 'unit-converter',
+        name: 'Unit Converter',
+        description: 'Convert between Metric and Imperial units for length, weight, and temperature.',
+        category: 'Utility',
+        icon: Scale,
+        path: '/unit-converter'
+    },
+    {
+        slug: 'color-converter',
+        name: 'Color Converter',
+        description: 'Convert HEX color codes to RGB, HSL, and CMYK formats.',
+        category: 'Developer',
+        icon: Palette,
+        path: '/color-converter'
+    },
+    {
+        slug: 'bmi-calculator',
+        name: 'BMI Calculator',
+        description: 'Calculate your Body Mass Index and check your health category.',
+        category: 'Health',
+        icon: Activity,
+        path: '/bmi-calculator'
+    },
+    {
+        slug: 'unix-timestamp',
+        name: 'Unix Timestamp',
+        description: 'Convert between Epoch time and human-readable dates.',
+        category: 'Developer',
+        icon: Clock,
+        path: '/unix-timestamp'
+    },
     {
         slug: 'keto-calc',
         name: 'Keto Calorie Calculator',
