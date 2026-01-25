@@ -42,14 +42,14 @@ const howToSteps: Step[] = [
 
 export default function FreelanceCalcPage() {
     return (
-        <div className="min-h-screen bg-slate-50 py-12">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 transition-colors duration-300">
             <BackButton />
             <div className="max-w-4xl mx-auto px-4 sm:px-6 mb-16">
                 <div className="text-center mb-10">
-                    <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4">
+                    <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-slate-100 mb-4">
                         Freelance Rate Calculator
                     </h1>
-                    <p className="text-xl text-slate-500">
+                    <p className="text-xl text-slate-500 dark:text-slate-400">
                         Ensure your business is profitable by charging the right amount.
                     </p>
                 </div>

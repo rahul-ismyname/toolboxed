@@ -7,7 +7,7 @@ export function BackButton() {
     return (
         <Link
             href="/"
-            className="fixed top-4 left-4 z-50 p-2 bg-white/90 backdrop-blur border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 text-slate-500 hover:text-slate-900 transition-all active:scale-95"
+            className="fixed top-4 left-4 z-50 p-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-all active:scale-95"
             title="Back to Dashboard"
         >
             <ArrowLeft className="w-5 h-5" />

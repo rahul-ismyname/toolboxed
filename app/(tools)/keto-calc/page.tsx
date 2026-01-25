@@ -42,14 +42,14 @@ const howToSteps: Step[] = [
 
 export default function KetoCalcPage() {
     return (
-        <div className="min-h-screen bg-slate-50 py-12">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 transition-colors duration-300">
             <BackButton />
             <div className="max-w-4xl mx-auto px-4 sm:px-6 mb-16">
                 <div className="text-center mb-10">
-                    <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4">
+                    <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-slate-100 mb-4">
                         Keto Macro Calculator
                     </h1>
-                    <p className="text-xl text-slate-500">
+                    <p className="text-xl text-slate-500 dark:text-slate-400">
                         Master your metabolism with our scientific ketogenic calculator.
                     </p>
                 </div>
@@ -59,7 +59,7 @@ export default function KetoCalcPage() {
 
             <HowToSection title="How to use this Calculator" steps={howToSteps} />
 
-            <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 text-center prose">
+            <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 text-center prose dark:prose-invert">
                 <h3>Why precision matters</h3>
                 <p>
                     Guessing your intake often leads to plateaus. This tool uses the Mifflin-St Jeor equation,

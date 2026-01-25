@@ -58,16 +58,16 @@ export function KetoCalculator() {
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-white dark:bg-slate-950 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
             {/* Header - Clean Light Theme */}
-            <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2.5">
-                    <div className="p-2 bg-slate-900 text-white rounded-lg">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-900 bg-slate-50/50 dark:bg-slate-900/50">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+                    <div className="p-2 bg-slate-900 dark:bg-slate-800 text-white rounded-lg">
                         <Calculator className="w-5 h-5" />
                     </div>
                     Keto Calculator
                 </h2>
-                <p className="text-slate-500 mt-2 text-sm ml-12">
+                <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm ml-12">
                     Calculate exact macros for ketosis using the Mifflin-St Jeor formula.
                 </p>
             </div>
@@ -77,15 +77,15 @@ export function KetoCalculator() {
                 <div className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Gender</label>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Gender</label>
                             <div className="flex rounded-lg shadow-sm">
                                 <button
                                     onClick={() => setGender('male')}
-                                    className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-l-lg border transition-all ${gender === 'male' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                                    className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-l-lg border transition-all ${gender === 'male' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                                 >Male</button>
                                 <button
                                     onClick={() => setGender('female')}
-                                    className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-r-lg border transition-all ${gender === 'female' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                                    className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-r-lg border transition-all ${gender === 'female' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                                 >Female</button>
                             </div>
                         </div>
@@ -95,7 +95,7 @@ export function KetoCalculator() {
                                 type="number"
                                 value={age}
                                 onChange={(e) => setAge(Number(e.target.value))}
-                                className="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition-all placeholder:text-slate-300"
+                                className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-500 focus:border-transparent outline-none transition-all placeholder:text-slate-300 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                                 placeholder="Years"
                             />
                         </div>
@@ -103,34 +103,34 @@ export function KetoCalculator() {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Weight (kg)</label>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Weight (kg)</label>
                             <input
                                 type="number"
                                 value={weight}
                                 onChange={(e) => setWeight(Number(e.target.value))}
-                                className="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition-all placeholder:text-slate-300"
+                                className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-500 focus:border-transparent outline-none transition-all placeholder:text-slate-300 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                                 placeholder="kg"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Height (cm)</label>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Height (cm)</label>
                             <input
                                 type="number"
                                 value={height}
                                 onChange={(e) => setHeight(Number(e.target.value))}
-                                className="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition-all placeholder:text-slate-300"
+                                className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-500 focus:border-transparent outline-none transition-all placeholder:text-slate-300 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                                 placeholder="cm"
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">Activity Level</label>
+                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Activity Level</label>
                         <div className="relative">
                             <select
                                 value={activity}
                                 onChange={(e) => setActivity(e.target.value as Activity)}
-                                className="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none appearance-none bg-white transition-all text-slate-700"
+                                className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-500 focus:border-transparent outline-none appearance-none bg-white dark:bg-slate-900 transition-all text-slate-700 dark:text-slate-200"
                             >
                                 <option value="sedentary">Sedentary (Office job)</option>
                                 <option value="light">Light Activity (1-2 days/week)</option>
@@ -150,7 +150,7 @@ export function KetoCalculator() {
                             <select
                                 value={goal}
                                 onChange={(e) => setGoal(e.target.value as Goal)}
-                                className="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none appearance-none bg-white transition-all text-slate-700"
+                                className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-500 focus:border-transparent outline-none appearance-none bg-white dark:bg-slate-900 transition-all text-slate-700 dark:text-slate-200"
                             >
                                 <option value="lose">Lose Weight</option>
                                 <option value="maintain">Maintain Weight</option>
@@ -173,15 +173,15 @@ export function KetoCalculator() {
                 {/* Results Section */}
                 <div className="flex flex-col justify-center">
                     {!results ? (
-                        <div className="h-full border-2 border-dashed border-slate-100 rounded-xl flex flex-col items-center justify-center text-center p-8 bg-slate-50/50">
-                            <div className="p-4 bg-white rounded-full mb-4 shadow-sm border border-slate-100">
-                                <RefreshCcw className="w-8 h-8 text-slate-300" />
+                        <div className="h-full border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-xl flex flex-col items-center justify-center text-center p-8 bg-slate-50/50 dark:bg-slate-900/50">
+                            <div className="p-4 bg-white dark:bg-slate-900 rounded-full mb-4 shadow-sm border border-slate-100 dark:border-slate-800">
+                                <RefreshCcw className="w-8 h-8 text-slate-300 dark:text-slate-600" />
                             </div>
-                            <p className="text-slate-500 font-medium">Enter your details to generate your personal plan.</p>
+                            <p className="text-slate-500 dark:text-slate-400 font-medium">Enter your details to generate your personal plan.</p>
                         </div>
                     ) : (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="bg-slate-900 rounded-2xl p-6 text-white text-center shadow-xl shadow-slate-200">
+                            <div className="bg-slate-900 dark:bg-slate-800 rounded-2xl p-6 text-white text-center shadow-xl shadow-slate-200 dark:shadow-none">
                                 <p className="text-sm font-medium text-slate-400 uppercase tracking-widest mb-1">Target Intake</p>
                                 <div className="flex items-baseline justify-center gap-1">
                                     <p className="text-5xl font-black tracking-tight">{results.calories}</p>
@@ -201,17 +201,17 @@ export function KetoCalculator() {
                             </div>
 
                             <div className="grid grid-cols-3 gap-4">
-                                <div className="p-4 bg-white rounded-xl border border-slate-100 shadow-sm text-center group hover:border-rose-200 transition-colors">
+                                <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm text-center group hover:border-rose-200 dark:hover:border-rose-900 transition-colors">
                                     <p className="text-xs font-semibold text-rose-500 uppercase tracking-wide mb-1">Carbs</p>
-                                    <p className="text-2xl font-bold text-slate-900 group-hover:scale-110 transition-transform">{results.carbs}g</p>
+                                    <p className="text-2xl font-bold text-slate-900 dark:text-white group-hover:scale-110 transition-transform">{results.carbs}g</p>
                                 </div>
-                                <div className="p-4 bg-white rounded-xl border border-slate-100 shadow-sm text-center group hover:border-sky-200 transition-colors">
+                                <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm text-center group hover:border-sky-200 dark:hover:border-sky-900 transition-colors">
                                     <p className="text-xs font-semibold text-sky-500 uppercase tracking-wide mb-1">Protein</p>
-                                    <p className="text-2xl font-bold text-slate-900 group-hover:scale-110 transition-transform">{results.protein}g</p>
+                                    <p className="text-2xl font-bold text-slate-900 dark:text-white group-hover:scale-110 transition-transform">{results.protein}g</p>
                                 </div>
-                                <div className="p-4 bg-white rounded-xl border border-slate-100 shadow-sm text-center group hover:border-amber-200 transition-colors">
+                                <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm text-center group hover:border-amber-200 dark:hover:border-amber-900 transition-colors">
                                     <p className="text-xs font-semibold text-amber-500 uppercase tracking-wide mb-1">Fat</p>
-                                    <p className="text-2xl font-bold text-slate-900 group-hover:scale-110 transition-transform">{results.fat}g</p>
+                                    <p className="text-2xl font-bold text-slate-900 dark:text-white group-hover:scale-110 transition-transform">{results.fat}g</p>
                                 </div>
                             </div>
                         </div>

@@ -42,14 +42,14 @@ const howToSteps: Step[] = [
 
 export default function JsonToolPage() {
     return (
-        <div className="min-h-screen bg-slate-50 py-12">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 transition-colors duration-300">
             <BackButton />
             <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-12">
                 <div className="text-center mb-10">
-                    <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4">
+                    <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-slate-100 mb-4">
                         JSON Formatter & Validator
                     </h1>
-                    <p className="text-xl text-slate-500">
+                    <p className="text-xl text-slate-500 dark:text-slate-400">
                         The professional's choice for debugging and formatting JSON data.
                     </p>
                 </div>
@@ -59,7 +59,7 @@ export default function JsonToolPage() {
 
             <HowToSection title="Using the JSON Tool" steps={howToSteps} />
 
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 text-center prose">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 text-center prose dark:prose-invert">
                 <h3>Developers love this tool</h3>
                 <p>
                     We built this to be the fastest, cleanest JSON tool on the web. No ads, no lag, just code.

@@ -4,6 +4,8 @@ import {
     DollarSign,
     Maximize,
     Shield,
+    Key,
+    TrendingUp,
     LucideIcon
 } from 'lucide-react';
 
@@ -58,5 +60,21 @@ export const tools: Tool[] = [
         category: 'Utility',
         icon: Shield,
         path: '/privacy-policy-gen'
+    },
+    {
+        slug: 'password-generator',
+        name: 'Secure Password Generator',
+        description: 'Generate strong, random passwords instantly with custom settings.',
+        category: 'Utility',
+        icon: Key,
+        path: '/password-generator'
+    },
+    {
+        slug: 'roi-calculator',
+        name: 'ROI Calculator',
+        description: 'Calculate Return on Investment for marketing campaigns or business projects.',
+        category: 'Business',
+        icon: TrendingUp,
+        path: '/roi-calculator'
     }
 ];
