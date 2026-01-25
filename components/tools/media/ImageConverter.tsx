@@ -43,6 +43,7 @@ export function ImageConverter() {
             try {
                 // Dynamic import for client-side only to fix DOMMatrix error
                 // Force load the browser build to ensure DOMMatrix and Canvas are available
+                // @ts-ignore
                 const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs');
                 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
@@ -61,6 +62,7 @@ export function ImageConverter() {
                     canvas.width = viewport.width;
 
                     if (context) {
+                        // @ts-ignore
                         const renderTask = page.render({ canvasContext: context, viewport });
                         await renderTask.promise;
                         extractedImages.push(canvas.toDataURL('image/jpeg', 0.9)); // Use standard JPEG intermediate
