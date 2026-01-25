@@ -15,7 +15,7 @@ export function ToolExplorer() {
         return ['All', ...Array.from(cats)].sort((a, b) => {
             if (a === 'All') return -1;
             return 0; // Keep order of discovery or sort alphabetically if preferred
-        });
+        }) as (ToolCategory | 'All')[];
     }, []);
 
     // Filter tools based on search and category
