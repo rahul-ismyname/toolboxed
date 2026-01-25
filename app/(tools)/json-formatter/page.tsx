@@ -8,6 +8,9 @@ export const metadata: Metadata = {
     title: 'JSON Formatter & Validator | Prettify JSON Online',
     description: 'Format, validate, and minify your JSON data. Clean up messy JSON with beautiful indentation instantly.',
     keywords: ['json formatter', 'json validator', 'json prettifier', 'minify json', 'developer tools'],
+    alternates: {
+        canonical: '/json-formatter',
+    },
 };
 
 const faqItems = [

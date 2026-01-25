@@ -1,38 +1,45 @@
-import { CaseConverter } from '@/components/tools/developer/CaseConverter';
+import { CaseConverter } from '@/components/tools/utility/CaseConverter';
 import { FaqSection } from '@/components/shared/FaqSection';
 import { HowToSection, Step } from '@/components/shared/HowToSection';
 import { BackButton } from '@/components/shared/BackButton';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Case Converter | Change Text Case Online',
-    description: 'Instantly convert text between camelCase, snake_case, PascalCase, kebab-case, and more. Essential tool for developers and writers.',
-    keywords: ['case converter', 'camelcase converter', 'snake_case', 'pascalcase', 'text transformation'],
+    title: 'Case Converter | UPPERCASE, lowercase, Title Case & More',
+    description: 'Easily change the case of your text online. Convert to UPPERCASE, lowercase, Title Case, Sentence case, camelCase, and snake_case instantly.',
+    keywords: ['case converter', 'uppercase to lowercase', 'title case tool', 'text transformation', 'camelcase converter', 'sentence case online'],
+    alternates: {
+        canonical: '/case-converter',
+    },
 };
 
 const faqItems = [
     {
-        question: "What cases are supported?",
-        answer: "We support camelCase, PascalCase, snake_case, CONSTANT_CASE, kebab-case, Title Case, lowercase, and UPPERCASE."
+        question: "What text cases are supported?",
+        answer: "Our tool supports UPPERCASE, lowercase, Sentence case, Title Case, camelCase, and snake_case. Every transformation is performed instantly as you click."
     },
     {
-        question: "Is this tool safe for code?",
-        answer: "Yes, our algorithms are designed to handle code snippets and variable names accurately, preserving original word boundaries where possible."
+        question: "Does it count words and characters?",
+        answer: "Yes! The tool provides a real-time count of words and characters below the editor, making it useful for social media or SEO text planning."
+    },
+    {
+        question: "Is there a limit to the text length?",
+        answer: "There's no hard limit. All processing happens in your browser, so it can handle large blocks of text efficiently."
     }
 ];
 
 const howToSteps: Step[] = [
     {
-        title: "Input Text",
-        description: "Type or paste your text into the main input area."
+        title: "Paste Text",
+        description: "Paste your content into the large text area at the center."
     },
     {
-        title: "View Results",
-        description: "Your text is instantly transformed into all supported cases in the cards below."
+        title: "Select Case",
+        description: "Choose your desired transformation from the toolbar or the advanced buttons below."
     },
     {
-        title: "Copy",
-        description: "Click any result card to copy the transformed text to your clipboard."
+        title: "Copy Result",
+        description: "Click the copy icon to grab your formatted text and use it anywhere."
     }
 ];
 
@@ -46,14 +53,14 @@ export default function CasePage() {
                         Case Converter
                     </h1>
                     <p className="text-xl text-slate-500 dark:text-slate-400">
-                        Convert string cases for code or content.
+                        Transform your text into any format instantly.
                     </p>
                 </div>
 
                 <CaseConverter />
             </div>
 
-            <HowToSection title="How to use" steps={howToSteps} />
+            <HowToSection title="Better Text Formatting" steps={howToSteps} />
             <FaqSection items={faqItems} />
         </div>
     );

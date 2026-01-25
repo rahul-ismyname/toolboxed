@@ -8,6 +8,9 @@ export const metadata: Metadata = {
     title: 'BMI Calculator | Body Mass Index Check',
     description: 'Calculate your Body Mass Index (BMI) online instantly. Check if you are in a healthy weight range based on your height and weight.',
     keywords: ['bmi calculator', 'body mass index', 'healthy weight', 'obesity calculator', 'health tools'],
+    alternates: {
+        canonical: '/bmi-calculator',
+    },
 };
 
 const faqItems = [

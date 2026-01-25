@@ -7,8 +7,6 @@ import {
     Key,
     TrendingUp,
     QrCode,
-    Type,
-    Link2,
     Coins,
     Scale,
     Palette,
@@ -16,10 +14,40 @@ import {
     Clock,
     ShieldCheck,
     FileText,
+    Binary,
+    Calendar,
+    Landmark,
+    Percent,
+    Eye,
+    Wand2,
+    Diff,
+    Receipt,
+    Image,
+    Codesandbox,
+    Flame,
+    Type,
+    Link2,
+    AlignLeft,
+    Hourglass,
+    ArrowRightLeft,
+    Radio,
+    Shuffle,
+    BarChart3,
+    Hash,
+    Fingerprint,
+    Lock,
+    Ratio,
+    Scissors,
+    Tag,
+    PenTool,
+    Layers,
+    ImagePlus,
+    Timer,
     LucideIcon
 } from 'lucide-react';
 
-export type ToolCategory = 'Health' | 'Developer' | 'Business' | 'Utility';
+export type ToolCategory = 'Health' | 'Developer' | 'Business' | 'Utility' | 'Design';
+
 
 export interface Tool {
     slug: string;
@@ -32,28 +60,228 @@ export interface Tool {
 
 export const tools: Tool[] = [
     {
+        slug: 'box-shadow-generator',
+        name: 'Box Shadow Generator',
+        description: 'Create layered, smooth CSS box-shadows with a visual editor.',
+        category: 'Design',
+        icon: Layers,
+        path: '/box-shadow-generator'
+    },
+    {
+        slug: 'image-converter',
+        name: 'Image Converter',
+        description: 'Convert images to WebP, PNG, or JPG purely in your browser.',
+        category: 'Utility',
+        icon: ImagePlus,
+        path: '/image-converter'
+    },
+    {
+        slug: 'pomodoro-timer',
+        name: 'Pomodoro Timer',
+        description: 'Stay focused with customizable 25-minute work intervals.',
+        category: 'Health',
+        icon: Timer,
+        path: '/pomodoro-timer'
+    },
+    {
+        slug: 'css-clip-path',
+        name: 'CSS Clip Path Generator',
+        description: 'Create complex shapes and polygons with interactive CSS clip-path builder.',
+        category: 'Design',
+        icon: Scissors,
+        path: '/css-clip-path'
+    },
+    {
+        slug: 'meta-tag-generator',
+        name: 'Meta Tag Generator',
+        description: 'Generate SEO and Social Media meta tags with live Google/Facebook preview.',
+        category: 'Developer',
+        icon: Tag,
+        path: '/meta-tag-generator'
+    },
+    {
+        slug: 'signature-pad',
+        name: 'Digital Signature Pad',
+        description: 'Draw, save, and download your digital signature as transparent PNG.',
+        category: 'Business',
+        icon: PenTool,
+        path: '/signature-pad'
+    },
+    {
+        slug: 'uuid-generator',
+        name: 'UUID Generator',
+        description: 'Generate version 1, 3, 4, and 5 UUIDs instantly with bulk options.',
+        category: 'Developer',
+        icon: Fingerprint,
+        path: '/uuid-generator'
+    },
+    {
+        slug: 'jwt-decoder',
+        name: 'JWT Decoder',
+        description: 'Decode and inspect JSON Web Tokens (headers, payload, signature).',
+        category: 'Developer',
+        icon: Lock,
+        path: '/jwt-decoder'
+    },
+    {
+        slug: 'aspect-ratio-calculator',
+        name: 'Aspect Ratio Calculator',
+        description: 'Calculate dimensions and ratios for images, video, and screens.',
+        category: 'Design',
+        icon: Ratio,
+        path: '/aspect-ratio-calculator'
+    },
+    {
+        slug: 'stopwatch-timer',
+        name: 'Stopwatch & Timer',
+        description: 'Track time with high-precision stopwatch or countdown timer.',
+        category: 'Utility',
+        icon: Hourglass,
+        path: '/stopwatch-timer'
+    },
+    {
+        slug: 'json-to-csv',
+        name: 'JSON to CSV',
+        description: 'Convert JSON arrays to CSV format and download as Spreadsheet.',
+        category: 'Developer',
+        icon: ArrowRightLeft,
+        path: '/json-to-csv'
+    },
+    {
+        slug: 'sales-tax',
+        name: 'Sales Tax Calculator',
+        description: 'Calculate sales tax, GST, or VAT for any transaction.',
+        category: 'Business',
+        icon: Receipt,
+        path: '/sales-tax'
+    },
+    {
+        slug: 'case-converter',
+        name: 'Case Converter',
+        description: 'Transform text into UPPERCASE, lowercase, Title Case, and more.',
+        category: 'Utility',
+        icon: Type,
+        path: '/case-converter'
+    },
+    {
+        slug: 'url-converter',
+        name: 'URL Encoder / Decoder',
+        description: 'Safely encode and decode URLs and query parameters.',
+        category: 'Developer',
+        icon: Link2,
+        path: '/url-converter'
+    },
+    {
+        slug: 'lorem-ipsum',
+        name: 'Lorem Ipsum Generator',
+        description: 'Generate custom placeholder text for your designs and layouts.',
+        category: 'Utility',
+        icon: AlignLeft,
+        path: '/lorem-ipsum'
+    },
+    {
+        slug: 'placeholder-generator',
+        name: 'Image Placeholder',
+        description: 'Generate custom dummy image URLs for your web prototypes.',
+        category: 'Utility',
+        icon: Image,
+        path: '/placeholder-generator'
+    },
+    {
+        slug: 'html-entities',
+        name: 'HTML Entities',
+        description: 'Safely encode and decode HTML special characters.',
+        category: 'Developer',
+        icon: Codesandbox,
+        path: '/html-entities'
+    },
+    {
+        slug: 'bmr-calculator',
+        name: 'BMR Calculator',
+        description: 'Calculate your metabolic rate and daily calorie needs.',
+        category: 'Health',
+        icon: Flame,
+        path: '/bmr-calculator'
+    },
+    {
+        slug: 'loan-calculator',
+        name: 'Loan / EMI Calculator',
+        description: 'Calculate monthly payments and total interest for any loan or mortgage.',
+        category: 'Business',
+        icon: Landmark,
+        path: '/loan-calculator'
+    },
+    {
+        slug: 'glassmorphism-generator',
+        name: 'Glassmorphism Generator',
+        description: 'Create beautiful frosted-glass UI effects with auto-generated CSS.',
+        category: 'Developer',
+        icon: Wand2,
+        path: '/glassmorphism-generator'
+    },
+    {
+        slug: 'diff-checker',
+        name: 'Text Diff Checker',
+        description: 'Compare two blocks of text side-by-side and highlight differences.',
+        category: 'Developer',
+        icon: Diff,
+        path: '/diff-checker'
+    },
+    {
+        slug: 'markdown-previewer',
+        name: 'Markdown Previewer',
+        description: 'Live side-by-side markdown editor and real-time previewer.',
+        category: 'Developer',
+        icon: Eye,
+        path: '/markdown-previewer'
+    },
+    {
+        slug: 'percentage-calculator',
+        name: 'Percentage Calculator',
+        description: 'Solve any percentage problem: increases, decreases, and ratios.',
+        category: 'Utility',
+        icon: Percent,
+        path: '/percentage-calculator'
+    },
+    {
+        slug: 'color-converter-new',
+        name: 'Color Converter',
+        description: 'Advanced HEX, RGB, and HSL color conversion with visual picker.',
+        category: 'Developer',
+        icon: Palette,
+        path: '/color-converter'
+    },
+    {
+        slug: 'base64',
+        name: 'Base64 Encoder / Decoder',
+        description: 'Convert text to Base64 and vice versa with instant client-side processing.',
+        category: 'Developer',
+        icon: Binary,
+        path: '/base64'
+    },
+    {
+        slug: 'age-calculator',
+        name: 'Age Calculator',
+        description: 'Calculate your exact age in years, months, and days instantly.',
+        category: 'Utility',
+        icon: Calendar,
+        path: '/age-calculator'
+    },
+    {
+        slug: 'compound-interest',
+        name: 'Compound Interest',
+        description: 'Visualize the power of exponential growth on your investments.',
+        category: 'Business',
+        icon: Landmark,
+        path: '/compound-interest'
+    },
+    {
         slug: 'qr-generator',
         name: 'QR Code Generator',
         description: 'Generate customizable QR codes for URLs, text, and Wi-Fi instanty.',
         category: 'Utility',
         icon: QrCode,
         path: '/qr-generator'
-    },
-    {
-        slug: 'lorem-ipsum',
-        name: 'Lorem Ipsum Generator',
-        description: 'Generate placeholder text for your designs in paragraphs, sentences, or words.',
-        category: 'Developer',
-        icon: Type,
-        path: '/lorem-ipsum'
-    },
-    {
-        slug: 'url-encoder',
-        name: 'URL Encoder / Decoder',
-        description: 'Safely encode or decode URLs to handle special characters correctly.',
-        category: 'Developer',
-        icon: Link2,
-        path: '/url-encoder'
     },
     {
         slug: 'currency-converter',
@@ -70,14 +298,6 @@ export const tools: Tool[] = [
         category: 'Utility',
         icon: Scale,
         path: '/unit-converter'
-    },
-    {
-        slug: 'color-converter',
-        name: 'Color Converter',
-        description: 'Convert HEX color codes to RGB, HSL, and CMYK formats.',
-        category: 'Developer',
-        icon: Palette,
-        path: '/color-converter'
     },
     {
         slug: 'bmi-calculator',
@@ -110,14 +330,6 @@ export const tools: Tool[] = [
         category: 'Developer',
         icon: FileJson,
         path: '/json-formatter'
-    },
-    {
-        slug: 'case-converter',
-        name: 'Case Converter',
-        description: 'Convert text between camelCase, snake_case, PascalCase and more.',
-        category: 'Developer',
-        icon: Type,
-        path: '/case-converter'
     },
     {
         slug: 'word-counter',
@@ -166,5 +378,37 @@ export const tools: Tool[] = [
         category: 'Business',
         icon: TrendingUp,
         path: '/roi-calculator'
+    },
+    {
+        slug: 'morse-code',
+        name: 'Morse Code Converter',
+        description: 'Convert text to Morse code and back with real-time audio playback.',
+        category: 'Utility',
+        icon: Radio,
+        path: '/morse-code'
+    },
+    {
+        slug: 'base-converter',
+        name: 'Base Converter',
+        description: 'Instant conversion between Binary, Decimal, Hex, and Octal bases.',
+        category: 'Developer',
+        icon: Hash,
+        path: '/base-converter'
+    },
+    {
+        slug: 'random-choice',
+        name: 'Random Choice Maker',
+        description: 'Pick a random item from a list with a fun shuffle animation.',
+        category: 'Utility',
+        icon: Shuffle,
+        path: '/random-choice'
+    },
+    {
+        slug: 'text-statistics',
+        name: 'Advanced Text Statistics',
+        description: 'Analyze reading time, character frequency, and readability scores.',
+        category: 'Utility',
+        icon: BarChart3,
+        path: '/text-statistics'
     }
 ];

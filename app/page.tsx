@@ -1,17 +1,9 @@
-import { tools, ToolCategory } from '@/config/tools';
-import { ToolCard } from '@/components/registry/ToolCard';
+import { ToolExplorer } from '@/components/registry/ToolExplorer';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { CheckCircle2 } from 'lucide-react';
 
 export default function Home() {
-  // Group tools by category
-  const categories: ToolCategory[] = ['Health', 'Developer', 'Business', 'Utility'];
-  const groupedTools = categories.reduce((acc, category) => {
-    acc[category] = tools.filter(t => t.category === category);
-    return acc;
-  }, {} as Record<ToolCategory, typeof tools>);
-
   return (
     <>
       <Navbar />
@@ -53,38 +45,9 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Categorized Tools Grid */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 space-y-20">
-          {categories.map((category) => {
-            const categoryTools = groupedTools[category];
-            if (categoryTools.length === 0) return null;
-
-            return (
-              <section key={category} id={category.toLowerCase()}>
-                <div className="flex items-end justify-between mb-8 border-b border-slate-100 dark:border-slate-800 pb-4">
-                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-                    {category}
-                  </h2>
-                  <span className="text-sm font-medium text-slate-400 dark:text-slate-500">
-                    {categoryTools.length} {categoryTools.length === 1 ? 'Tool' : 'Tools'}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {categoryTools.map((tool) => {
-                    const { icon: _icon, ...safeTool } = tool;
-                    return (
-                      <ToolCard
-                        key={tool.slug}
-                        tool={safeTool}
-                        icon={<tool.icon className="w-6 h-6" />}
-                      />
-                    );
-                  })}
-                </div>
-              </section>
-            );
-          })}
+        {/* Tool Explorer Section */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <ToolExplorer />
         </div>
 
         {/* Bottom CTA */}

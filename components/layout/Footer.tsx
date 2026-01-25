@@ -6,9 +6,8 @@ export function Footer() {
                     © {new Date().getFullYear()} Toolboxed Inc. All rights reserved.
                 </p>
                 <div className="flex gap-6 text-sm text-slate-500 dark:text-slate-400">
-                    <a href="/privacy-policy-gen" className="hover:text-slate-900 dark:hover:text-slate-100 transition-colors">Privacy Policy</a>
-                    <a href="#" className="hover:text-slate-900 dark:hover:text-slate-100 transition-colors cursor-not-allowed" title="Coming Soon">Terms of Service</a>
-                    <a href="mailto:contact@toolboxed.online" className="hover:text-slate-900 dark:hover:text-slate-100 transition-colors">Contact</a>
+                    <a href="/privacy" className="hover:text-slate-900 dark:hover:text-slate-100 transition-colors">Privacy Policy</a>
+                    <a href="/terms" className="hover:text-slate-900 dark:hover:text-slate-100 transition-colors">Terms of Service</a>
                 </div>
             </div>
         </footer>

@@ -8,6 +8,9 @@ export const metadata: Metadata = {
     title: 'Strong Password Generator | Secure & Random',
     description: 'Create secure, random passwords instantly. Customize length and character types to protect your online accounts.',
     keywords: ['password generator', 'secure password', 'random password', 'security tools', 'password strength'],
+    alternates: {
+        canonical: '/password-generator',
+    },
 };
 
 const faqItems = [

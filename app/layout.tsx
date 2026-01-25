@@ -22,6 +22,9 @@ export const metadata: Metadata = {
   authors: [{ name: 'Toolboxed Team' }],
   creator: 'Toolboxed',
   publisher: 'Toolboxed',
+  alternates: {
+    canonical: '/',
+  },
   robots: {
     index: true,
     follow: true,
