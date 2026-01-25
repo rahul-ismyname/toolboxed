@@ -14,6 +14,7 @@ import {
     Palette,
     Activity,
     Clock,
+    ShieldCheck,
     LucideIcon
 } from 'lucide-react';
 
@@ -94,20 +95,28 @@ export const tools: Tool[] = [
         path: '/unix-timestamp'
     },
     {
+        slug: 'password-generator',
+        name: 'Password Generator',
+        description: 'Create strong, secure, and random passwords instantly.',
+        category: 'Utility',
+        icon: ShieldCheck,
+        path: '/password-generator'
+    },
+    {
+        slug: 'json-formatter',
+        name: 'JSON Formatter',
+        description: 'Format, validate, and minify your JSON data.',
+        category: 'Developer',
+        icon: FileJson,
+        path: '/json-formatter'
+    },
+    {
         slug: 'keto-calc',
         name: 'Keto Calorie Calculator',
         description: 'Scientific macro calculator for Ketogenic diets with specialized inputs.',
         category: 'Health',
         icon: Calculator,
         path: '/keto-calc'
-    },
-    {
-        slug: 'json-tool',
-        name: 'JSON Formatter',
-        description: 'Validate, prettify, and minify your JSON data instantly.',
-        category: 'Developer',
-        icon: FileJson,
-        path: '/json-tool'
     },
     {
         slug: 'freelance-rate',
@@ -132,14 +141,6 @@ export const tools: Tool[] = [
         category: 'Utility',
         icon: Shield,
         path: '/privacy-policy-gen'
-    },
-    {
-        slug: 'password-generator',
-        name: 'Secure Password Generator',
-        description: 'Generate strong, random passwords instantly with custom settings.',
-        category: 'Utility',
-        icon: Key,
-        path: '/password-generator'
     },
     {
         slug: 'roi-calculator',
