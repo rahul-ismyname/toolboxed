@@ -13,27 +13,45 @@ export const metadata: Metadata = {
     default: 'Toolboxed - Professional Utility Tools',
     template: '%s | Toolboxed',
   },
-  description: 'A suite of high-performance utility tools for developers and creators. Free calculators, converters, and generators.',
-  keywords: ['utility tools', 'developer tools', 'calculator', 'converter', 'json formatter', 'b2b tools'],
+  description: 'Boost your productivity with Toolboxed—a high-performance suite of free utility tools. Features a BMI calculator, secure password generator, currency converter, JSON formatter, and developer-centric utilities.',
+  keywords: [
+    'utility tools', 'developer tools', 'free online tools', 'calculator', 'converter',
+    'json formatter', 'bmi calculator online', 'qr code generator', 'currency converter live',
+    'unix timestamp converter', 'secure password generator', 'color converter', 'unit converter'
+  ],
   authors: [{ name: 'Toolboxed Team' }],
   creator: 'Toolboxed',
   publisher: 'Toolboxed',
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
   openGraph: {
     type: 'website',
     locale: 'en_US',
     url: appUrl,
-    title: 'Toolboxed - Professional Utility Tools',
-    description: 'Boost your productivity with our suite of free, high-performance developer and business tools.',
+    title: 'Toolboxed | Free Professional Utility Tools for Everyone',
+    description: 'Fast, secure, and free online tools for developers, creators, and professionals. From calculators to converters, all in one place.',
     siteName: 'Toolboxed',
+    images: [{
+      url: `${appUrl}/og-image.png`,
+      width: 1200,
+      height: 630,
+      alt: 'Toolboxed - Professional Utility Tools',
+    }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Toolboxed - Utility Micro-Tools',
-    description: 'Free, fast, and secure utility tools for everyone.',
+    title: 'Toolboxed | Professional Utility Tools',
+    description: 'The ultimate suite of free, high-performance web utilities. Secure, fast, and easy to use.',
+    images: [`${appUrl}/og-image.png`],
   },
 };
 

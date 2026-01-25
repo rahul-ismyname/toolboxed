@@ -15,6 +15,7 @@ import {
     Activity,
     Clock,
     ShieldCheck,
+    FileText,
     LucideIcon
 } from 'lucide-react';
 
@@ -109,6 +110,22 @@ export const tools: Tool[] = [
         category: 'Developer',
         icon: FileJson,
         path: '/json-formatter'
+    },
+    {
+        slug: 'case-converter',
+        name: 'Case Converter',
+        description: 'Convert text between camelCase, snake_case, PascalCase and more.',
+        category: 'Developer',
+        icon: Type,
+        path: '/case-converter'
+    },
+    {
+        slug: 'word-counter',
+        name: 'Word Counter',
+        description: 'Check word, character, sentence, and paragraph counts instantly.',
+        category: 'Utility',
+        icon: FileText,
+        path: '/word-counter'
     },
     {
         slug: 'keto-calc',
