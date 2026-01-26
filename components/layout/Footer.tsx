@@ -21,9 +21,18 @@ export function Footer() {
                         <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">Popular Tools</h3>
                         <ul className="space-y-3 text-sm text-slate-500 dark:text-slate-400">
                             <li><Link href="/bmi-calculator" className="hover:text-emerald-500 transition-colors">BMI Calculator</Link></li>
-                            <li><Link href="/paint-app" className="hover:text-emerald-500 transition-colors">Paint App</Link></li>
                             <li><Link href="/json-formatter" className="hover:text-emerald-500 transition-colors">JSON Formatter</Link></li>
                             <li><Link href="/password-generator" className="hover:text-emerald-500 transition-colors">Password Generator</Link></li>
+                            <li><Link href="/pdf-master" className="hover:text-emerald-500 transition-colors">PDF Master</Link></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">Categories</h3>
+                        <ul className="space-y-3 text-sm text-slate-500 dark:text-slate-400">
+                            <li><Link href="/category/developer" className="hover:text-emerald-500 transition-colors">Developer Tools</Link></li>
+                            <li><Link href="/category/design" className="hover:text-emerald-500 transition-colors">Design Tools</Link></li>
+                            <li><Link href="/category/business" className="hover:text-emerald-500 transition-colors">Business Suite</Link></li>
+                            <li><Link href="/category/utility" className="hover:text-emerald-500 transition-colors">Utility Hub</Link></li>
                         </ul>
                     </div>
                     <div>

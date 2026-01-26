@@ -1,10 +1,10 @@
-import { MetadataRoute } from 'next';
+import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
-        name: 'Toolboxed - Professional Utility Tools',
+        name: 'Toolboxed Online',
         short_name: 'Toolboxed',
-        description: 'A high-performance suite of free utility tools for developers and professionals.',
+        description: 'High-performance, private, and free online utility tools.',
         start_url: '/',
         display: 'standalone',
         background_color: '#ffffff',
@@ -16,5 +16,5 @@ export default function manifest(): MetadataRoute.Manifest {
                 type: 'image/x-icon',
             },
         ],
-    };
+    }
 }

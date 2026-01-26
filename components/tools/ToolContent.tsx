@@ -1,4 +1,7 @@
 import React from 'react';
+import { tools } from '@/config/tools';
+import Link from 'next/link';
+import { ToolCard } from '../registry/ToolCard';
 
 type ToolData = {
     title: string;
@@ -385,12 +388,12 @@ const toolContentData: Record<string, ToolData> = {
         ],
         faqs: [
             { question: 'Which version should I use?', answer: 'Version 4 (Random) is the standard for most modern applications (primary keys, user IDs).' },
-            { question: 'Are they truly unique?', answer: 'v4 UUIDs have 122 random bits, making collision practically impossible.' }
+            { question: 'Are they truly unique?', answer: 'v4 UUIDs have 122 random bits, making collision practically impossible. For more security, use our [Password Generator](/password-generator).' }
         ]
     },
     'jwt-decoder': {
         title: 'JWT Decoder & Debugger',
-        description: 'Decode, verify, and inspect JSON Web Tokens instantly. View headers, payloads, and signatures clearly.',
+        description: 'Decode, verify, and inspect JSON Web Tokens instantly. View headers, payloads, and signatures clearly. Works perfectly with our [UUID Generator](/uuid-generator).',
         features: [
             '**Instant Decoding**: Paste a token to see its contents immediately.',
             '**Human Readable**: Auto-formats timestamps into readable dates.',
@@ -1184,6 +1187,26 @@ const toolContentData: Record<string, ToolData> = {
         faqs: [
             { question: 'What is time blocking?', answer: 'A method of scheduling your day into specific chunks of time for focused work.' }
         ]
+    },
+    'color-converter-new': {
+        title: 'Professional Color Converter & Picker',
+        description: 'Convert color codes between HEX, RGB, HSL, and CMYK formats. Features an advanced visual picker and palette generator.',
+        features: [
+            '**Multi-Format**: Support for HEX, RGB, HSL, CMYK, and LAB.',
+            '**Visual Picker**: Precise color selection with alpha support.',
+            '**Accessibility**: Contrast checks and readability ratings.',
+            '**Palettes**: Auto-generate complementary and analogous schemes.',
+            '**CSS READY**: One-click copy for your stylesheets.'
+        ],
+        howToUse: [
+            { title: 'Pick or Paste', description: 'Enter a color code or use the visual picker to select a base color.' },
+            { title: 'Choose Format', description: 'Select your target format (e.g., HSL) to see the conversion.' },
+            { title: 'Adjust Alpha', description: 'Use the transparency slider if needed.' },
+            { title: 'Copy CSS', description: 'Copy the resulting code directly into your project.' }
+        ],
+        faqs: [
+            { question: 'What is CMYK used for?', answer: 'CMYK is primarily used for print design, while RGB and HEX are for digital screens.' }
+        ]
     }
 };
 
@@ -1193,8 +1216,13 @@ interface ToolContentProps {
 
 export function ToolContent({ slug }: ToolContentProps) {
     const data = toolContentData[slug];
+    const currentTool = tools.find(t => t.slug === slug);
 
     if (!data) return null;
+
+    const relatedTools = tools
+        .filter(t => t.category === currentTool?.category && t.slug !== slug)
+        .slice(0, 4);
 
     const jsonLd = {
         '@context': 'https://schema.org',
@@ -1214,6 +1242,35 @@ export function ToolContent({ slug }: ToolContentProps) {
         }
     };
 
+    const faqLd = {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        'mainEntity': data.faqs.map(faq => ({
+            '@type': 'Question',
+            'name': faq.question,
+            'acceptedAnswer': {
+                '@type': 'Answer',
+                'text': faq.answer
+            }
+        }))
+    };
+
+    const howToLd = {
+        '@context': 'https://schema.org',
+        '@type': 'HowTo',
+        'name': `How to use ${data.title}`,
+        'description': data.description,
+        'step': data.howToUse.map((step, index) => ({
+            '@type': 'HowToStep',
+            'position': index + 1,
+            'name': step.title,
+            'itemListElement': [{
+                '@type': 'HowToDirection',
+                'text': step.description
+            }]
+        }))
+    };
+
     return (
         <article className="max-w-4xl mx-auto px-4 py-12 space-y-12 text-slate-700 dark:text-slate-300">
 
@@ -1222,6 +1279,14 @@ export function ToolContent({ slug }: ToolContentProps) {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(howToLd) }}
+            />
 
             {/* Description Section */}
             <section className="text-center max-w-2xl mx-auto space-y-4">
@@ -1229,9 +1294,19 @@ export function ToolContent({ slug }: ToolContentProps) {
                 <p className="text-lg leading-relaxed">{data.description}</p>
             </section>
 
+            {/* Table of Contents - Jump Links for SEO */}
+            <section className="bg-slate-50 dark:bg-slate-900/40 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Quick Links</h2>
+                <div className="flex flex-wrap gap-4">
+                    <a href="#features" className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">Key Features</a>
+                    <a href="#how-to" className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">How to Use</a>
+                    <a href="#faqs" className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">FAQs</a>
+                </div>
+            </section>
+
             {/* Features Grid */}
-            <section>
-                <h2 className="text-2xl font-bold mb-6 text-slate-900 dark:text-white">Key Features</h2>
+            <section id="features" className="scroll-mt-20">
+                <h2 className="text-2xl font-bold mb-6 text-slate-900 dark:text-white">Key Features of {data.title}</h2>
                 <div className="grid md:grid-cols-2 gap-6">
                     {data.features.map((feature, idx) => {
                         const [bold, rest] = feature.split(':');
@@ -1251,8 +1326,8 @@ export function ToolContent({ slug }: ToolContentProps) {
             </section>
 
             {/* How to Use Steps */}
-            <section className="bg-slate-100 dark:bg-slate-900/50 p-8 rounded-2xl">
-                <h2 className="text-2xl font-bold mb-8 text-slate-900 dark:text-white text-center">How to Create Animations</h2>
+            <section id="how-to" className="bg-slate-100 dark:bg-slate-900/50 p-8 rounded-2xl scroll-mt-20">
+                <h2 className="text-2xl font-bold mb-8 text-slate-900 dark:text-white text-center">How to use {data.title}</h2>
                 <div className="space-y-8">
                     {data.howToUse.map((step, idx) => (
                         <div key={idx} className="flex gap-6 items-start">
@@ -1269,8 +1344,8 @@ export function ToolContent({ slug }: ToolContentProps) {
             </section>
 
             {/* FAQ Section */}
-            <section>
-                <h2 className="text-2xl font-bold mb-6 text-slate-900 dark:text-white">Frequently Asked Questions</h2>
+            <section id="faqs" className="scroll-mt-20">
+                <h2 className="text-2xl font-bold mb-6 text-slate-900 dark:text-white">Frequently Asked Questions about {data.title}</h2>
                 <div className="space-y-4">
                     {data.faqs.map((faq, idx) => (
                         <div key={idx} className="border-b border-slate-200 dark:border-slate-800 pb-4">
@@ -1278,6 +1353,55 @@ export function ToolContent({ slug }: ToolContentProps) {
                             <p className="text-slate-600 dark:text-slate-400">{faq.answer}</p>
                         </div>
                     ))}
+                </div>
+            </section>
+
+            {/* Related Tools Section */}
+            {relatedTools.length > 0 && (
+                <section className="pt-12 border-t border-slate-200 dark:border-slate-800">
+                    <h2 className="text-2xl font-bold mb-8 text-slate-900 dark:text-white">Related {currentTool?.category} Tools</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {relatedTools.map((tool) => {
+                            const { icon: _icon, ...safeTool } = tool;
+                            return (
+                                <ToolCard
+                                    key={tool.slug}
+                                    tool={safeTool}
+                                    icon={<tool.icon className="w-5 h-5" />}
+                                />
+                            );
+                        })}
+                    </div>
+                </section>
+            )}
+
+            {/* Why Toolboxed Section */}
+            <section className="bg-blue-50 dark:bg-blue-900/10 p-8 rounded-3xl border border-blue-100 dark:border-blue-900/30">
+                <div className="max-w-3xl">
+                    <h2 className="text-2xl font-bold mb-4 text-blue-900 dark:text-blue-100">Why use Toolboxed.online?</h2>
+                    <p className="text-blue-800/80 dark:text-blue-200/60 leading-relaxed mb-6">
+                        Toolboxed is a curated suite of high-performance utility tools designed for modern professionals.
+                        Unlike other tool sites, we prioritize <strong>privacy, speed, and zero distractions</strong>.
+                        None of your data ever leaves your browser, and we never show annoying ads.
+                    </p>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="flex items-center gap-2 text-sm font-medium text-blue-900 dark:text-blue-200">
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                            100% Free & Open Source
+                        </div>
+                        <div className="flex items-center gap-2 text-sm font-medium text-blue-900 dark:text-blue-200">
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                            No Registration Required
+                        </div>
+                        <div className="flex items-center gap-2 text-sm font-medium text-blue-900 dark:text-blue-200">
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                            Client-Side Processing
+                        </div>
+                        <div className="flex items-center gap-2 text-sm font-medium text-blue-900 dark:text-blue-200">
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                            Mobile Friendly Design
+                        </div>
+                    </div>
                 </div>
             </section>
 

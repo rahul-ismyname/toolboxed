@@ -41,9 +41,20 @@ export default function NotFound() {
                     </div>
 
                     <div className="mt-16 p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-500/5 border border-emerald-100 dark:border-emerald-500/10">
-                        <p className="text-sm font-medium text-emerald-800 dark:text-emerald-400">
+                        <p className="text-sm font-medium text-emerald-800 dark:text-emerald-400 mb-6">
                             💡 Hint: Try searching for the tool name on our home page!
                         </p>
+                        <div className="flex flex-wrap justify-center gap-3">
+                            {['Developer', 'Design', 'Business', 'Utility'].map((cat) => (
+                                <Link
+                                    key={cat}
+                                    href={`/category/${cat.toLowerCase()}`}
+                                    className="text-xs font-bold px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 hover:text-emerald-500 transition-colors"
+                                >
+                                    {cat} Tools
+                                </Link>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </main>

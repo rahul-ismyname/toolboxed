@@ -1,21 +1,24 @@
-'use client';
-
 import { DynamicPDFMaster } from '@/components/tools/DynamicTools';
 import { ToolContent } from '@/components/tools/ToolContent';
-import { ChevronLeft } from 'lucide-react';
-import Link from 'next/link';
+import { Breadcrumb } from '@/components/shared/Breadcrumb';
+import { BackButton } from '@/components/shared/BackButton';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Privacy-First PDF Master | Merge, Split & Sign PDFs',
+    description: 'The ultimate privacy-first suite for your sensitive documents. Merge, split, protect, and sign PDFs entirely in your browser. No files are ever uploaded.',
+    keywords: ['pdf master', 'merge pdf', 'split pdf', 'sign pdf online', 'privacy pdf tool'],
+    alternates: {
+        canonical: '/pdf-master',
+    },
+};
 
 export default function PDFMasterPage() {
     return (
         <div className="min-h-screen bg-white dark:bg-slate-950">
             <div className="max-w-6xl mx-auto px-4 py-8">
-                <Link
-                    href="/"
-                    className="inline-flex items-center text-sm font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all mb-8 group"
-                >
-                    <ChevronLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
-                    Back to Dashboard
-                </Link>
+                <BackButton />
+                <Breadcrumb category="Utility" name="PDF Master" />
 
                 <div className="mb-12">
                     <h1 className="text-4xl font-black text-slate-900 dark:text-white mb-4">PDF Master</h1>

@@ -1,6 +1,7 @@
 import { TimeBlockPlanner } from '@/components/tools/business/TimeBlockPlanner';
 import { TitleSection } from '@/components/shared/TitleSection';
 import { BackButton } from '@/components/shared/BackButton';
+import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
@@ -18,6 +19,7 @@ export default function TimeBlockPlannerPage() {
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 transition-colors duration-300">
             <BackButton />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-12">
+                <Breadcrumb category="Business" name="Time-Block Day Planner" />
                 <TitleSection
                     title="Time-Block Day Planner"
                     description="Visualize your perfect day with color-coded blocks."

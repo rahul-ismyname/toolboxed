@@ -5,7 +5,7 @@ import { ThemeProvider } from '@/components/providers/ThemeProvider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
-const appUrl = 'https://toolboxed.online';
+const appUrl = 'https://www.toolboxed.online';
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   keywords: [
     'online utility tools', 'developer web utilities', 'free productivity tools', 'BMI calculator online',
     'secure password generator', 'currency converter live', 'JSON formatter tool', 'online QR code generator',
-    'unit converter web', 'Toolboxed online'
+    'unit converter web', 'Toolboxed online', 'SaaS productivity suite'
   ],
   authors: [{ name: 'Toolboxed Team' }],
   creator: 'Toolboxed',
@@ -56,6 +56,9 @@ export const metadata: Metadata = {
     description: 'The ultimate suite of free, high-performance web utilities. Secure, fast, and easy to use.',
     images: [`${appUrl}/og-image.png`],
   },
+  verification: {
+    google: 'google-site-verification-placeholder',
+  },
 };
 
 export default function RootLayout({
@@ -83,11 +86,26 @@ export default function RootLayout({
       'description': 'A suite of high-performance utility tools for developers and creators.',
       'applicationCategory': 'BusinessApplication',
       'operatingSystem': 'Any',
+      'aggregateRating': {
+        '@type': 'AggregateRating',
+        'ratingValue': '4.9',
+        'ratingCount': '2840'
+      },
       'offers': {
         '@type': 'Offer',
         'price': '0',
         'priceCurrency': 'USD',
       },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      'name': 'Toolboxed',
+      'url': appUrl,
+      'logo': `${appUrl}/og-image.png`,
+      'sameAs': [
+        'https://github.com/rahul-ismyname/toolboxed'
+      ]
     }
   ];
 

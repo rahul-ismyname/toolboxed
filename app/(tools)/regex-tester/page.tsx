@@ -1,4 +1,6 @@
 import { RegexTester } from '@/components/tools/developer/RegexTester';
+import { Breadcrumb } from '@/components/shared/Breadcrumb';
+import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
@@ -6,11 +8,16 @@ export const metadata: Metadata = {
     title: 'RegEx Tester & Debugger | Live Regular Expression Editor',
     description: 'Test and debug JavaScript regular expressions online with real-time highlighting and cheat sheet. Supports global, case-insensitive, and multiline flags.',
     keywords: ['regex tester', 'regex debugger', 'regular expression tester online', 'javascript regex editor', 'regex cheat sheet'],
+    alternates: {
+        canonical: '/regex-tester',
+    },
 };
 
 export default function RegexTesterPage() {
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
+            <BackButton />
+            <Breadcrumb category="Developer" name="RegEx Tester" />
             <div className="max-w-3xl mx-auto text-center mb-12">
                 <h1 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6">
                     RegEx Tester

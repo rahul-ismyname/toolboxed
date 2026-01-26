@@ -1,8 +1,18 @@
 import { ToolExplorer } from '@/components/registry/ToolExplorer';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Shield } from 'lucide-react';
+import Link from 'next/link';
 import { FeaturedTools } from '@/components/registry/FeaturedTools';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Toolboxed | All-in-One Professional Online Utility Tools',
+  description: 'Fast, secure, and free online tools for developers, creators, and professionals. From calculators to converters, all in one place. 100% private.',
+  alternates: {
+    canonical: '/',
+  },
+};
 
 export default function Home() {
   return (
@@ -52,6 +62,61 @@ export default function Home() {
         {/* Tool Explorer Section */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <ToolExplorer />
+        </div>
+
+        {/* About / SEO Section */}
+        <div className="bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div>
+                <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-6">
+                  Professional Utility Tools for the Modern Web
+                </h2>
+                <p className="text-lg text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+                  Toolboxed.online is a free, open-source platform providing high-performance, developer-centric utility tools.
+                  Our mission is to offer a clean, secure, and fast alternative to ad-heavy tool websites.
+                </p>
+                <ul className="grid sm:grid-cols-2 gap-4">
+                  {[
+                    { name: 'Design', href: '/category/design' },
+                    { name: 'Developer', href: '/category/developer' },
+                    { name: 'Business', href: '/category/business' },
+                    { name: 'Utility', href: '/category/utility' },
+                    { name: 'Health', href: '/category/health' }
+                  ].map((cat, i) => (
+                    <li key={i}>
+                      <Link
+                        href={cat.href}
+                        className="group flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 hover:border-emerald-500 hover:shadow-md transition-all"
+                      >
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 group-hover:scale-125 transition-transform" />
+                        <span className="font-semibold text-slate-700 dark:text-slate-200 group-hover:text-emerald-500 transition-colors">
+                          {cat.name} Tools
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="bg-white dark:bg-slate-950 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Privacy First</h3>
+                <p className="text-slate-500 dark:text-slate-400 mb-6">
+                  All processing happens <strong>locally in your browser</strong>.
+                  We never upload your files or sensitive data to our servers.
+                  Security isn&apos;t just a feature; it&apos;s our foundation.
+                </p>
+                <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500">
+                    <Shield className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">Secure & Private</p>
+                    <p className="text-xs text-slate-500">No server-side storage used.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Bottom CTA */}

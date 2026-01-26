@@ -1,4 +1,6 @@
 import { DynamicMermaidEditor } from '@/components/tools/DynamicTools';
+import { Breadcrumb } from '@/components/shared/Breadcrumb';
+import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
@@ -6,11 +8,16 @@ export const metadata: Metadata = {
     title: 'Mermaid.js Visualizer | Text to Diagram Online',
     description: 'Create flowcharts, sequence diagrams, and Gantt charts instantly by typing text. Detailed Mermaid.js live editor with SVG/PNG export.',
     keywords: ['mermaid live editor', 'text to diagram', 'flowchart maker', 'sequence diagram online', 'mermaidjs online'],
+    alternates: {
+        canonical: '/mermaid-visualizer',
+    },
 };
 
 export default function MermaidPage() {
     return (
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+            <BackButton />
+            <Breadcrumb category="Design" name="Mermaid Visualizer" />
             <div className="text-center mb-8">
                 <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-3">
                     Mermaid Visualizer
