@@ -1,4 +1,5 @@
 import { DynamicMermaidEditor } from '@/components/tools/DynamicTools';
+import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ export default function MermaidPage() {
             </div>
 
             <DynamicMermaidEditor />
+            <ToolContent slug="mermaid-visualizer" />
         </div>
     );
 }

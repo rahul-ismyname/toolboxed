@@ -1,5 +1,6 @@
 import { DynamicStickmanAnimator } from '@/components/tools/DynamicTools';
 import { BackButton } from '@/components/shared/BackButton';
+import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -27,6 +28,8 @@ export default function StickmanPage() {
 
                 <DynamicStickmanAnimator />
             </div>
+
+            <ToolContent slug="stickman-animator" />
         </div>
     );
 }

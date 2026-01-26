@@ -6,6 +6,7 @@ import { Star } from 'lucide-react';
 
 // Curated list of high-value tools to feature
 const FEATURED_SLUGS = [
+    'time-block-planner',
     'animated-patterns',
     'landing-page-builder',
     'mind-map',

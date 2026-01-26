@@ -1,5 +1,7 @@
 import { DynamicPaintApp } from '@/components/tools/DynamicTools';
+import { TitleSection } from '@/components/shared/TitleSection';
 import { BackButton } from '@/components/shared/BackButton';
+import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -16,17 +18,15 @@ export default function PaintPage() {
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 transition-colors duration-300">
             <BackButton />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-12">
-                <div className="text-center mb-10">
-                    <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-slate-100 mb-4">
-                        Paint App
-                    </h1>
-                    <p className="text-xl text-slate-500 dark:text-slate-400">
-                        Create masterpiece directly in your browser.
-                    </p>
-                </div>
+                <TitleSection
+                    title="Paint App"
+                    description="Create masterpiece directly in your browser."
+                />
 
                 <DynamicPaintApp />
             </div>
+
+            <ToolContent slug="paint-app" />
         </div>
     );
 }

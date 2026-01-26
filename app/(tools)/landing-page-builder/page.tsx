@@ -1,4 +1,5 @@
 import { DynamicLandingPageBuilder } from '@/components/tools/DynamicTools';
+import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -14,6 +15,7 @@ export default function LandingPageBuilderPage() {
                 <p className="text-slate-600 dark:text-slate-400">Design professional SaaS landing pages visually and export the code instantly.</p>
             </div>
             <DynamicLandingPageBuilder />
+            <ToolContent slug="landing-page-builder" />
         </div>
     );
 }

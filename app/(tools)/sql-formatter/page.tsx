@@ -1,4 +1,5 @@
 import { SqlFormatter } from '@/components/tools/developer/SqlFormatter';
+import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -7,7 +8,7 @@ export const metadata: Metadata = {
     keywords: ['sql formatter', 'sql beautifier', 'format sql online', 'mysql formatter', 'postgresql formatter', 'sql validator'],
 };
 
-export default function SqlFormatterPage() {
+export default function SQLFormatterPage() {
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
             <div className="max-w-3xl mx-auto text-center mb-12">
@@ -20,6 +21,7 @@ export default function SqlFormatterPage() {
             </div>
 
             <SqlFormatter />
+            <ToolContent slug="sql-formatter" />
         </div>
     );
 }

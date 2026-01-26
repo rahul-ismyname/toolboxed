@@ -1,4 +1,5 @@
 import { RegexTester } from '@/components/tools/developer/RegexTester';
+import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ export default function RegexTesterPage() {
             </div>
 
             <RegexTester />
+            <ToolContent slug="regex-tester" />
         </div>
     );
 }

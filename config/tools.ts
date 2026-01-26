@@ -517,6 +517,14 @@ export const tools: Tool[] = [
         path: '/animated-patterns'
     },
     {
+        slug: 'time-block-planner',
+        name: 'Time-Block Day Planner',
+        description: 'Visual day planner to "paint" your schedule with color-coded 30-minute blocks.',
+        category: 'Business',
+        icon: Layout,
+        path: '/time-block-planner'
+    },
+    {
         slug: 'stickman-animator',
         name: 'Stickman Animator',
         description: 'Professional browser-based stickman animation tool with keyframes and interpolation.',

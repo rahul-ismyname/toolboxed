@@ -1,6 +1,7 @@
 'use client';
 
 import { DynamicPDFMaster } from '@/components/tools/DynamicTools';
+import { ToolContent } from '@/components/tools/ToolContent';
 import { ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 
@@ -24,6 +25,7 @@ export default function PDFMasterPage() {
                 </div>
 
                 <DynamicPDFMaster />
+                <ToolContent slug="pdf-master" />
             </div>
         </div>
     );

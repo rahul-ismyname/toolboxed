@@ -1,4 +1,5 @@
 import { DynamicResumeBuilder } from '@/components/tools/DynamicTools';
+import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -7,5 +8,10 @@ export const metadata: Metadata = {
 };
 
 export default function ResumeBuilderPage() {
-    return <DynamicResumeBuilder />;
+    return (
+        <>
+            <DynamicResumeBuilder />
+            <ToolContent slug="resume-builder" />
+        </>
+    );
 }
