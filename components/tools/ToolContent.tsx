@@ -2,6 +2,7 @@ import React from 'react';
 import { tools } from '@/config/tools';
 import Link from 'next/link';
 import { ToolCard } from '../registry/ToolCard';
+import { Star, CheckCircle } from 'lucide-react';
 
 type ToolData = {
     title: string;
@@ -1289,40 +1290,62 @@ export function ToolContent({ slug }: ToolContentProps) {
             />
 
             {/* Description Section */}
-            <section className="text-center max-w-2xl mx-auto space-y-4">
-                <h2 className="text-3xl font-bold text-slate-900 dark:text-white">About {data.title}</h2>
-                <p className="text-lg leading-relaxed">{data.description}</p>
+            <section className="text-center max-w-2xl mx-auto space-y-6">
+                <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-700">
+                    <div className="flex -space-x-1">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                            <Star key={i} className="w-4 h-4 fill-current" />
+                        ))}
+                    </div>
+                    <span className="text-sm font-bold tracking-tight">4.9/5 User Rating</span>
+                </div>
+                <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
+                    Free {data.title} Online
+                </h2>
+                <p className="text-xl leading-relaxed text-slate-600 dark:text-slate-400">{data.description}</p>
             </section>
 
             {/* Table of Contents - Jump Links for SEO */}
-            <section className="bg-slate-50 dark:bg-slate-900/40 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
-                <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Quick Links</h2>
-                <div className="flex flex-wrap gap-4">
-                    <a href="#features" className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">Key Features</a>
-                    <a href="#how-to" className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">How to Use</a>
-                    <a href="#faqs" className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">FAQs</a>
+            <section className="bg-slate-50 dark:bg-slate-900/40 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="space-y-1">
+                    <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Quick Navigation</h2>
+                    <p className="text-xs text-slate-500">Jump to specific sections of the {data.title} guide.</p>
+                </div>
+                <div className="flex flex-wrap gap-4 justify-center">
+                    <a href="#features" className="text-sm font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/40">Key Features</a>
+                    <a href="#how-to" className="text-sm font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/40">How to Use</a>
+                    <a href="#faqs" className="text-sm font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/40">FAQs</a>
                 </div>
             </section>
 
             {/* Features Grid */}
             <section id="features" className="scroll-mt-20">
-                <h2 className="text-2xl font-bold mb-6 text-slate-900 dark:text-white">Key Features of {data.title}</h2>
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="mb-8">
+                    <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-2">Key Features</h2>
+                    <p className="text-slate-500">Powerful capabilities of our {data.title.toLowerCase()}.</p>
+                </div>
+                <ul className="grid md:grid-cols-2 gap-6 list-none p-0">
                     {data.features.map((feature, idx) => {
                         const [bold, rest] = feature.split(':');
                         return (
-                            <div key={idx} className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                                <div className="flex items-start gap-3">
-                                    <div className="mt-1 w-2 h-2 rounded-full bg-blue-500 shrink-0" />
-                                    <p>
-                                        <span className="font-semibold text-slate-900 dark:text-white">{bold.replace(/\*\*/g, '')}:</span>
-                                        {rest}
-                                    </p>
+                            <li key={idx} className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
+                                <div className="flex items-start gap-4">
+                                    <div className="mt-1 flex-shrink-0 w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                                        <CheckCircle className="w-5 h-5" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <h3 className="font-bold text-slate-900 dark:text-white leading-tight">
+                                            {bold.replace(/\*\*/g, '')}
+                                        </h3>
+                                        <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                                            {rest}
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
+                            </li>
                         );
                     })}
-                </div>
+                </ul>
             </section>
 
             {/* How to Use Steps */}

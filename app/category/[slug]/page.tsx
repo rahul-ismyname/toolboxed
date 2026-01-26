@@ -26,6 +26,17 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
         alternates: {
             canonical: `/category/${slug}`,
         },
+        openGraph: {
+            title: `${category} Tools - Professional Online Suite`,
+            description: `Free, private, and high-performance ${category} tools for modern workflows.`,
+            type: 'website',
+            url: `/category/${slug}`,
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: `${category} Tools | Toolboxed`,
+            description: `The ultimate suite of professional ${category} utilities.`,
+        },
     };
 }
 
