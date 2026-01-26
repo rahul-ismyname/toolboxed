@@ -185,7 +185,7 @@ export function ResumeBuilder() {
                                 <label className="text-xs font-medium text-slate-500 mb-1 block">Template</label>
                                 <select
                                     value={data.meta.template}
-                                    onChange={(e) => updateMeta('template', e.target.value)}
+                                    onChange={(e) => updateMeta('template', e.target.value as any)}
                                     className="w-full text-sm p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
                                 >
                                     <option value="modern">Modern</option>
@@ -219,15 +219,15 @@ export function ResumeBuilder() {
                         onToggle={() => setActiveSection(activeSection === 'personal' ? null : 'personal')}
                     >
                         <div className="space-y-3">
-                            <Input label="Full Name" value={data.personal.fullName} onChange={v => updatePersonal('fullName', v)} />
-                            <Input label="Job Title" value={data.personal.title} onChange={v => updatePersonal('title', v)} />
+                            <Input label="Full Name" value={data.personal.fullName} onChange={(v: string) => updatePersonal('fullName', v)} />
+                            <Input label="Job Title" value={data.personal.title} onChange={(v: string) => updatePersonal('title', v)} />
                             <div className="grid grid-cols-2 gap-3">
-                                <Input label="Email" value={data.personal.email} onChange={v => updatePersonal('email', v)} />
-                                <Input label="Phone" value={data.personal.phone} onChange={v => updatePersonal('phone', v)} />
+                                <Input label="Email" value={data.personal.email} onChange={(v: string) => updatePersonal('email', v)} />
+                                <Input label="Phone" value={data.personal.phone} onChange={(v: string) => updatePersonal('phone', v)} />
                             </div>
-                            <Input label="Location" value={data.personal.location} onChange={v => updatePersonal('location', v)} />
-                            <Input label="Website / LinkedIn" value={data.personal.website} onChange={v => updatePersonal('website', v)} />
-                            <TextArea label="Professional Summary" value={data.personal.summary} onChange={v => updatePersonal('summary', v)} />
+                            <Input label="Location" value={data.personal.location} onChange={(v: string) => updatePersonal('location', v)} />
+                            <Input label="Website / LinkedIn" value={data.personal.website} onChange={(v: string) => updatePersonal('website', v)} />
+                            <TextArea label="Professional Summary" value={data.personal.summary} onChange={(v: string) => updatePersonal('summary', v)} />
                         </div>
                     </Section>
 
@@ -251,23 +251,23 @@ export function ResumeBuilder() {
                                         <Trash2 className="w-4 h-4" />
                                     </button>
                                     <div className="space-y-3">
-                                        <Input label="Company" value={exp.company} onChange={v => {
+                                        <Input label="Company" value={exp.company} onChange={(v: string) => {
                                             const newExp = [...data.experience];
                                             newExp[idx].company = v;
                                             setData(prev => ({ ...prev, experience: newExp }));
                                         }} />
-                                        <Input label="Role" value={exp.role} onChange={v => {
+                                        <Input label="Role" value={exp.role} onChange={(v: string) => {
                                             const newExp = [...data.experience];
                                             newExp[idx].role = v;
                                             setData(prev => ({ ...prev, experience: newExp }));
                                         }} />
                                         <div className="grid grid-cols-2 gap-3">
-                                            <Input label="Start Date" type="month" value={exp.startDate} onChange={v => {
+                                            <Input label="Start Date" type="month" value={exp.startDate} onChange={(v: string) => {
                                                 const newExp = [...data.experience];
                                                 newExp[idx].startDate = v;
                                                 setData(prev => ({ ...prev, experience: newExp }));
                                             }} />
-                                            <Input label="End Date" type="month" value={exp.endDate} disabled={exp.current} onChange={v => {
+                                            <Input label="End Date" type="month" value={exp.endDate} disabled={exp.current} onChange={(v: string) => {
                                                 const newExp = [...data.experience];
                                                 newExp[idx].endDate = v;
                                                 setData(prev => ({ ...prev, experience: newExp }));
@@ -286,7 +286,7 @@ export function ResumeBuilder() {
                                             />
                                             I currently work here
                                         </label>
-                                        <TextArea label="Description (• for bullets)" value={exp.description} onChange={v => {
+                                        <TextArea label="Description (• for bullets)" value={exp.description} onChange={(v: string) => {
                                             const newExp = [...data.experience];
                                             newExp[idx].description = v;
                                             setData(prev => ({ ...prev, experience: newExp }));
@@ -335,23 +335,23 @@ export function ResumeBuilder() {
                                         <Trash2 className="w-4 h-4" />
                                     </button>
                                     <div className="space-y-3">
-                                        <Input label="School / University" value={edu.school} onChange={v => {
+                                        <Input label="School / University" value={edu.school} onChange={(v: string) => {
                                             const newEdu = [...data.education];
                                             newEdu[idx].school = v;
                                             setData(prev => ({ ...prev, education: newEdu }));
                                         }} />
-                                        <Input label="Degree / Major" value={edu.degree} onChange={v => {
+                                        <Input label="Degree / Major" value={edu.degree} onChange={(v: string) => {
                                             const newEdu = [...data.education];
                                             newEdu[idx].degree = v;
                                             setData(prev => ({ ...prev, education: newEdu }));
                                         }} />
                                         <div className="grid grid-cols-2 gap-3">
-                                            <Input label="Start Date" type="month" value={edu.startDate} onChange={v => {
+                                            <Input label="Start Date" type="month" value={edu.startDate} onChange={(v: string) => {
                                                 const newEdu = [...data.education];
                                                 newEdu[idx].startDate = v;
                                                 setData(prev => ({ ...prev, education: newEdu }));
                                             }} />
-                                            <Input label="End Date" type="month" value={edu.endDate} onChange={v => {
+                                            <Input label="End Date" type="month" value={edu.endDate} onChange={(v: string) => {
                                                 const newEdu = [...data.education];
                                                 newEdu[idx].endDate = v;
                                                 setData(prev => ({ ...prev, education: newEdu }));
@@ -390,7 +390,7 @@ export function ResumeBuilder() {
                         <TextArea
                             label="Skills (Comma separated)"
                             value={data.skills}
-                            onChange={v => setData(prev => ({ ...prev, skills: v }))}
+                            onChange={(v: string) => setData(prev => ({ ...prev, skills: v }))}
                             placeholder="Design, React, Typescript..."
                         />
                     </Section>
@@ -692,6 +692,78 @@ const TemplateMinimal = ({ data }: { data: ResumeData }) => (
                     ))}
                 </div>
             </section>
+        </div>
+    </div>
+);
+
+const TemplateProfessional = ({ data }: { data: ResumeData }) => (
+    <div className="p-12 h-full flex flex-col border-l-8" style={{ borderColor: data.meta.color }}>
+        <h1 className="text-4xl font-bold uppercase tracking-wider mb-2 text-slate-800">{data.personal.fullName}</h1>
+        <p className="text-xl font-medium text-slate-600 mb-8">{data.personal.title}</p>
+
+        <div className="flex gap-6 mb-8 text-sm font-bold text-slate-500 border-y py-4 border-slate-200">
+            {data.personal.email && <span>{data.personal.email}</span>}
+            {data.personal.phone && <span>{data.personal.phone}</span>}
+            {data.personal.location && <span>{data.personal.location}</span>}
+        </div>
+
+        <div className="space-y-8">
+            <section>
+                <h3 className="font-bold text-slate-900 border-b-2 border-slate-800 mb-4 pb-1 uppercase text-sm">Summary</h3>
+                <p className="text-slate-700 leading-relaxed">{data.personal.summary}</p>
+            </section>
+            <section>
+                <h3 className="font-bold text-slate-900 border-b-2 border-slate-800 mb-4 pb-1 uppercase text-sm">Experience</h3>
+                <div className="space-y-6">
+                    {data.experience.map(exp => (
+                        <div key={exp.id}>
+                            <div className="flex justify-between font-bold text-slate-900 mb-1">
+                                <span>{exp.company}</span>
+                                <span>{exp.startDate} - {exp.current ? 'Present' : exp.endDate}</span>
+                            </div>
+                            <div className="text-sm font-semibold text-slate-600 mb-2">{exp.role}</div>
+                            <p className="text-sm text-slate-700">{exp.description}</p>
+                        </div>
+                    ))}
+                </div>
+            </section>
+        </div>
+    </div>
+);
+
+const TemplateCreative = ({ data }: { data: ResumeData }) => (
+    <div className="h-full flex flex-col bg-slate-50 p-8 border-4 border-double" style={{ borderColor: data.meta.color }}>
+        <div className="text-center mb-10">
+            <h1 className="text-5xl font-black mb-2" style={{ color: data.meta.color }}>{data.personal.fullName}</h1>
+            <p className="text-xl font-medium uppercase tracking-[0.2em] text-slate-400">{data.personal.title}</p>
+        </div>
+        <div className="grid grid-cols-2 gap-12 flex-1">
+            <div className="space-y-8">
+                <section>
+                    <h3 className="font-black text-2xl mb-4 text-slate-800">About Me</h3>
+                    <p className="text-lg leading-relaxed text-slate-600 font-medium">{data.personal.summary}</p>
+                </section>
+                <section>
+                    <h3 className="font-black text-2xl mb-4 text-slate-800">Contact</h3>
+                    <div className="space-y-2 text-slate-600 font-medium">
+                        <div className="block">{data.personal.email}</div>
+                        <div className="block">{data.personal.phone}</div>
+                        <div className="block">{data.personal.location}</div>
+                    </div>
+                </section>
+            </div>
+            <div className="space-y-8 text-right">
+                <section>
+                    <h3 className="font-black text-2xl mb-4 text-slate-800">Experience</h3>
+                    {data.experience.map(exp => (
+                        <div key={exp.id} className="mb-6">
+                            <h4 className="font-bold text-lg">{exp.company}</h4>
+                            <div className="text-slate-500 mb-2">{exp.role}</div>
+                            <p className="text-sm text-slate-600">{exp.description}</p>
+                        </div>
+                    ))}
+                </section>
+            </div>
         </div>
     </div>
 );

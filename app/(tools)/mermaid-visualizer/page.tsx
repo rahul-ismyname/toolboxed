@@ -1,5 +1,6 @@
 import { MermaidEditor } from '@/components/tools/design/MermaidEditor';
 import { Metadata } from 'next';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
     title: 'Mermaid.js Visualizer | Text to Diagram Online',
@@ -19,7 +20,9 @@ export default function MermaidPage() {
                 </p>
             </div>
 
-            <MermaidEditor />
+            <Suspense fallback={<div className="text-center py-12">Loading Editor...</div>}>
+                <MermaidEditor />
+            </Suspense>
         </div>
     );
 }
