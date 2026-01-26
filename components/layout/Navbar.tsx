@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { tools } from '@/config/tools';
 import { Menu, X, Rocket, Grid } from 'lucide-react';
 import { useState } from 'react';
 import { InlineSearch } from '@/components/ui/InlineSearch';
@@ -14,13 +13,14 @@ export function Navbar() {
         <nav className="sticky top-0 z-50 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16">
-                    <div className="flex items-center">
+                    <div className="flex items-center gap-8">
                         <Link href="/" className="flex items-center gap-2.5 font-bold text-lg text-slate-900">
                             <div className="bg-slate-900 dark:bg-emerald-500 text-white p-1.5 rounded-md">
                                 <Rocket className="w-4 h-4" />
                             </div>
                             <span className="tracking-tight text-slate-900 dark:text-white">Toolboxed</span>
                         </Link>
+
                     </div>
 
                     {/* Desktop Menu - Simplified */}

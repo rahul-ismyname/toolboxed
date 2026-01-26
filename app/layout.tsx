@@ -10,14 +10,14 @@ const appUrl = 'https://toolboxed.online';
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
   title: {
-    default: 'Toolboxed - Professional Utility Tools',
+    default: 'Toolboxed - All-in-One Professional Online Utility Tools',
     template: '%s | Toolboxed',
   },
-  description: 'Boost your productivity with Toolboxed—a high-performance suite of free utility tools. Features a BMI calculator, secure password generator, currency converter, JSON formatter, and developer-centric utilities.',
+  description: 'Boost your productivity with Toolboxed—a high-performance, secure suite of free online utility tools. Features a BMI calculator, password generator, unit converter, and more developer-centric web utilities.',
   keywords: [
-    'utility tools', 'developer tools', 'free online tools', 'calculator', 'converter',
-    'json formatter', 'bmi calculator online', 'qr code generator', 'currency converter live',
-    'unix timestamp converter', 'secure password generator', 'color converter', 'unit converter'
+    'online utility tools', 'developer web utilities', 'free productivity tools', 'BMI calculator online',
+    'secure password generator', 'currency converter live', 'JSON formatter tool', 'online QR code generator',
+    'unit converter web', 'Toolboxed online'
   ],
   authors: [{ name: 'Toolboxed Team' }],
   creator: 'Toolboxed',
@@ -63,20 +63,33 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'SoftwareApplication',
-    name: 'Toolboxed',
-    image: `${appUrl}/og-image.png`,
-    description: 'A suite of high-performance utility tools for developers and creators.',
-    applicationCategory: 'BusinessApplication',
-    operatingSystem: 'Any',
-    offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'USD',
+  const structuredData = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      'name': 'Toolboxed',
+      'url': appUrl,
+      'potentialAction': {
+        '@type': 'SearchAction',
+        'target': `${appUrl}/?q={search_term_string}`,
+        'query-input': 'required name=search_term_string'
+      }
     },
-  };
+    {
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      'name': 'Toolboxed',
+      'image': `${appUrl}/og-image.png`,
+      'description': 'A suite of high-performance utility tools for developers and creators.',
+      'applicationCategory': 'BusinessApplication',
+      'operatingSystem': 'Any',
+      'offers': {
+        '@type': 'Offer',
+        'price': '0',
+        'priceCurrency': 'USD',
+      },
+    }
+  ];
 
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
@@ -92,7 +105,7 @@ export default function RootLayout({
         >
           <script
             type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
           />
           {children}
         </ThemeProvider>

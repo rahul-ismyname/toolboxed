@@ -44,7 +44,13 @@ import {
     ImagePlus,
     Timer,
     LucideIcon,
-    Wallet
+    Wallet,
+    Database,
+    ScanSearch,
+    Workflow,
+    Layout,
+    Network,
+    Columns
 } from 'lucide-react';
 
 export type ToolCategory = 'Health' | 'Developer' | 'Business' | 'Utility' | 'Design';
@@ -61,6 +67,62 @@ export interface Tool {
 
 export const tools: Tool[] = [
     {
+        slug: 'landing-page-builder',
+        name: 'Visual Landing Page Builder',
+        description: 'Design professional SaaS landing pages visually and export the code instantly.',
+        category: 'Business',
+        icon: Layout,
+        path: '/landing-page-builder'
+    },
+    {
+        slug: 'mind-map',
+        name: 'Mind Map Builder',
+        description: 'Infinite canvas for brainstorming, planning, and organizing ideas.',
+        category: 'Design',
+        icon: Network,
+        path: '/mind-map'
+    },
+    {
+        slug: 'kanban-board',
+        name: 'Project Kanban Board',
+        description: 'Manage tasks and projects with a drag-and-drop sticky board.',
+        category: 'Business',
+        icon: Columns,
+        path: '/kanban-board'
+    },
+    {
+        slug: 'resume-builder',
+        name: 'Ultimate Resume Builder',
+        description: 'Build professional, ATS-friendly resumes with live preview and PDF export.',
+        category: 'Business',
+        icon: FileText,
+        path: '/resume-builder'
+    },
+    {
+        slug: 'sql-formatter',
+        name: 'SQL Formatter',
+        description: 'Beautify and validate SQL queries for multiple dialects (MySQL, Postgres, etc).',
+        category: 'Developer',
+        icon: Database,
+        path: '/sql-formatter'
+    },
+    {
+        slug: 'regex-tester',
+        name: 'RegEx Tester',
+        description: 'Test and debug regular expressions with real-time highlighting.',
+        category: 'Developer',
+        icon: ScanSearch,
+        path: '/regex-tester'
+    },
+    {
+        slug: 'mermaid-visualizer',
+        name: 'Mermaid Visualizer',
+        description: 'Create flowcharts, sequence diagrams, and more with text.',
+        category: 'Design',
+        icon: Workflow,
+        path: '/mermaid-visualizer'
+    },
+    {
         slug: 'box-shadow-generator',
         name: 'Box Shadow Generator',
         description: 'Create layered, smooth CSS box-shadows with a visual editor.',
@@ -70,8 +132,8 @@ export const tools: Tool[] = [
     },
     {
         slug: 'image-converter',
-        name: 'Image Converter',
-        description: 'Convert images to WebP, PNG, or JPG purely in your browser.',
+        name: 'Image Converter & Compressor',
+        description: 'Convert and compress images (WebP, PNG, JPG) to reduce file size.',
         category: 'Utility',
         icon: ImagePlus,
         path: '/image-converter'

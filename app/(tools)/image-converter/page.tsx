@@ -5,9 +5,9 @@ import { BackButton } from '@/components/shared/BackButton';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'Image Converter | Convert Images to WebP, PNG, JPG Online',
-    description: 'Free online image converter. Convert PNG and JPG files to high-efficiency WebP format directly in your browser without uploading.',
-    keywords: ['image converter', 'webp converter', 'png to jpg', 'jpg to webp', 'client side image converter'],
+    title: 'Image Converter & Compressor | Compress PNG, JPG, WebP Online',
+    description: 'Free online image compressor and converter. Reduce file size of PNG and JPG images by up to 80% without quality loss. 100% private & browser-based.',
+    keywords: ['compress image', 'reduce image size', 'image converter', 'webp converter', 'png to jpg', 'jpg to webp'],
     alternates: {
         canonical: '/image-converter',
     },
@@ -16,15 +16,15 @@ export const metadata: Metadata = {
 const faqItems = [
     {
         question: "Is my image uploaded?",
-        answer: "No. All conversion happens locally in your browser using the HTML5 Canvas API. Your photos never leave your device."
+        answer: "No. All compression and conversion happens locally in your browser using the HTML5 Canvas API. Your photos never leave your device."
+    },
+    {
+        question: "How does compression work?",
+        answer: "We use smart lossy compression algorithms (like WebP) to reduce file size significantly while maintaining visible quality."
     },
     {
         question: "Why convert to WebP?",
         answer: "WebP images are typically 25-30% smaller than comparable PNGs or JPEGs, making your website load faster."
-    },
-    {
-        question: "Is quality lost?",
-        answer: "You can control the quality setting. Converting to lossless formats like PNG preserves quality, while JPEG and WebP allow you to trade quality for file size."
     }
 ];
 
@@ -34,12 +34,12 @@ const howToSteps: Step[] = [
         description: "Drag and drop your image file into the upload box."
     },
     {
-        title: "Choose Format",
-        description: "Select your desired output format (WebP, JPEG, or PNG) and adjust quality if needed."
+        title: "Adjust Compression",
+        description: "Choose your format (WebP is best for size) and use the Quality slider to reduce file size."
     },
     {
         title: "Download",
-        description: "Click 'Convert & Download' to save the new file instantly."
+        description: "Click 'Download' to save the optimized file instantly."
     }
 ];
 
@@ -50,10 +50,10 @@ export default function ConverterPage() {
             <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-12">
                 <div className="text-center mb-10">
                     <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-slate-100 mb-4">
-                        Image Converter
+                        Image Converter & Compressor
                     </h1>
                     <p className="text-xl text-slate-500 dark:text-slate-400">
-                        Secure, private, client-side format conversion.
+                        Securely compress and convert images directly in your browser.
                     </p>
                 </div>
 
