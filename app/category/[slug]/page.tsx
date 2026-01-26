@@ -7,7 +7,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 interface CategoryPageProps {
-    params: { slug: string };
+    params: Promise<{ slug: string }>;
 }
 
 export async function generateStaticParams() {
@@ -16,22 +16,24 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
-    const category = params.slug.charAt(0).toUpperCase() + params.slug.slice(1);
+    const { slug } = await params;
+    const category = slug.charAt(0).toUpperCase() + slug.slice(1);
 
     return {
         title: `Professional ${category} Tools | Free Online Utilities`,
         description: `Explore our curated selection of free, high-performance ${category} tools. No registration required, 100% private, and browser-based utilities for modern professionals.`,
         keywords: [`${category} tools`, `online ${category} utilities`, `free ${category} software`, 'Toolboxed'],
         alternates: {
-            canonical: `/category/${params.slug}`,
+            canonical: `/category/${slug}`,
         },
     };
 }
 
-export default function CategoryPage({ params }: CategoryPageProps) {
-    const categoryName = params.slug.charAt(0).toUpperCase() + params.slug.slice(1);
+export default async function CategoryPage({ params }: CategoryPageProps) {
+    const { slug } = await params;
+    const categoryName = slug.charAt(0).toUpperCase() + slug.slice(1);
     const categoryTools = tools.filter(
-        t => t.category.toLowerCase() === params.slug.toLowerCase()
+        t => t.category.toLowerCase() === slug.toLowerCase()
     );
 
     if (categoryTools.length === 0) {
