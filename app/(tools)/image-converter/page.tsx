@@ -1,4 +1,4 @@
-import { ImageConverter } from '@/components/tools/media/ImageConverter';
+import { DynamicImageConverter } from '@/components/tools/DynamicTools';
 import { FaqSection } from '@/components/shared/FaqSection';
 import { HowToSection, Step } from '@/components/shared/HowToSection';
 import { BackButton } from '@/components/shared/BackButton';
@@ -57,7 +57,7 @@ export default function ConverterPage() {
                     </p>
                 </div>
 
-                <ImageConverter />
+                <DynamicImageConverter />
             </div>
 
             <HowToSection title="Using the Converter" steps={howToSteps} />

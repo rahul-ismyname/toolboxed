@@ -1,0 +1,47 @@
+'use client';
+
+import dynamic from 'next/dynamic';
+
+const Loading = ({ name, color }: { name: string, color: string }) => (
+    <div className="min-h-[500px] flex items-center justify-center bg-slate-50 dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800">
+        <div className="text-center">
+            <div className={`w-12 h-12 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4`} style={{ borderLeftColor: color, borderRightColor: color, borderBottomColor: color }}></div>
+            <p className="text-slate-500 font-medium tracking-wide">Initializing {name}...</p>
+        </div>
+    </div>
+);
+
+export const DynamicLandingPageBuilder = dynamic(
+    () => import('./business/LandingPageBuilder').then(mod => mod.LandingPageBuilder),
+    { ssr: false, loading: () => <Loading name="Landing Page Studio" color="#3b82f6" /> }
+);
+
+export const DynamicResumeBuilder = dynamic(
+    () => import('./utility/ResumeBuilder').then(mod => mod.ResumeBuilder),
+    { ssr: false, loading: () => <Loading name="Resume Studio" color="#10b981" /> }
+);
+
+export const DynamicMindMapBuilder = dynamic(
+    () => import('./design/MindMapBuilder').then(mod => mod.MindMapBuilder),
+    { ssr: false, loading: () => <Loading name="Mind Map Engine" color="#10b981" /> }
+);
+
+export const DynamicKanbanBoard = dynamic(
+    () => import('./business/KanbanBoard').then(mod => mod.KanbanBoard),
+    { ssr: false, loading: () => <Loading name="Kanban Workspace" color="#3b82f6" /> }
+);
+
+export const DynamicMermaidEditor = dynamic(
+    () => import('./design/MermaidEditor').then(mod => mod.MermaidEditor),
+    { ssr: false, loading: () => <Loading name="Diagram Visualizer" color="#3b82f6" /> }
+);
+
+export const DynamicPaintApp = dynamic(
+    () => import('./design/PaintApp').then(mod => mod.PaintApp),
+    { ssr: false, loading: () => <Loading name="Design Canvas" color="#10b981" /> }
+);
+
+export const DynamicImageConverter = dynamic(
+    () => import('./media/ImageConverter').then(mod => mod.ImageConverter),
+    { ssr: false, loading: () => <Loading name="Local Image Processor" color="#3b82f6" /> }
+);

@@ -1,4 +1,4 @@
-import { PaintApp } from '@/components/tools/design/PaintApp';
+import { DynamicPaintApp } from '@/components/tools/DynamicTools';
 import { BackButton } from '@/components/shared/BackButton';
 import { Metadata } from 'next';
 
@@ -25,7 +25,7 @@ export default function PaintPage() {
                     </p>
                 </div>
 
-                <PaintApp />
+                <DynamicPaintApp />
             </div>
         </div>
     );
