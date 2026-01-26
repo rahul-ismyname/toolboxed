@@ -50,7 +50,9 @@ import {
     Workflow,
     Layout,
     Network,
-    Columns
+    Columns,
+    Sparkles,
+    Accessibility
 } from 'lucide-react';
 
 export type ToolCategory = 'Health' | 'Developer' | 'Business' | 'Utility' | 'Design';
@@ -97,6 +99,22 @@ export const tools: Tool[] = [
         category: 'Business',
         icon: FileText,
         path: '/resume-builder'
+    },
+    {
+        slug: 'invoice-builder',
+        name: 'Professional Invoice & Proposal',
+        description: 'Build professional, branded invoices and proposals with live calculations and premium PDF patterns.',
+        category: 'Business',
+        icon: Receipt,
+        path: '/invoice-builder'
+    },
+    {
+        slug: 'pdf-master',
+        name: 'Privacy-First PDF Master',
+        description: 'Merge, split, protect, and digitally sign PDFs entirely in your browser. 100% private.',
+        category: 'Utility',
+        icon: Shield,
+        path: '/pdf-master'
     },
     {
         slug: 'sql-formatter',
@@ -489,5 +507,21 @@ export const tools: Tool[] = [
         category: 'Design',
         icon: Palette,
         path: '/paint-app'
+    },
+    {
+        slug: 'animated-patterns',
+        name: 'Animated Pattern Master',
+        description: 'Generate and animate infinite SVG patterns for modern backgrounds.',
+        category: 'Design',
+        icon: Sparkles,
+        path: '/animated-patterns'
+    },
+    {
+        slug: 'stickman-animator',
+        name: 'Stickman Animator',
+        description: 'Professional browser-based stickman animation tool with keyframes and interpolation.',
+        category: 'Design',
+        icon: Accessibility,
+        path: '/stickman-animator'
     }
 ];

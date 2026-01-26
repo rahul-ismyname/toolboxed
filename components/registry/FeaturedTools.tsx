@@ -6,11 +6,13 @@ import { Star } from 'lucide-react';
 
 // Curated list of high-value tools to feature
 const FEATURED_SLUGS = [
+    'animated-patterns',
     'landing-page-builder',
     'mind-map',
     'resume-builder',
     'kanban-board',
     'mermaid-visualizer',
+    'stickman-animator',
     'image-converter',
     'sql-formatter',
 ];

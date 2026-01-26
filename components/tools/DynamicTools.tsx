@@ -45,3 +45,22 @@ export const DynamicImageConverter = dynamic(
     () => import('./media/ImageConverter').then(mod => mod.ImageConverter),
     { ssr: false, loading: () => <Loading name="Local Image Processor" color="#3b82f6" /> }
 );
+
+export const DynamicInvoiceBuilder = dynamic(
+    () => import('./business/InvoiceBuilder').then(mod => mod.InvoiceBuilder),
+    { ssr: false, loading: () => <Loading name="Invoice Studio" color="#3b82f6" /> }
+);
+
+export const DynamicPDFMaster = dynamic(
+    () => import('./utility/PDFMaster').then(mod => mod.PDFMaster),
+    { ssr: false, loading: () => <Loading name="PDF Master" color="#ef4444" /> }
+);
+
+export const DynamicAnimatedPatternMaster = dynamic(
+    () => import('./design/AnimatedPatternMaster').then(mod => mod.AnimatedPatternMaster),
+    { ssr: false, loading: () => <Loading name="Pattern Studio" color="#6366f1" /> }
+);
+export const DynamicStickmanAnimator = dynamic(
+    () => import('./design/StickmanAnimator').then(mod => mod.StickmanAnimator),
+    { ssr: false, loading: () => <Loading name="Stickman Studio" color="#10b981" /> }
+);
