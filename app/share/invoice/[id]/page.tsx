@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getInvoice } from '@/lib/supabase';
+import { getInvoice } from '@/lib/actions';
 import { InvoiceBuilder } from '@/components/tools/business/InvoiceBuilder';
 import Link from 'next/link';
 import { ArrowRight, Sparkles } from 'lucide-react';
