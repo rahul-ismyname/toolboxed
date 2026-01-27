@@ -1,4 +1,4 @@
-import { getOriginalUrl } from '@/lib/supabase';
+import { getOriginalUrl } from '@/lib/actions';
 import { redirect, notFound } from 'next/navigation';
 
 // Update Props to reflect that params is a Promise

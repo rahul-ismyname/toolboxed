@@ -6,7 +6,7 @@ import {
     Settings2, Palette, FileText, ChevronDown, ChevronUp,
     CheckCircle2, AlertCircle, Save, Printer, Upload, Share2
 } from 'lucide-react';
-import { saveInvoice } from '@/lib/supabase';
+import { saveInvoice } from '@/lib/actions';
 
 // --- TYPES ---
 

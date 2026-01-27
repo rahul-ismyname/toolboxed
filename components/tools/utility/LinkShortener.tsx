@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createShortLink } from '@/lib/supabase';
+import { createShortLink } from '@/lib/actions';
 import { Link2, Copy, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 export default function LinkShortener() {

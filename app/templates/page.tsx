@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getPublicTemplates } from '@/lib/supabase';
+import { getPublicTemplates } from '@/lib/actions';
 import Link from 'next/link';
 import { Sparkles, ArrowRight, Copy } from 'lucide-react';
 
