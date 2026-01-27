@@ -1208,6 +1208,30 @@ const toolContentData: Record<string, ToolData> = {
         faqs: [
             { question: 'What is CMYK used for?', answer: 'CMYK is primarily used for print design, while RGB and HEX are for digital screens.' }
         ]
+    },
+    'mockup-studio': {
+        title: '3D Device Mockup Studio - Professional App Screenshot Renderer',
+        description: 'Transform your flat screenshots into stunning, photorealistic 3D device mockups. Create professional marketing materials for your apps and websites directly in your browser with real-time 3D rotation and custom environment controls.',
+        features: [
+            '**Interactive 3D Rotation**: Drag to rotate your device models in real-time with full pitch and yaw control.',
+            '**High-Fidelity Models**: Professional-grade 3D models of iPhone 15 and MacBook Pro with realistic textures and reflections.',
+            '**Custom Branding**: Adjust background colors and environment settings to match your brand identity perfectly.',
+            '**Perspective Presets**: One-click professional angles including Isometric, Frontal, and Dynamic Tilt views.',
+            '**Instant PNG Export**: Download high-resolution, pixel-perfect mockups ready for presentation or social media.'
+        ],
+        howToUse: [
+            { title: 'Upload Screenshot', description: 'Drag and drop your app or website screenshot onto the device screen area.' },
+            { title: 'Select Device', description: 'Toggle between the iPhone and MacBook models based on your project needs.' },
+            { title: 'Adjust Perspective', description: 'Use the on-canvas drag interaction or the precise sliders to find the perfect angle.' },
+            { title: 'Customize Background', description: 'Pick a curated background color or use the color picker for a custom environment.' },
+            { title: 'Download Result', description: 'Click "Download Mockup" to save your professional 3D render as a high-quality PNG.' }
+        ],
+        faqs: [
+            { question: 'Is the Mockup Studio free to use?', answer: 'Yes, like all tools on Toolboxed, the 3D Mockup Studio is 100% free with no watermarks or hidden costs.' },
+            { question: 'Do my images get uploaded to a server?', answer: 'No! All image processing and 3D rendering happen locally in your browser using client-side technology. Your data stays private.' },
+            { question: 'What image formats are supported?', answer: 'You can upload PNG, JPG, and WebP images. For best results, use screenshots that match the aspect ratio of the target device.' },
+            { question: 'Can I use these mockups commercially?', answer: 'Absolutely! The mockups you generate are yours to use in pitch decks, social media, marketing campaigns, or personal portfolios.' }
+        ]
     }
 };
 

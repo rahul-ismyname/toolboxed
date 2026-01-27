@@ -1,12 +1,15 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
-    Layout, Type, Image as ImageIcon, MousePointer2, Move, CreditCard,
-    MessageSquare, HelpCircle, Phone, Code, Eye, Monitor, Smartphone,
-    Laptop, Settings2, Plus, Trash2, ArrowUp, ArrowDown, ChevronUp,
-    ChevronDown, Layers, Box, Check, Copy, X, LayoutTemplate,
-    AlignLeft, AlignCenter, AlignRight
+    Layout, Plus, Trash2, Download, Eye, Maximize, Minimize,
+    RotateCcw, Copy, Check, Share2, Settings, Smartphone, Tablet, Monitor,
+    ChevronUp, ChevronDown, MoveUp, MoveDown, Layers, Palette,
+    LayoutTemplate, Image as ImageIcon, Video, Star, FileText,
+    HelpCircle, Minus, ExternalLink, Mail, Phone, MapPin,
+    Facebook, Twitter, Instagram, Linkedin, Github, MessageSquare,
+    Zap, Shield, Globe, Clock, CheckCircle2, AlertCircle, ArrowRight,
+    Box, Laptop, Code, X, AlignLeft, AlignCenter, AlignRight, Type, MousePointer2, CreditCard
 } from 'lucide-react';
 
 // --- TYPES ---
@@ -208,8 +211,6 @@ export function LandingPageBuilder() {
     };
 
     const getInitialData = (type: SectionType) => {
-        const baseStyle = { bg: 'bg-transparent', padding: 'py-20', textAlign: 'center' };
-
         switch (type) {
             case 'hero': return {
                 title: 'Build faster with our premium components',
@@ -267,6 +268,8 @@ export function LandingPageBuilder() {
     // --- RENDERERS ---
 
     const renderPreview = () => {
+        const isDark = globalSettings.backgroundColor.includes('slate-900') || globalSettings.backgroundColor.includes('black');
+        const textColor = isDark ? 'text-white' : 'text-slate-900';
         return (
             <div
                 style={{
@@ -301,9 +304,9 @@ export function LandingPageBuilder() {
 
 
     return (
-        <div className="flex bg-slate-50 dark:bg-slate-950 min-h-[800px] border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+        <div className="flex flex-col lg:flex-row bg-slate-50 dark:bg-slate-950 min-h-[800px] border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
             {/* Sidebar Left: Components & Blocks */}
-            <div className="w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col">
+            <div className="w-full lg:w-72 bg-white dark:bg-slate-900 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 flex flex-col order-2 lg:order-1 h-72 lg:h-auto">
                 <div className="p-4 border-b border-slate-200 dark:border-slate-800">
                     <h3 className="font-bold flex items-center gap-2 text-slate-800 dark:text-white">
                         <Layers size={18} className="text-blue-500" />
@@ -332,17 +335,17 @@ export function LandingPageBuilder() {
             </div>
 
             {/* Main Canvas Area */}
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden order-1 lg:order-2 h-[500px] lg:h-auto border-b lg:border-b-0 border-slate-200 dark:border-slate-800">
                 {/* Canvas Toolbar */}
-                <div className="h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 flex items-center justify-between">
-                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                <div className="h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 md:px-6 flex items-center justify-between gap-2 overflow-x-auto">
+                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg flex-shrink-0">
                         <button onClick={() => setViewMode('desktop')} className={`p-1.5 rounded-md transition-all ${viewMode === 'desktop' ? 'bg-white dark:bg-slate-700 shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}><Laptop size={18} /></button>
                         <button onClick={() => setViewMode('tablet')} className={`p-1.5 rounded-md transition-all ${viewMode === 'tablet' ? 'bg-white dark:bg-slate-700 shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}><Laptop size={18} className="rotate-90" /></button>
                         <button onClick={() => setViewMode('mobile')} className={`p-1.5 rounded-md transition-all ${viewMode === 'mobile' ? 'bg-white dark:bg-slate-700 shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}><Smartphone size={18} /></button>
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex-shrink-0">
                             <button
                                 onClick={() => setShowTemplates(true)}
                                 className={`p-2 rounded-lg transition-all ${showTemplates ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
@@ -356,37 +359,37 @@ export function LandingPageBuilder() {
                                 className={`p-2 rounded-lg transition-all ${showGlobalSettings ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
                                 title="Global Settings"
                             >
-                                <Settings2 size={18} />
+                                <Settings size={18} />
                             </button>
                         </div>
-                        <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2"></div>
+                        <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2 hidden sm:block"></div>
                         <button
                             onClick={() => setIsPreviewing(true)}
-                            className="flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-bold hover:bg-slate-50 transition-colors"
+                            className="flex items-center gap-2 px-3 sm:px-4 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-bold hover:bg-slate-50 transition-colors whitespace-nowrap"
                         >
                             <Monitor size={16} />
-                            Preview
+                            <span className="hidden sm:inline">Preview</span>
                         </button>
                         <button
                             onClick={() => setIsExporting(true)}
-                            className="flex items-center gap-2 px-4 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity"
+                            className="flex items-center gap-2 px-3 sm:px-4 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity whitespace-nowrap"
                         >
                             <Code size={16} />
-                            Get Code
+                            <span className="hidden sm:inline">Get Code</span>
                         </button>
                     </div>
                 </div>
 
-                <div className="flex-1 p-8 overflow-y-auto scrollbar-hide bg-slate-100/50 dark:bg-slate-950/50">
+                <div className="flex-1 p-4 md:p-8 overflow-y-auto scrollbar-hide bg-slate-100/50 dark:bg-slate-950/50">
                     {renderPreview()}
                 </div>
             </div>
 
             {/* Sidebar Right: Active Section Props */}
-            <div className="w-80 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex flex-col">
+            <div className="w-full lg:w-80 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex flex-col order-3 h-72 lg:h-auto">
                 <div className="p-4 border-b border-slate-200 dark:border-slate-800">
                     <h3 className="font-bold flex items-center gap-2 text-slate-800 dark:text-white">
-                        <Settings2 size={18} className="text-blue-500" />
+                        <Settings size={18} className="text-blue-500" />
                         Settings
                     </h3>
                 </div>

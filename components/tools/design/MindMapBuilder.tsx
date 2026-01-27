@@ -276,7 +276,7 @@ export function MindMapBuilder() {
 
             {/* Toolbar */}
             <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl rounded-full px-4 py-2 flex items-center gap-2">
-                <div className="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-200 mr-4 border-r border-slate-200 dark:border-slate-800 pr-4">
+                <div className="hidden md:flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-200 mr-4 border-r border-slate-200 dark:border-slate-800 pr-4">
                     <Network className="w-4 h-4 text-emerald-500" />
                     MindMap
                 </div>

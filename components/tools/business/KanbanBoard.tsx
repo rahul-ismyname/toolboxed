@@ -226,14 +226,14 @@ export function KanbanBoard() {
             </div>
 
             {/* Board Area */}
-            <div className="flex-1 overflow-x-auto overflow-y-hidden p-6">
-                <div className="flex gap-6 h-full min-w-max">
+            <div className="flex-1 overflow-x-auto overflow-y-hidden p-4 md:p-6 snap-x snap-mandatory">
+                <div className="flex gap-4 md:gap-6 h-full min-w-max">
                     {columns.map(col => (
                         <div
                             key={col.id}
                             onDragOver={onDragOver}
                             onDrop={(e) => onDrop(e, col.id)}
-                            className={`w-80 flex flex-col rounded-2xl border border-slate-200 dark:border-slate-800 ${col.color} bg-opacity-50 transition-colors`}
+                            className={`w-[85vw] md:w-80 flex flex-col rounded-2xl border border-slate-200 dark:border-slate-800 ${col.color} bg-opacity-50 transition-colors snap-center`}
                         >
                             {/* Column Header */}
                             <div className="p-4 flex items-center justify-between font-bold text-slate-700 dark:text-slate-200">

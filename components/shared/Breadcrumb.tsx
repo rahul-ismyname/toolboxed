@@ -7,6 +7,7 @@ interface BreadcrumbProps {
 }
 
 export function Breadcrumb({ category, name }: BreadcrumbProps) {
+    const appUrl = 'https://www.toolboxed.online';
     const breadcrumbLd = {
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
@@ -15,13 +16,13 @@ export function Breadcrumb({ category, name }: BreadcrumbProps) {
                 '@type': 'ListItem',
                 'position': 1,
                 'name': 'Home',
-                'item': 'https://toolboxed.online'
+                'item': appUrl
             },
             ...(category ? [{
                 '@type': 'ListItem',
                 'position': 2,
                 'name': category,
-                'item': `https://toolboxed.online/category/${category.toLowerCase()}`
+                'item': `${appUrl}/category/${category.toLowerCase()}`
             }] : []),
             {
                 '@type': 'ListItem',

@@ -1,24 +1,14 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
-    Settings,
     Play,
     Pause,
     Copy,
     Download,
-    RefreshCw,
-    Palette,
     Maximize2,
-    Minimize2,
-    Code,
     Check,
     Zap,
-    Grid,
-    Circle,
-    Activity,
-    Box,
-    Hash,
     Share2
 } from 'lucide-react';
 
@@ -160,6 +150,7 @@ export function AnimatedPatternMaster() {
     });
 
     const [copied, setCopied] = useState(false);
+    const [activeTab, setActiveTab] = useState<'design' | 'preview'>('design');
     const [viewMode, setViewMode] = useState<'preview' | 'code'>('preview');
 
     const { width, height } = useMemo(() => ({
@@ -192,8 +183,7 @@ export function AnimatedPatternMaster() {
         );
     }, [config, width, height]);
 
-    const cssCode = `background-color: ${config.bgColor};
-background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cdefs%3E%3Cpattern id='p' x='0' y='0' width='${width}' height='${height}' patternUnits='userSpaceOnUse'%3E${encodeURIComponent('<path d="..." fill="none" stroke="' + config.color + '" />')}%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23p)'/%3E%3C/svg%3E");`;
+    const cssCode = `background-color: ${config.bgColor};\nbackground-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cdefs%3E%3Cpattern id='p' x='0' y='0' width='${width}' height='${height}' patternUnits='userSpaceOnUse'%3E${encodeURIComponent('<path d="..." fill="none" stroke="' + config.color + '" />')}%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23p)'/%3E%3C/svg%3E");`;
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
@@ -202,16 +192,33 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
     };
 
     return (
-        <div className="flex flex-col lg:flex-row h-full min-h-[750px] bg-slate-50 dark:bg-slate-950 rounded-[2.5rem] overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl">
+        <div className="flex flex-col lg:flex-row h-full min-h-[600px] lg:min-h-[750px] bg-slate-50 dark:bg-slate-950 rounded-[1.5rem] lg:rounded-[2.5rem] overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl relative">
+
+            {/* Mobile Tab Switcher */}
+            <div className="lg:hidden flex p-2 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
+                <button
+                    onClick={() => setActiveTab('design')}
+                    className={`flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === 'design' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400'}`}
+                >
+                    Design
+                </button>
+                <button
+                    onClick={() => setActiveTab('preview')}
+                    className={`flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === 'preview' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400'}`}
+                >
+                    Preview
+                </button>
+            </div>
+
             {/* Sidebar */}
-            <div className="w-full lg:w-[420px] p-10 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 overflow-y-auto custom-scrollbar">
-                <div className="flex items-center gap-4 mb-10">
-                    <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-xl shadow-indigo-500/20">
-                        <Zap className="w-6 h-6 text-white" />
+            <div className={`w-full lg:w-[420px] p-6 lg:p-10 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 overflow-y-auto custom-scrollbar ${activeTab === 'design' ? 'block' : 'hidden lg:block'}`}>
+                <div className="flex items-center gap-4 mb-8 lg:mb-10">
+                    <div className="p-2.5 lg:p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-xl shadow-indigo-500/20">
+                        <Zap className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Pattern Studio</h1>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Infinite SVG Engine</p>
+                        <h1 className="text-xl lg:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Pattern Studio</h1>
+                        <p className="text-[9px] lg:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Infinite SVG Engine</p>
                     </div>
                 </div>
 
@@ -342,7 +349,7 @@ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
             </div>
 
             {/* Main Preview Container */}
-            <div className="flex-1 flex flex-col relative">
+            <div className={`flex-1 flex flex-col relative ${activeTab === 'preview' ? 'block' : 'hidden lg:flex'}`}>
                 {/* Top bar over preview */}
                 <div className="absolute top-8 left-8 right-8 z-20 flex items-center justify-between pointer-events-none">
                     <div className="flex gap-2 pointer-events-auto">

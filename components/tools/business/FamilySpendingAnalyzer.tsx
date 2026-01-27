@@ -257,7 +257,7 @@ export default function FamilySpendingAnalyzer() {
         <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
 
             {/* Navigation Tabs */}
-            <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-1 overflow-x-auto">
+            <div className="flex gap-1 lg:gap-2 border-b border-slate-200 dark:border-slate-800 pb-1 overflow-x-auto no-scrollbar">
                 {[
                     { id: 'dashboard', label: 'Dashboard', icon: PieChart },
                     { id: 'history', label: 'Transactions', icon: FileText },
@@ -267,34 +267,34 @@ export default function FamilySpendingAnalyzer() {
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${activeTab === tab.id
-                            ? "bg-white dark:bg-slate-900 border-x border-t border-slate-200 dark:border-slate-800 text-blue-600 dark:text-blue-400 relative -mb-1 pb-3"
+                        className={`flex items-center gap-2 px-3 lg:px-4 py-2 rounded-t-lg text-xs lg:text-sm font-medium transition-colors shrink-0 whitespace-nowrap ${activeTab === tab.id
+                            ? "bg-white dark:bg-slate-900 border-x border-t border-slate-200 dark:border-slate-800 text-blue-600 dark:text-blue-400 relative -mb-1 pb-3 lg:pb-3"
                             : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                             }`}
                     >
-                        <tab.icon className="w-4 h-4" />
+                        <tab.icon className="w-3.5 h-3.5 lg:w-4 h-4" />
                         {tab.label}
                     </button>
                 ))}
             </div>
 
             {activeTab === 'dashboard' && (
-                <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+                <div className="space-y-6 lg:space-y-8 animate-in slide-in-from-bottom-4 duration-500">
                     {/* Header Stats */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
                         {/* Income Card */}
-                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 lg:p-6 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
                             <div className="flex justify-between items-start mb-4">
                                 <div className="w-full">
-                                    <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Monthly Income</h3>
+                                    <h3 className="text-slate-500 dark:text-slate-400 text-xs lg:text-sm font-medium mb-1">Monthly Income</h3>
                                     <div className="flex items-center gap-1">
-                                        <span className="text-2xl font-bold text-slate-900 dark:text-white">{currency.symbol}</span>
+                                        <span className="text-xl lg:text-2xl font-bold text-slate-900 dark:text-white">{currency.symbol}</span>
                                         <input
                                             type="number"
                                             value={income || ""}
                                             onChange={(e) => setIncome(Number(e.target.value))}
                                             placeholder="0"
-                                            className="bg-transparent text-2xl font-bold text-slate-900 dark:text-white outline-none w-full placeholder:text-slate-300 dark:placeholder:text-slate-700 font-mono"
+                                            className="bg-transparent text-xl lg:text-2xl font-bold text-slate-900 dark:text-white outline-none w-full placeholder:text-slate-300 dark:placeholder:text-slate-700 font-mono"
                                         />
                                     </div>
                                 </div>
@@ -568,42 +568,42 @@ export default function FamilySpendingAnalyzer() {
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                    <div className="overflow-x-auto no-scrollbar -mx-6 px-6 lg:mx-0 lg:px-0">
+                        <table className="w-full text-left border-collapse min-w-[600px] lg:min-w-0">
                             <thead>
                                 <tr className="border-b border-slate-200 dark:border-slate-800">
-                                    <th className="pb-4 pl-4 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Date</th>
-                                    <th className="pb-4 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Description</th>
-                                    <th className="pb-4 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Category</th>
-                                    <th className="pb-4 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold text-right">Amount</th>
-                                    <th className="pb-4 pr-4 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold text-right">Actions</th>
+                                    <th className="pb-4 pl-4 text-[10px] lg:text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Date</th>
+                                    <th className="pb-4 text-[10px] lg:text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Description</th>
+                                    <th className="pb-4 text-[10px] lg:text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Category</th>
+                                    <th className="pb-4 text-[10px] lg:text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold text-right">Amount</th>
+                                    <th className="pb-4 pr-4 text-[10px] lg:text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                 {expenses.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="py-12 text-center text-slate-500 dark:text-slate-400">
+                                        <td colSpan={5} className="py-12 text-center text-slate-500 dark:text-slate-400 text-sm">
                                             No transactions yet.
                                         </td>
                                     </tr>
                                 ) : (
                                     expenses.slice().reverse().map((expense) => (
                                         <tr key={expense.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                            <td className="py-4 pl-4 text-slate-600 dark:text-slate-300 text-sm">{expense.date}</td>
-                                            <td className="py-4 text-slate-900 dark:text-white font-medium flex items-center gap-2">
-                                                {expense.name}
-                                                {expense.isRecurring && <RefreshCw className="w-3 h-3 text-slate-400" />}
+                                            <td className="py-3 lg:py-4 pl-4 text-slate-600 dark:text-slate-300 text-[10px] lg:text-sm">{expense.date}</td>
+                                            <td className="py-3 lg:py-4 text-slate-900 dark:text-white font-medium flex items-center gap-2 text-xs lg:text-sm">
+                                                <span className="truncate max-w-[120px] lg:max-w-none">{expense.name}</span>
+                                                {expense.isRecurring && <RefreshCw className="w-3 h-3 text-slate-400 shrink-0" />}
                                             </td>
-                                            <td className="py-4">
-                                                <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2.5 py-1 rounded-md text-xs font-medium border border-slate-200 dark:border-slate-700">
+                                            <td className="py-3 lg:py-4">
+                                                <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 lg:px-2.5 py-1 rounded-md text-[9px] lg:text-xs font-medium border border-slate-200 dark:border-slate-700">
                                                     {expense.category}
                                                 </span>
                                             </td>
-                                            <td className="py-4 text-right text-slate-900 dark:text-white font-mono font-medium">{formatMoney(expense.amount)}</td>
-                                            <td className="py-4 pr-4 text-right">
+                                            <td className="py-3 lg:py-4 text-right text-slate-900 dark:text-white font-mono font-medium text-xs lg:text-sm">{formatMoney(expense.amount)}</td>
+                                            <td className="py-3 lg:py-4 pr-4 text-right">
                                                 <button
                                                     onClick={() => removeExpense(expense.id)}
-                                                    className="text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                                                    className="text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors p-1.5 lg:p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>

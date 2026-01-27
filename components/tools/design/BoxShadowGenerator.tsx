@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Layers, Copy, Check, Plus, Trash2, RefreshCw } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { Layers, Copy, Check, Plus, Trash2 } from 'lucide-react';
 
 interface ShadowLayer {
     id: string;
@@ -22,11 +22,11 @@ export function BoxShadowGenerator() {
     const [boxColor, setBoxColor] = useState('#ffffff');
     const [copied, setCopied] = useState(false);
 
-    const getShadowValue = () => {
+    const getShadowValue = useCallback(() => {
         return layers.map(l =>
             `${l.inset ? 'inset ' : ''}${l.x}px ${l.y}px ${l.blur}px ${l.spread}px ${l.color}`
         ).join(', ');
-    };
+    }, [layers]);
 
     const addLayer = () => {
         setLayers([...layers, {
@@ -40,19 +40,19 @@ export function BoxShadowGenerator() {
         }]);
     };
 
-    const updateLayer = (id: string, updates: Partial<ShadowLayer>) => {
-        setLayers(layers.map(l => l.id === id ? { ...l, ...updates } : l));
-    };
+    const updateLayer = useCallback((id: string, updates: Partial<ShadowLayer>) => {
+        setLayers(current => current.map(l => l.id === id ? { ...l, ...updates } : l));
+    }, []);
 
-    const removeLayer = (id: string) => {
-        setLayers(layers.filter(l => l.id !== id));
-    };
+    const removeLayer = useCallback((id: string) => {
+        setLayers(current => current.filter(l => l.id !== id));
+    }, []);
 
-    const handleCopy = () => {
+    const handleCopy = useCallback(() => {
         navigator.clipboard.writeText(`box-shadow: ${getShadowValue()};`);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
-    };
+    }, [getShadowValue]);
 
     return (
         <div className="w-full max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
@@ -93,86 +93,98 @@ export function BoxShadowGenerator() {
                 <div className="space-y-6">
 
                     {/* Layers List */}
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 p-6 space-y-6 max-h-[600px] overflow-y-auto custom-scrollbar">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 p-4 md:p-6 space-y-4 md:space-y-6 max-h-[500px] md:max-h-[600px] overflow-y-auto custom-scrollbar">
                         <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
                             <div className="flex items-center gap-2">
                                 <Layers className="w-5 h-5 text-emerald-500" />
-                                <h3 className="font-bold text-slate-700 dark:text-slate-200">Shadow Layers</h3>
+                                <h3 className="font-bold text-slate-700 dark:text-slate-200 text-sm md:text-base">Shadow Layers</h3>
                             </div>
                             <button
                                 onClick={addLayer}
-                                className="px-3 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold rounded-lg hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors flex items-center gap-2"
+                                className="px-3 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] md:text-xs font-bold rounded-lg hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors flex items-center gap-2"
                             >
                                 <Plus className="w-3 h-3" /> Add Layer
                             </button>
                         </div>
 
-                        <div className="space-y-8">
+                        <div className="space-y-6 md:space-y-8">
                             {layers.map((layer, index) => (
                                 <div key={layer.id} className="space-y-4 relative group">
                                     <div className="flex justify-between items-center">
                                         <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Layer {index + 1}</span>
-                                        <button onClick={() => removeLayer(layer.id)} className="text-slate-300 hover:text-red-500 transition-colors p-1">
+                                        <button onClick={() => removeLayer(layer.id)} className="text-slate-300 hover:text-red-500 transition-colors p-2">
                                             <Trash2 className="w-4 h-4" />
                                         </button>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-1">
-                                            <label className="text-xs text-slate-500">X Offset ({layer.x}px)</label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between text-[10px] md:text-xs text-slate-500 font-medium">
+                                                <span>X Offset</span>
+                                                <span>{layer.x}px</span>
+                                            </div>
                                             <input
                                                 type="range" min="-100" max="100" value={layer.x}
                                                 onChange={(e) => updateLayer(layer.id, { x: Number(e.target.value) })}
-                                                className="w-full accent-emerald-500 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
+                                                className="w-full accent-emerald-500 h-2 md:h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg cursor-pointer"
                                             />
                                         </div>
-                                        <div className="space-y-1">
-                                            <label className="text-xs text-slate-500">Y Offset ({layer.y}px)</label>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between text-[10px] md:text-xs text-slate-500 font-medium">
+                                                <span>Y Offset</span>
+                                                <span>{layer.y}px</span>
+                                            </div>
                                             <input
                                                 type="range" min="-100" max="100" value={layer.y}
                                                 onChange={(e) => updateLayer(layer.id, { y: Number(e.target.value) })}
-                                                className="w-full accent-emerald-500 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
+                                                className="w-full accent-emerald-500 h-2 md:h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg cursor-pointer"
                                             />
                                         </div>
-                                        <div className="space-y-1">
-                                            <label className="text-xs text-slate-500">Blur ({layer.blur}px)</label>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between text-[10px] md:text-xs text-slate-500 font-medium">
+                                                <span>Blur</span>
+                                                <span>{layer.blur}px</span>
+                                            </div>
                                             <input
                                                 type="range" min="0" max="100" value={layer.blur}
                                                 onChange={(e) => updateLayer(layer.id, { blur: Number(e.target.value) })}
-                                                className="w-full accent-emerald-500 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
+                                                className="w-full accent-emerald-500 h-2 md:h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg cursor-pointer"
                                             />
                                         </div>
-                                        <div className="space-y-1">
-                                            <label className="text-xs text-slate-500">Spread ({layer.spread}px)</label>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between text-[10px] md:text-xs text-slate-500 font-medium">
+                                                <span>Spread</span>
+                                                <span>{layer.spread}px</span>
+                                            </div>
                                             <input
                                                 type="range" min="-50" max="50" value={layer.spread}
                                                 onChange={(e) => updateLayer(layer.id, { spread: Number(e.target.value) })}
-                                                className="w-full accent-emerald-500 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
+                                                className="w-full accent-emerald-500 h-2 md:h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg cursor-pointer"
                                             />
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex-1 flex items-center gap-2 bg-slate-50 dark:bg-slate-950 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
-                                            <div className="w-6 h-6 rounded-full border border-slate-200 shadow-sm" style={{ backgroundColor: layer.color }}></div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex-1 flex items-center gap-2 bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                                            <div className="w-6 h-6 rounded-full border border-slate-200 shadow-sm shrink-0" style={{ backgroundColor: layer.color }}></div>
                                             <input
                                                 type="text"
                                                 value={layer.color}
                                                 onChange={(e) => updateLayer(layer.id, { color: e.target.value })}
-                                                className="bg-transparent text-xs font-mono w-full outline-none text-slate-600 dark:text-slate-400"
+                                                className="bg-transparent text-[10px] md:text-xs font-mono w-full outline-none text-slate-600 dark:text-slate-400"
                                             />
                                         </div>
-                                        <label className="flex items-center gap-2 text-xs font-bold text-slate-500 cursor-pointer select-none">
+                                        <label className="flex items-center gap-2 p-2.5 px-4 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800 text-[10px] md:text-xs font-bold text-slate-500 cursor-pointer select-none">
                                             <input
                                                 type="checkbox"
                                                 checked={layer.inset}
                                                 onChange={(e) => updateLayer(layer.id, { inset: e.target.checked })}
-                                                className="rounded text-emerald-500 focus:ring-emerald-500"
+                                                className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500"
                                             />
                                             Inset
                                         </label>
                                     </div>
-                                    {index < layers.length - 1 && <div className="h-px bg-slate-100 dark:bg-slate-800 w-full mt-4"></div>}
+                                    {index < layers.length - 1 && <div className="h-px bg-slate-100 dark:bg-slate-800 w-full mt-2 md:mt-4"></div>}
                                 </div>
                             ))}
                         </div>

@@ -169,9 +169,19 @@ export function TimeBlockPlanner() {
         return `${h}:${minute === 0 ? '00' : '30'} ${ampm}`;
     };
 
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (!isDragging) return;
+        const touch = e.touches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+        const blockId = element?.getAttribute('data-block-id');
+        if (blockId) {
+            updateBlock(Number(blockId));
+        }
+    };
+
     const renderGridSection = (subsetBlocks: TimeBlock[], showCurrentTime = false) => (
         <div
-            className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden select-none relative print:shadow-none print:border print:rounded-none"
+            className="bg-white dark:bg-slate-900 rounded-2xl lg:rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden select-none relative print:shadow-none print:border print:rounded-none"
             style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
         >
             {/* Current Time Indicator */}
@@ -192,30 +202,32 @@ export function TimeBlockPlanner() {
                 );
             })()}
 
-            <div className="grid grid-cols-[60px_1fr] md:grid-cols-[80px_1fr]">
+            <div className="grid grid-cols-[50px_1fr] md:grid-cols-[80px_1fr]">
                 {/* Time Labels Column */}
                 <div className="border-r border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
                     {subsetBlocks.filter((_, i) => i % 2 === 0).map(block => (
-                        <div key={`label-${block.hour}`} className="h-24 flex items-start justify-center pt-2 text-xs font-bold text-slate-400 border-b border-transparent">
+                        <div key={`label-${block.hour}`} className="h-16 lg:h-24 flex items-start justify-center pt-2 text-[10px] lg:text-xs font-bold text-slate-400 border-b border-transparent">
                             {formatTime(block.hour, 0)}
                         </div>
                     ))}
                 </div>
 
                 {/* Paintable Area */}
-                <div>
+                <div onTouchMove={handleTouchMove}>
                     {subsetBlocks.map((block) => {
                         const category = CATEGORIES.find(c => c.id === block.categoryId);
                         return (
                             <div
                                 key={block.id}
+                                data-block-id={block.id}
                                 onMouseDown={() => handleMouseDown(block.id)}
                                 onMouseEnter={() => handleMouseEnter(block.id)}
-                                className={`h-12 border-b border-slate-50 dark:border-slate-800/50 transition-colors duration-100 cursor-n-resize flex items-center px-4 group
+                                onTouchStart={() => handleMouseDown(block.id)}
+                                className={`h-8 lg:h-12 border-b border-slate-50 dark:border-slate-800/50 transition-colors duration-100 cursor-n-resize flex items-center px-2 lg:px-4 group
                                     ${category ? category.color : 'hover:bg-slate-50 dark:hover:bg-slate-800'}
                                 `}
                             >
-                                <div className={`text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity ${category ? category.textColor : 'text-slate-400'}`}>
+                                <div className={`text-[10px] lg:text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity ${category ? category.textColor : 'text-slate-400'}`}>
                                     {formatTime(block.hour, block.minute)}
                                     {category && ` - ${category.name}`}
                                 </div>
@@ -228,58 +240,58 @@ export function TimeBlockPlanner() {
     );
 
     return (
-        <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8" onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
+        <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8" onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp} onTouchEnd={handleMouseUp}>
 
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Time Sculptor</h1>
-                    <p className="text-slate-500 dark:text-slate-400">Paint your perfect day, block by block.</p>
+                    <h1 className="text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight">Time Sculptor</h1>
+                    <p className="text-sm lg:text-base text-slate-500 dark:text-slate-400">Paint your perfect day, block by block.</p>
                 </div>
                 <div className="flex gap-2">
                     <div className="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1 print:hidden">
-                        <button onClick={() => applyTemplate('work')} className="px-3 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-indigo-500 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition-all" title="Work Day Template">
+                        <button onClick={() => applyTemplate('work')} className="px-3 py-2 text-[10px] lg:text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-indigo-500 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition-all" title="Work Day Template">
                             Work
                         </button>
-                        <button onClick={() => applyTemplate('weekend')} className="px-3 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-emerald-500 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition-all" title="Weekend Template">
+                        <button onClick={() => applyTemplate('weekend')} className="px-3 py-2 text-[10px] lg:text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-emerald-500 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition-all" title="Weekend Template">
                             Wknd
                         </button>
                     </div>
-                    <button onClick={downloadImage} className="p-3 text-slate-500 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-xl transition-all print:hidden" title="Download PNG">
+                    <button onClick={downloadImage} className="p-2 lg:p-3 text-slate-500 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-xl transition-all print:hidden" title="Download PNG">
                         <Download className="w-5 h-5" />
                     </button>
-                    <button onClick={handlePrint} className="p-3 text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all print:hidden" title="Print Plan">
+                    <button onClick={handlePrint} className="p-2 lg:p-3 text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all print:hidden" title="Print Plan">
                         <Printer className="w-5 h-5" />
                     </button>
-                    <button onClick={clearBoard} className="p-3 text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-all print:hidden" title="Clear Board">
+                    <button onClick={clearBoard} className="p-2 lg:p-3 text-slate-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-all print:hidden" title="Clear Board">
                         <Trash2 className="w-5 h-5" />
                     </button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8" ref={exportRef}>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8" ref={exportRef}>
 
                 {/* Tools & Stats Sidebar */}
-                <div className="lg:col-span-4 space-y-8 order-2 lg:order-1">
+                <div className="lg:col-span-4 space-y-6 lg:space-y-8 order-2 lg:order-1">
 
                     {/* Palette */}
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl border border-slate-100 dark:border-slate-800 print:hidden">
-                        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Palette</h2>
-                        <div className="grid grid-cols-1 gap-3">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl lg:rounded-3xl p-4 lg:p-6 shadow-xl border border-slate-100 dark:border-slate-800 print:hidden overflow-hidden">
+                        <h2 className="text-[10px] lg:text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Palette</h2>
+                        <div className="flex lg:grid lg:grid-cols-1 gap-2 lg:gap-3 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 no-scrollbar">
                             {CATEGORIES.map((cat, index) => (
                                 <button
                                     key={cat.id}
                                     onClick={() => setSelectedCategory(cat.id)}
-                                    className={`flex items-center gap-4 p-4 rounded-2xl transition-all border ${selectedCategory === cat.id
+                                    className={`flex items-center gap-3 lg:gap-4 p-3 lg:p-4 rounded-xl lg:rounded-2xl transition-all border shrink-0 ${selectedCategory === cat.id
                                         ? 'border-slate-900 dark:border-white ring-2 ring-slate-900 dark:ring-white ring-offset-2 dark:ring-offset-slate-900'
                                         : 'border-transparent hover:bg-slate-50 dark:hover:bg-slate-800'
                                         }`}
                                 >
-                                    <div className={`w-10 h-10 rounded-full ${cat.color} flex items-center justify-center shadow-sm`}>
-                                        <cat.icon className={`w-5 h-5 ${cat.textColor}`} />
+                                    <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-full ${cat.color} flex items-center justify-center shadow-sm shrink-0`}>
+                                        <cat.icon className={`w-4 h-4 lg:w-5 lg:h-5 ${cat.textColor}`} />
                                     </div>
-                                    <div className="flex-1 text-left flex justify-between items-center">
-                                        <span className="block font-bold text-slate-900 dark:text-white">{cat.name}</span>
+                                    <div className="flex-1 text-left flex justify-between items-center gap-4">
+                                        <span className="block font-bold text-slate-900 dark:text-white whitespace-nowrap text-xs lg:text-base">{cat.name}</span>
                                         <kbd className="hidden sm:inline-flex h-5 px-2 items-center gap-1 font-mono text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-400 rounded border border-slate-200 dark:border-slate-700">
                                             {index + 1}
                                         </kbd>

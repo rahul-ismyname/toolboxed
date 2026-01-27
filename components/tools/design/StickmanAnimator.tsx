@@ -116,7 +116,7 @@ export function StickmanAnimator() {
                     setSelectedFigureId(parsed[0].figures[0]?.id || "")
                 } else if (parsed[0] && parsed[0].nodes) {
                     // Migrate old single-figure data
-                    const migratedKeyframes = parsed.map((k: any) => ({
+                    const migratedKeyframes = parsed.map((k: { frameIndex: number, nodes: Node[] }) => ({
                         frameIndex: k.frameIndex,
                         figures: [{
                             id: "u1",
@@ -944,87 +944,67 @@ export function StickmanAnimator() {
                 </div>
             )}
 
-            <div className="flex flex-col lg:flex-row gap-6 h-[700px]">
+            <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[700px]">
                 {/* Left Toolbar */}
-                <div className="lg:w-20 flex flex-col gap-3 bg-white dark:bg-slate-900 p-3 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-xl">
+                <div className="flex lg:flex-col gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl lg:rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-xl overflow-x-auto lg:overflow-x-visible no-scrollbar">
                     <ToolbarBtn icon={Move} active={!isBuilderMode} onClick={() => setIsBuilderMode(false)} label="Animate" />
                     <ToolbarBtn icon={ValidatorsIcon} active={isBuilderMode} onClick={() => setIsBuilderMode(true)} label="Builder" />
-                    <div className="w-full h-px bg-slate-100 dark:bg-slate-800 my-2" />
-                    {isBuilderMode ? (
-                        <>
-                            <ToolbarBtn icon={Plus} onClick={() => builderAddBone('line')} label="Add Line" disabled={!selectedNodeId} />
-                            <ToolbarBtn icon={CircleIcon} onClick={() => builderAddBone('circle')} label="Add Circle" disabled={!selectedNodeId} />
-                            <ToolbarBtn icon={Trash2} onClick={builderDeleteBone} label="Delete Bone" color="text-red-500" disabled={!selectedNodeId || selectedNodeId === "torso"} />
-                            <div className="w-full h-px bg-slate-100 dark:bg-slate-800 my-2" />
-                            <div className="space-y-4">
-                                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Node Style</h4>
-                                <div className="flex gap-2">
+                    <div className="w-px lg:w-full h-auto lg:h-px bg-slate-100 dark:bg-slate-800 mx-2 lg:my-2 shrink-0" />
+                    <div className="flex lg:flex-col gap-3">
+                        {isBuilderMode ? (
+                            <>
+                                <ToolbarBtn icon={Plus} onClick={() => builderAddBone('line')} label="Add Line" disabled={!selectedNodeId} />
+                                <ToolbarBtn icon={CircleIcon} onClick={() => builderAddBone('circle')} label="Add Circle" disabled={!selectedNodeId} />
+                                <ToolbarBtn icon={Trash2} onClick={builderDeleteBone} label="Delete Bone" color="text-red-500" disabled={!selectedNodeId || selectedNodeId === "torso"} />
+                                <div className="hidden lg:block w-full h-px bg-slate-100 dark:bg-slate-800 my-2" />
+                                <div className="hidden lg:flex flex-col gap-4">
+                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Node</h4>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="color"
+                                            onChange={(e) => updateNodeProperty({ color: e.target.value })}
+                                            className="w-8 h-8 rounded-full cursor-pointer border-2 border-slate-200"
+                                            title="Limb Color"
+                                        />
+                                        <button onClick={() => updateNodeProperty({ color: undefined })} className="text-[10px] font-bold text-slate-400">Reset</button>
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <ToolbarBtn icon={UserPlus} onClick={addFigure} label="Add Figure" />
+                                <ToolbarBtn icon={Users} active={showFigurePanel} onClick={() => setShowFigurePanel(!showFigurePanel)} label="Figures" />
+                                <ToolbarBtn icon={ArrowUp} onClick={bringToFront} label="Bring Fwd" />
+                                <div className="hidden lg:block w-full h-px bg-slate-100 dark:bg-slate-800 my-2" />
+                                <div className="flex lg:flex-col gap-2 items-center">
                                     <input
                                         type="color"
-                                        onChange={(e) => updateNodeProperty({ color: e.target.value })}
-                                        className="w-8 h-8 rounded-full cursor-pointer border-2 border-slate-200"
-                                        title="Limb Color"
+                                        value={background.type === 'color' ? background.value : '#ffffff'}
+                                        onChange={(e) => setBackground({ type: 'color', value: e.target.value })}
+                                        className="w-10 h-10 rounded-full cursor-pointer shadow-md border-2 border-white shrink-0"
+                                        title="BG Color"
                                     />
-                                    <button onClick={() => updateNodeProperty({ color: undefined })} className="text-[10px] font-bold text-slate-400 hover:text-red-500">Reset</button>
-                                </div>
-                                <div className="flex items-center justify-between text-[10px] font-black uppercase text-slate-400 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                                    <span>Easing</span>
-                                    <select
-                                        value={keyframes.find(k => k.frameIndex === currentFrame)?.easing || 'linear'}
-                                        onChange={(e) => {
-                                            const val = e.target.value as any
-                                            const ki = keyframes.findIndex(k => k.frameIndex === currentFrame)
-                                            if (ki !== -1) {
-                                                const newKeys = [...keyframes]
-                                                newKeys[ki] = { ...newKeys[ki], easing: val }
-                                                setKeyframes(newKeys)
+                                    <label className="cursor-pointer shrink-0">
+                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                            if (e.target.files?.[0]) {
+                                                const reader = new FileReader()
+                                                reader.onload = (ev) => setBackground({ type: 'image', value: ev.target?.result as string })
+                                                reader.readAsDataURL(e.target.files[0])
                                             }
-                                        }}
-                                        className="bg-transparent text-blue-500 font-bold cursor-pointer outline-none"
-                                    >
-                                        <option value="linear">Linear</option>
-                                        <option value="ease-in">Ease In</option>
-                                        <option value="ease-out">Ease Out</option>
-                                        <option value="ease-in-out">Smooth</option>
-                                        <option value="elastic">Elastic</option>
-                                    </select>
+                                        }} />
+                                        <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200">
+                                            <ImageIcon className="w-5 h-5 text-slate-500" />
+                                        </div>
+                                    </label>
                                 </div>
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            <ToolbarBtn icon={UserPlus} onClick={addFigure} label="Add Figure" />
-                            <ToolbarBtn icon={Users} active={showFigurePanel} onClick={() => setShowFigurePanel(!showFigurePanel)} label="Figures" />
-                            <ToolbarBtn icon={ArrowUp} onClick={bringToFront} label="Bring Fwd" />
-                            <div className="w-full h-px bg-slate-100 dark:bg-slate-800 my-2" />
-                            <div className="flex flex-col gap-2 items-center">
-                                <input
-                                    type="color"
-                                    value={background.type === 'color' ? background.value : '#ffffff'}
-                                    onChange={(e) => setBackground({ type: 'color', value: e.target.value })}
-                                    className="w-10 h-10 rounded-full cursor-pointer shadow-md border-2 border-white"
-                                    title="Background Color"
-                                />
-                                <label className="cursor-pointer">
-                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                                        if (e.target.files?.[0]) {
-                                            const reader = new FileReader()
-                                            reader.onload = (ev) => setBackground({ type: 'image', value: ev.target?.result as string })
-                                            reader.readAsDataURL(e.target.files[0])
-                                        }
-                                    }} />
-                                    <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200">
-                                        <ImageIcon className="w-5 h-5 text-slate-500" />
-                                    </div>
-                                </label>
-                            </div>
-                        </>
-                    )}
+                            </>
+                        )}
+                    </div>
                 </div>
 
                 {/* Figure Panel Sidebar (Floating Overlay) */}
                 {showFigurePanel && (
-                    <div className="absolute left-24 top-4 z-40 w-56 h-[calc(100%-2rem)] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col animate-in fade-in slide-in-from-left-4">
+                    <div className="absolute left-4 lg:left-24 top-24 lg:top-4 z-40 w-56 h-[calc(100%-8rem)] lg:h-[calc(100%-2rem)] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col animate-in fade-in slide-in-from-left-4">
                         <div className="p-4 border-b border-slate-100 dark:border-slate-800">
                             <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Figures</h3>
                         </div>
@@ -1044,8 +1024,8 @@ export function StickmanAnimator() {
                 )}
 
                 {/* Canvas */}
-                <div className="flex-1 bg-white dark:bg-slate-900 rounded-[3rem] border border-slate-200 dark:border-slate-800 shadow-2xl relative flex flex-col overflow-hidden">
-                    <div className="absolute top-4 right-4 z-20 flex gap-2">
+                <div className="flex-1 bg-white dark:bg-slate-900 rounded-[2rem] lg:rounded-[3rem] border border-slate-200 dark:border-slate-800 shadow-2xl relative flex flex-col overflow-hidden min-h-[400px] lg:min-h-0">
+                    <div className="absolute top-4 right-4 z-20 flex gap-2 scale-75 lg:scale-100 origin-top-right">
                         <button onClick={() => setZoom(z => Math.max(0.2, z - 0.1))} className="p-2 bg-white/80 rounded-xl shadow border hover:bg-white"><ZoomOut className="w-4 h-4 text-slate-700" /></button>
                         <button onClick={() => setZoom(z => Math.min(3, z + 0.1))} className="p-2 bg-white/80 rounded-xl shadow border hover:bg-white"><ZoomIn className="w-4 h-4 text-slate-700" /></button>
                         <button onClick={toggleFullScreen} className="p-2 bg-slate-900 text-white rounded-xl shadow border border-slate-900 hover:bg-slate-800"><Maximize className="w-4 h-4" /></button>
@@ -1063,9 +1043,9 @@ export function StickmanAnimator() {
                         {/* Rendering Overlay */}
                         {isRecording && (
                             <div className="absolute inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-300">
-                                <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-2xl flex flex-col items-center gap-4">
+                                <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-2xl flex flex-col items-center gap-4 mx-4">
                                     <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                                    <span className="font-black text-sm uppercase tracking-widest text-slate-700 dark:text-slate-200">Processing Video...</span>
+                                    <span className="font-black text-xs uppercase tracking-widest text-slate-700 dark:text-slate-200 text-center">Processing Video...</span>
                                 </div>
                             </div>
                         )}
@@ -1083,24 +1063,26 @@ export function StickmanAnimator() {
                 </div>
 
                 {/* Right Controls */}
-                <div className="lg:w-64 bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-xl p-6 flex flex-col gap-4">
-                    <button onClick={() => setIsPlaying(!isPlaying)} className={`w-full py-4 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 ${isPlaying ? 'bg-slate-900 text-white' : 'bg-emerald-500 text-white'}`}>
-                        {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />} {isPlaying ? 'Stop' : 'Play'}
-                    </button>
-                    <button onClick={addFrame} className="w-full py-4 rounded-xl bg-blue-500 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2">
-                        <Plus className="w-4 h-4" /> Add Frame
-                    </button>
-                    <div className="flex flex-col gap-3">
-                        <button onClick={downloadProject} className="py-5 rounded-[2rem] bg-slate-100 dark:bg-slate-800 text-slate-500 font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl hover:opacity-90 active:scale-95 transition-all">
-                            <Download className="w-4 h-4" /> Save Project
+                <div className="w-full lg:w-64 bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-xl p-4 lg:p-6 flex flex-col gap-4">
+                    <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
+                        <button onClick={() => setIsPlaying(!isPlaying)} className={`w-full py-4 rounded-xl font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 ${isPlaying ? 'bg-slate-900 text-white' : 'bg-emerald-500 text-white'}`}>
+                            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />} {isPlaying ? 'Stop' : 'Play'}
                         </button>
-                        <button onClick={exportVideo} disabled={isRecording} className={`py-5 rounded-[2rem] ${isRecording ? 'bg-red-500 text-white animate-pulse' : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'} font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-2xl hover:opacity-90 active:scale-95 transition-all`}>
+                        <button onClick={addFrame} className="w-full py-4 rounded-xl bg-blue-500 text-white font-black text-[10px] lg:text-xs uppercase tracking-widest flex items-center justify-center gap-2 text-center leading-none">
+                            <Plus className="w-3 h-3 lg:w-4 lg:h-4" /> Add Frame
+                        </button>
+                    </div>
+                    <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
+                        <button onClick={downloadProject} className="py-4 lg:py-5 rounded-2xl lg:rounded-[2rem] bg-slate-100 dark:bg-slate-800 text-slate-500 font-black text-[9px] lg:text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 lg:gap-3 shadow-sm lg:shadow-xl hover:opacity-90 active:scale-95 transition-all">
+                            <Download className="w-4 h-4" /> Save
+                        </button>
+                        <button onClick={exportVideo} disabled={isRecording} className={`py-4 lg:py-5 rounded-2xl lg:rounded-[2rem] ${isRecording ? 'bg-red-500 text-white animate-pulse' : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'} font-black text-[9px] lg:text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 lg:gap-3 shadow-sm lg:shadow-2xl hover:opacity-90 active:scale-95 transition-all shrink-0`}>
                             {isRecording ? <div className="w-3 h-3 bg-white rounded-sm animate-spin" /> : <Video className="w-4 h-4" />}
-                            {isRecording ? 'Rendering...' : 'Export Video'}
+                            {isRecording ? 'Render' : 'Export'}
                         </button>
                     </div>
 
-                    <div className="flex gap-2 justify-center pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div className="hidden lg:flex gap-2 justify-center pt-4 border-t border-slate-100 dark:border-slate-800">
                         <button onClick={() => isPlaying ? setIsPlaying(false) : addFrame()} className="text-[10px] font-bold text-slate-400 uppercase">
                             Space: Add Frame
                         </button>
@@ -1109,12 +1091,12 @@ export function StickmanAnimator() {
                         </button>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto mt-4 grid grid-cols-3 gap-2 content-start">
+                    <div className="flex-1 min-h-[100px] overflow-y-auto mt-2 lg:mt-4 grid grid-cols-4 lg:grid-cols-3 gap-2 content-start no-scrollbar">
                         {keyframes.map(k => (
                             <div
                                 key={k.frameIndex}
                                 onClick={() => { setCurrentFrame(k.frameIndex); setIsPlaying(false) }}
-                                className={`aspect-square rounded-lg border-2 flex items-center justify-center cursor-pointer ${currentFrame === k.frameIndex ? 'bg-blue-500 border-blue-500 text-white' : 'border-slate-100 text-slate-300'}`}
+                                className={`aspect-square rounded-lg border-2 flex items-center justify-center cursor-pointer text-[10px] font-bold ${currentFrame === k.frameIndex ? 'bg-blue-500 border-blue-500 text-white' : 'border-slate-100 text-slate-300 dark:border-slate-800'}`}
                             >
                                 F{k.frameIndex}
                             </div>
@@ -1124,16 +1106,16 @@ export function StickmanAnimator() {
             </div>
 
             {/* Timeline */}
-            <div className="bg-white dark:bg-slate-900 rounded-[3rem] p-8 shadow-xl border border-slate-200 dark:border-slate-800">
+            <div className="bg-white dark:bg-slate-900 rounded-[2rem] lg:rounded-[3rem] p-4 lg:p-8 shadow-xl border border-slate-200 dark:border-slate-800">
                 <input
                     type="range" min="0" max={Math.max(timelineLength, keyframes[keyframes.length - 1]?.frameIndex + 50 || 0)} value={currentFrame}
                     onChange={e => setCurrentFrame(Number(e.target.value))}
                     className="w-full accent-emerald-500"
                 />
-                <div className="flex justify-between mt-2 text-xs font-black text-slate-400 uppercase">
+                <div className="flex justify-between mt-2 text-[10px] lg:text-xs font-black text-slate-400 uppercase">
                     <span>Frame 0</span>
-                    <span className="text-emerald-500 text-lg">Frame {currentFrame}</span>
-                    <span>Bitrate: {FPS}</span>
+                    <span className="text-emerald-500 text-base lg:text-lg">Frame {currentFrame}</span>
+                    <span className="hidden sm:inline">Bitrate: {FPS}</span>
                 </div>
             </div>
         </div >
@@ -1143,7 +1125,7 @@ export function StickmanAnimator() {
 // Helper for icon consistency (Scissors was renamed to ValidatorsIcon temporarily in my head, fixing back to Scissors)
 const ValidatorsIcon = Scissors;
 
-function ToolbarBtn({ icon: Icon, active, onClick, label, disabled, color }: { icon: any, active?: boolean, onClick: () => void, label: string, disabled?: boolean, color?: string }) {
+function ToolbarBtn({ icon: Icon, active, onClick, label, disabled, color }: { icon: React.ElementType, active?: boolean, onClick: () => void, label: string, disabled?: boolean, color?: string }) {
     return (
         <button
             onClick={onClick}

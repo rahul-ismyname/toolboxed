@@ -139,6 +139,30 @@ export function ResumeBuilder() {
     };
 
     // --- RENDER HELPERS ---
+    // --- SCALING LOGIC ---
+    const [scale, setScale] = useState(0.85);
+
+    useEffect(() => {
+        const handleResize = () => {
+            const container = document.getElementById('resume-preview-container');
+            if (container) {
+                const containerWidth = container.clientWidth;
+                // 210mm is approx 800px. We add some padding.
+                const baseWidth = 850;
+                const newScale = Math.min(0.85, (containerWidth - 32) / baseWidth);
+                setScale(newScale);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        handleResize(); // Initial call
+
+        // Small delay to ensure container is rendered
+        setTimeout(handleResize, 100);
+
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const getFontClass = () => {
         switch (data.meta.font) {
             case 'serif': return 'font-serif';
@@ -153,7 +177,7 @@ export function ResumeBuilder() {
         <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)] bg-slate-100 dark:bg-slate-950 overflow-hidden">
 
             {/* --- LEFT: EDITOR --- */}
-            <div className="w-full lg:w-[450px] xl:w-[500px] flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 h-full overflow-hidden print:hidden z-10 shadow-xl">
+            <div className="w-full lg:w-[450px] xl:w-[500px] flex flex-col bg-white dark:bg-slate-900 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 h-1/2 lg:h-full overflow-hidden print:hidden z-10 shadow-xl order-2 lg:order-1">
                 {/* Editor Header */}
                 <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900">
                     <h2 className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
@@ -399,22 +423,22 @@ export function ResumeBuilder() {
             </div>
 
             {/* --- RIGHT: PREVIEW --- */}
-            <div className="flex-1 bg-slate-100 dark:bg-slate-950 p-8 overflow-y-auto flex justify-center relative">
+            <div id="resume-preview-container" className="flex-1 bg-slate-100 dark:bg-slate-950 p-4 lg:p-8 overflow-y-auto flex justify-center relative order-1 lg:order-2 h-1/2 lg:h-full border-b lg:border-b-0 border-slate-200 dark:border-slate-800">
 
                 {/* PDF Actions */}
-                <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-3 print:hidden">
+                <div className="absolute bottom-8 right-8 z-50 flex flex-col gap-3 print:hidden">
                     <button
                         onClick={handlePrint}
                         className="bg-slate-900 text-white p-4 rounded-full shadow-2xl hover:bg-black hover:scale-105 transition-all flex items-center justify-center gap-2 font-bold"
                     >
                         <Download className="w-5 h-5" />
-                        Download PDF
+                        <span className="hidden md:inline">Download PDF</span>
                     </button>
                 </div>
 
-                <div className="fixed top-24 right-8 z-40 print:hidden text-xs text-slate-400 font-medium">
+                <div className="absolute top-4 right-4 lg:top-8 lg:right-8 z-40 print:hidden text-xs text-slate-400 font-medium">
                     <span className="bg-white dark:bg-slate-900 px-3 py-1 rounded-full shadow-sm border border-slate-200 dark:border-slate-800 flex items-center gap-2">
-                        <Save className="w-3 h-3 text-emerald-500" /> Auto-saved
+                        <Save className="w-3 h-3 text-emerald-500" /> <span className="hidden sm:inline">Auto-saved</span>
                     </span>
                 </div>
 
@@ -422,7 +446,7 @@ export function ResumeBuilder() {
                 <div
                     id="resume-preview"
                     className={`w-[210mm] min-h-[297mm] bg-white text-slate-900 shadow-2xl mx-auto origin-top transition-transform duration-300 ${getFontClass()}`}
-                    style={{ transform: 'scale(0.85) translateY(-20px)' }} // Scale down slightly for fit
+                    style={{ transform: `scale(${scale})` }}
                 >
                     {data.meta.template === 'modern' && <TemplateModern data={data} />}
                     {data.meta.template === 'classic' && <TemplateClassic data={data} />}

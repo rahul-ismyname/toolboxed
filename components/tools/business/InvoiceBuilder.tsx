@@ -165,19 +165,44 @@ export function InvoiceBuilder() {
         }
     };
 
+    // --- SCALING LOGIC ---
+    const [scale, setScale] = useState(1);
+
+    useEffect(() => {
+        const handleResize = () => {
+            const container = document.getElementById('invoice-preview-container');
+            if (container) {
+                const containerWidth = container.clientWidth;
+                const baseWidth = 850; // Approx A4 + padding
+                // Only scale down if container is smaller than base, otherwise 1
+                const newScale = Math.min(1, (containerWidth - 32) / baseWidth);
+                setScale(newScale);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+
+        // Trigger resize when switching tabs
+        if (activeTab === 'preview') {
+            setTimeout(handleResize, 100);
+        }
+
+        return () => window.removeEventListener('resize', handleResize);
+    }, [activeTab]);
+
     if (!isClient) return null;
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
             {/* Header / Nav */}
-            <div className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 py-4 print:hidden">
+            <div className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 md:px-6 py-4 print:hidden">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
                         <Receipt className="w-6 h-6" />
                     </div>
                     <div>
                         <h1 className="text-lg font-black text-slate-900 dark:text-white">Studio</h1>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Invoice & Proposal</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Invoice</p>
                     </div>
                 </div>
 
@@ -185,38 +210,38 @@ export function InvoiceBuilder() {
                     <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
                         <button
                             onClick={() => setActiveTab('edit')}
-                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'edit' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            className={`px-3 md:px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'edit' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                         >
-                            <Settings2 className="w-4 h-4 inline-block mr-2" />
-                            Build
+                            <Settings2 className="w-4 h-4 inline-block md:mr-2" />
+                            <span className="hidden md:inline">Build</span>
                         </button>
                         <button
                             onClick={() => setActiveTab('preview')}
-                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'preview' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            className={`px-3 md:px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'preview' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                         >
-                            <FileText className="w-4 h-4 inline-block mr-2" />
-                            Preview
+                            <FileText className="w-4 h-4 inline-block md:mr-2" />
+                            <span className="hidden md:inline">Preview</span>
                         </button>
                     </div>
 
                     <button
                         onClick={() => window.print()}
-                        className="px-6 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold hover:scale-105 transition-all flex items-center gap-2 shadow-lg shadow-black/10"
+                        className="px-4 md:px-6 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold hover:scale-105 transition-all flex items-center gap-2 shadow-lg shadow-black/10"
                     >
                         <Download className="w-4 h-4" />
-                        Download PDF
+                        <span className="hidden md:inline">Download</span>
                     </button>
                 </div>
             </div>
 
-            <main className="max-w-7xl mx-auto px-6 py-12">
+            <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-12">
                 <div className={`grid grid-cols-1 lg:grid-cols-2 gap-12 ${activeTab === 'preview' ? 'lg:block print:block' : ''}`}>
 
                     {/* LEFT: EDITOR */}
-                    <div className={`space-y-8 print:hidden ${activeTab === 'preview' ? 'hidden' : ''}`}>
+                    <div className={`space-y-8 print:hidden ${activeTab === 'preview' ? 'hidden lg:block' : ''}`}>
 
                         {/* Section: Sender Info */}
-                        <div className="p-8 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
+                        <div className="p-6 md:p-8 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="p-2 bg-blue-50 dark:bg-blue-500/10 text-blue-600 rounded-lg">
                                     <Building2 className="w-5 h-5" />
@@ -224,8 +249,8 @@ export function InvoiceBuilder() {
                                 <h3 className="font-bold text-slate-900 dark:text-white">Business Details</h3>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="col-span-2">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="col-span-1 md:col-span-2">
                                     <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Company Name</label>
                                     <input
                                         type="text"
@@ -252,7 +277,7 @@ export function InvoiceBuilder() {
                                         className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl focus:border-blue-500 outline-none transition-all"
                                     />
                                 </div>
-                                <div className="col-span-2">
+                                <div className="col-span-1 md:col-span-2">
                                     <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Address</label>
                                     <textarea
                                         rows={2}
@@ -265,7 +290,7 @@ export function InvoiceBuilder() {
                         </div>
 
                         {/* Section: Receiver Info */}
-                        <div className="p-8 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
+                        <div className="p-6 md:p-8 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="p-2 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 rounded-lg">
                                     <User className="w-5 h-5" />
@@ -273,8 +298,8 @@ export function InvoiceBuilder() {
                                 <h3 className="font-bold text-slate-900 dark:text-white">Client Details</h3>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="col-span-2">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="col-span-1 md:col-span-2">
                                     <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Client Name</label>
                                     <input
                                         type="text"
@@ -283,7 +308,7 @@ export function InvoiceBuilder() {
                                         className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl focus:border-emerald-500 outline-none transition-all font-medium"
                                     />
                                 </div>
-                                <div className="col-span-2">
+                                <div className="col-span-1 md:col-span-2">
                                     <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Address</label>
                                     <textarea
                                         rows={2}
@@ -296,7 +321,7 @@ export function InvoiceBuilder() {
                         </div>
 
                         {/* Section: Line Items */}
-                        <div className="p-8 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
+                        <div className="p-6 md:p-8 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
                             <div className="flex items-center justify-between mb-8">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-amber-50 dark:bg-amber-500/10 text-amber-600 rounded-lg">
@@ -317,7 +342,7 @@ export function InvoiceBuilder() {
                                     <div key={item.id} className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 relative group">
                                         <button
                                             onClick={() => removeItem(item.id)}
-                                            className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                                            className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
@@ -365,7 +390,7 @@ export function InvoiceBuilder() {
                         </div>
 
                         {/* Section: Design & Customization */}
-                        <div className="p-8 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
+                        <div className="p-6 md:p-8 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="p-2 bg-purple-50 dark:bg-purple-500/10 text-purple-600 rounded-lg">
                                     <Palette className="w-5 h-5" />
@@ -373,8 +398,8 @@ export function InvoiceBuilder() {
                                 <h3 className="font-bold text-slate-900 dark:text-white">Design & Customization</h3>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-6">
-                                <div className="col-span-2">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="col-span-1 md:col-span-2">
                                     <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Document Type</label>
                                     <div className="flex gap-2">
                                         {['Invoice', 'Proposal', 'Quote'].map(t => (
@@ -415,7 +440,7 @@ export function InvoiceBuilder() {
                                     />
                                 </div>
 
-                                <div className="col-span-2">
+                                <div className="col-span-1 md:col-span-2">
                                     <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Logo (URL or Upload)</label>
                                     <div className="flex gap-2">
                                         <input
@@ -478,7 +503,7 @@ export function InvoiceBuilder() {
                                     </div>
                                 </div>
 
-                                <div className="col-span-2">
+                                <div className="col-span-1 md:col-span-2">
                                     <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Note to Client</label>
                                     <textarea
                                         rows={2}
@@ -492,8 +517,11 @@ export function InvoiceBuilder() {
                     </div>
 
                     {/* RIGHT: PREVIEW (Traditional A4 Aspect Ratio) */}
-                    <div className={`sticky top-32 ${activeTab === 'edit' ? 'hidden lg:block' : 'block'}`}>
-                        <div className={`bg-white text-slate-900 shadow-2xl rounded-sm min-h-[1100px] w-full max-w-[800px] mx-auto overflow-hidden border border-slate-200 origin-top transform scale-100 lg:scale-95 xl:scale-100 transition-all print:shadow-none print:border-none print:scale-100 print:m-0 print:p-0 ${data.meta.font === 'serif' ? 'font-serif' : data.meta.font === 'mono' ? 'font-mono' : 'font-sans'}`}>
+                    <div id="invoice-preview-container" className={`sticky top-32 ${activeTab === 'edit' ? 'hidden lg:block' : 'block'}`}>
+                        <div
+                            className={`bg-white text-slate-900 shadow-2xl rounded-sm min-h-[1100px] w-full max-w-[800px] mx-auto overflow-hidden border border-slate-200 origin-top transform transition-all print:shadow-none print:border-none print:scale-100 print:m-0 print:p-0 ${data.meta.font === 'serif' ? 'font-serif' : data.meta.font === 'mono' ? 'font-mono' : 'font-sans'}`}
+                            style={{ transform: `scale(${scale})` }}
+                        >
 
                             {/* --- TEMPLATE: MODERN --- */}
                             {data.meta.template === 'modern' && (

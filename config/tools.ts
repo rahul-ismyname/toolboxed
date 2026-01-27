@@ -52,7 +52,8 @@ import {
     Network,
     Columns,
     Sparkles,
-    Accessibility
+    Accessibility,
+    Monitor
 } from 'lucide-react';
 
 export type ToolCategory = 'Health' | 'Developer' | 'Business' | 'Utility' | 'Design';
@@ -531,5 +532,13 @@ export const tools: Tool[] = [
         category: 'Design',
         icon: Accessibility,
         path: '/stickman-animator'
+    },
+    {
+        slug: 'mockup-studio',
+        name: '3D Device Mockup Studio',
+        description: 'Create professional 3D device mockups for your apps and websites entirely in the browser.',
+        category: 'Design',
+        icon: Monitor,
+        path: '/mockup-studio'
     }
 ];

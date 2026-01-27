@@ -116,6 +116,7 @@ export function MermaidEditor() {
     const [copiedShare, setCopiedShare] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [activeMobileTab, setActiveMobileTab] = useState<'code' | 'preview' | 'templates'>('code');
 
     // Initial Load Logic
     useEffect(() => {
@@ -141,7 +142,7 @@ export function MermaidEditor() {
             fontFamily: 'inherit',
         });
         setIsInitialized(true);
-    }, []);
+    }, [searchParams, theme]);
 
     // Theme Update
     useEffect(() => {
@@ -152,9 +153,6 @@ export function MermaidEditor() {
             securityLevel: 'loose',
             fontFamily: 'inherit',
         });
-        // Force re-render by toggling internal state slightly if needed, 
-        // or just rely on the next render pass which the dependency array handles indirectly 
-        // if we re-trigger renderDiagram.
     }, [theme, isLoaded]);
 
     // Auto-Save & Render
@@ -167,11 +165,15 @@ export function MermaidEditor() {
         const renderDiagram = async () => {
             try {
                 const id = `mermaid-${Date.now()}`;
-                const { svg } = await mermaid.render(id, input);
-                setSvg(svg);
+                const { svg: svgContent } = await mermaid.render(id, input);
+                setSvg(svgContent);
                 setError(null);
-            } catch (e: any) {
-                setError(e.message);
+            } catch (e: unknown) {
+                if (e instanceof Error) {
+                    setError(e.message);
+                } else {
+                    setError(String(e));
+                }
             }
         };
 
@@ -245,148 +247,176 @@ export function MermaidEditor() {
     if (!isLoaded) return null; // Prevent hydration mismatch
 
     return (
-        <div className={`grid grid-cols-1 lg:grid-cols-12 gap-6 ${isFullscreen ? 'fixed inset-0 z-50 bg-white dark:bg-slate-900 p-6' : 'h-[calc(100vh-12rem)] min-h-[600px]'}`}>
-
-            {/* Templates Sidebar (Hidden in Fullscreen) */}
+        <div className="flex flex-col gap-4">
+            {/* Mobile Tab Switcher */}
             {!isFullscreen && (
-                <div className="hidden lg:flex lg:col-span-2 flex-col gap-2 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-4 overflow-y-auto">
-                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                        <LayoutTemplate className="w-3 h-3" />
+                <div className="flex lg:hidden bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <button
+                        onClick={() => setActiveMobileTab('code')}
+                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeMobileTab === 'code' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-500'}`}
+                    >
+                        Code
+                    </button>
+                    <button
+                        onClick={() => setActiveMobileTab('preview')}
+                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeMobileTab === 'preview' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-500'}`}
+                    >
+                        Preview
+                    </button>
+                    <button
+                        onClick={() => setActiveMobileTab('templates')}
+                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeMobileTab === 'templates' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-500'}`}
+                    >
                         Templates
-                    </div>
-                    {TEMPLATES.map(t => (
-                        <button
-                            key={t.name}
-                            onClick={() => setInput(t.code)}
-                            className="text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-500 transition-colors"
-                        >
-                            {t.name}
-                        </button>
-                    ))}
+                    </button>
                 </div>
             )}
 
-            {/* Editor Panel (Hidden in Fullscreen) */}
-            {!isFullscreen && (
-                <div className="lg:col-span-4 flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800">
-                    <div className="px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50">
-                        <div className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-200">
-                            <Network className="w-4 h-4 text-emerald-500" />
-                            <span>Code</span>
+            <div className={`grid grid-cols-1 lg:grid-cols-12 gap-6 ${isFullscreen ? 'fixed inset-0 z-50 bg-white dark:bg-slate-900 p-6' : 'h-[calc(100vh-16rem)] lg:h-[calc(100vh-12rem)] min-h-[500px] lg:min-h-[600px]'}`}>
+
+                {/* Templates Sidebar */}
+                {!isFullscreen && (
+                    <div className={`${activeMobileTab === 'templates' ? 'flex' : 'hidden'} lg:flex lg:col-span-2 flex-col gap-2 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-4 overflow-y-auto`}>
+                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                            <LayoutTemplate className="w-3 h-3" />
+                            Templates
                         </div>
-                        <div className="flex items-center gap-2">
-                            <select
-                                value={theme}
-                                onChange={(e) => setTheme(e.target.value)}
-                                className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-1 px-2 text-xs focus:outline-none focus:border-emerald-500 transition-colors"
-                            >
-                                {THEMES.map(t => (
-                                    <option key={t.value} value={t.value}>{t.label}</option>
-                                ))}
-                            </select>
-
-                            <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 mx-1"></div>
-
-                            <button
-                                onClick={handleShare}
-                                className="p-1.5 text-slate-400 hover:text-emerald-500 transition-colors relative"
-                                title="Share Link"
-                            >
-                                {copiedShare ? <Check className="w-4 h-4 text-emerald-500" /> : <Share2 className="w-4 h-4" />}
-                            </button>
-
-                            <button
-                                onClick={() => setInput(TEMPLATES[0].code)}
-                                className="p-1.5 text-slate-400 hover:text-emerald-500 transition-colors"
-                                title="Reset"
-                            >
-                                <RotateCcw className="w-4 h-4" />
-                            </button>
+                        <div className="flex flex-col gap-1">
+                            {TEMPLATES.map(t => (
+                                <button
+                                    key={t.name}
+                                    onClick={() => { setInput(t.code); setActiveMobileTab('code'); }}
+                                    className="text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-500 transition-colors"
+                                >
+                                    {t.name}
+                                </button>
+                            ))}
                         </div>
                     </div>
-                    <textarea
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="graph TD..."
-                        className="flex-1 w-full p-6 bg-slate-50 dark:bg-slate-950 font-mono text-sm leading-relaxed outline-none resize-none"
-                        spellCheck={false}
-                    />
-                    <div className="px-4 py-2 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 flex justify-end">
-                        Auto-saved
-                    </div>
-                </div>
-            )}
+                )}
 
-            {/* Preview Panel (Expands in Fullscreen) */}
-            <div className={`${isFullscreen ? 'col-span-12' : 'lg:col-span-6'} flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800 relative transition-all duration-300`}>
-                <div className="px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center z-10 relative">
-                    <div className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-200">
-                        <ImageIcon className="w-4 h-4 text-emerald-500" />
-                        <span>Preview</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setIsFullscreen(!isFullscreen)}
-                            className="p-1.5 text-slate-400 hover:text-emerald-500 transition-colors mr-2"
-                            title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-                        >
-                            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-                        </button>
-                        <button
-                            onClick={() => handleDownload('svg')}
-                            className="p-1.5 text-slate-400 hover:text-emerald-500 transition-colors"
-                            title="Download SVG"
-                        >
-                            <span className="font-bold text-[10px] border border-current rounded px-1">SVG</span>
-                        </button>
-                        <button
-                            onClick={() => handleDownload('png')}
-                            className="p-1.5 text-slate-400 hover:text-emerald-500 transition-colors"
-                            title="Download PNG"
-                        >
-                            <span className="font-bold text-[10px] border border-current rounded px-1">PNG</span>
-                        </button>
-                    </div>
-                </div>
+                {/* Editor Panel */}
+                {!isFullscreen && (
+                    <div className={`${activeMobileTab === 'code' ? 'flex' : 'hidden'} lg:flex lg:col-span-4 flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800`}>
+                        <div className="px-4 lg:px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50">
+                            <div className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-200">
+                                <Network className="w-4 h-4 text-emerald-500" />
+                                <span className="text-sm lg:text-base">Code</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <select
+                                    value={theme}
+                                    onChange={(e) => setTheme(e.target.value)}
+                                    className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-1 px-1 lg:px-2 text-[10px] lg:text-xs focus:outline-none focus:border-emerald-500 transition-colors"
+                                >
+                                    {THEMES.map(t => (
+                                        <option key={t.value} value={t.value}>{t.label}</option>
+                                    ))}
+                                </select>
 
-                <div className="flex-1 bg-slate-50 dark:bg-slate-950 relative overflow-hidden">
-                    {error && (
-                        <div className="absolute top-4 left-4 right-4 z-20 flex justify-center pointer-events-none">
-                            <div className="bg-red-50 dark:bg-red-950/90 backdrop-blur border border-red-200 dark:border-red-900 p-3 rounded-xl text-red-600 dark:text-red-400 shadow-lg max-w-lg text-center animate-in slide-in-from-top-4">
-                                <p className="font-bold text-xs uppercase mb-1 flex items-center justify-center gap-2">
-                                    <HelpCircle className="w-3 h-3" /> Syntax Error
-                                </p>
-                                <p className="font-mono text-[10px] leading-tight opacity-90 break-all">{error}</p>
+                                <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 mx-1"></div>
+
+                                <button
+                                    onClick={handleShare}
+                                    className="p-1.5 text-slate-400 hover:text-emerald-500 transition-colors relative"
+                                    title="Share Link"
+                                >
+                                    {copiedShare ? <Check className="w-4 h-4 text-emerald-500" /> : <Share2 className="w-4 h-4" />}
+                                </button>
+
+                                <button
+                                    onClick={() => setInput(TEMPLATES[0].code)}
+                                    className="p-1.5 text-slate-400 hover:text-emerald-500 transition-colors"
+                                    title="Reset"
+                                >
+                                    <RotateCcw className="w-4 h-4" />
+                                </button>
                             </div>
                         </div>
-                    )}
+                        <textarea
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="graph TD..."
+                            className="flex-1 w-full p-4 lg:p-6 bg-slate-50 dark:bg-slate-950 font-mono text-xs lg:text-sm leading-relaxed outline-none resize-none no-scrollbar"
+                            spellCheck={false}
+                        />
+                        <div className="px-4 py-2 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 text-[9px] lg:text-[10px] text-slate-400 flex justify-end">
+                            Auto-saved
+                        </div>
+                    </div>
+                )}
 
-                    {/* Zoom Pan Pinch Wrapper */}
-                    <TransformWrapper
-                        initialScale={1}
-                        minScale={0.5}
-                        maxScale={4}
-                        centerOnInit
-                    >
-                        {({ zoomIn, zoomOut, resetTransform }) => (
-                            <>
-                                {/* Floating Controls */}
-                                <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg p-1">
-                                    <button onClick={() => zoomIn()} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-500"><ZoomIn className="w-4 h-4" /></button>
-                                    <button onClick={() => zoomOut()} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-500"><ZoomOut className="w-4 h-4" /></button>
-                                    <button onClick={() => resetTransform()} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-500"><Move className="w-4 h-4" /></button>
+                {/* Preview Panel */}
+                <div className={`${isFullscreen ? 'col-span-12' : (activeMobileTab === 'preview' ? 'flex' : 'hidden lg:flex lg:col-span-6')} flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800 relative transition-all duration-300`}>
+                    <div className="px-4 lg:px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center z-10 relative">
+                        <div className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-200">
+                            <ImageIcon className="w-4 h-4 text-emerald-500" />
+                            <span className="text-sm lg:text-base">Preview</span>
+                        </div>
+                        <div className="flex items-center gap-1 lg:gap-2">
+                            <button
+                                onClick={() => setIsFullscreen(!isFullscreen)}
+                                className="p-1.5 text-slate-400 hover:text-emerald-500 transition-colors mr-1 lg:mr-2"
+                                title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                            >
+                                {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                            </button>
+                            <button
+                                onClick={() => handleDownload('svg')}
+                                className="p-1.5 text-slate-400 hover:text-emerald-500 transition-colors"
+                                title="Download SVG"
+                            >
+                                <span className="font-bold text-[9px] lg:text-[10px] border border-current rounded px-1">SVG</span>
+                            </button>
+                            <button
+                                onClick={() => handleDownload('png')}
+                                className="p-1.5 text-slate-400 hover:text-emerald-500 transition-colors"
+                                title="Download PNG"
+                            >
+                                <span className="font-bold text-[9px] lg:text-[10px] border border-current rounded px-1">PNG</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="flex-1 bg-slate-50 dark:bg-slate-950 relative overflow-hidden">
+                        {error && (
+                            <div className="absolute top-4 left-4 right-4 z-20 flex justify-center pointer-events-none">
+                                <div className="bg-red-50 dark:bg-red-950/90 backdrop-blur border border-red-200 dark:border-red-900 p-3 rounded-xl text-red-600 dark:text-red-400 shadow-lg max-w-lg text-center animate-in slide-in-from-top-4">
+                                    <p className="font-bold text-[10px] lg:text-xs uppercase mb-1 flex items-center justify-center gap-2">
+                                        <HelpCircle className="w-3 h-3" /> Syntax Error
+                                    </p>
+                                    <p className="font-mono text-[9px] lg:text-[10px] leading-tight opacity-90 break-all">{error}</p>
                                 </div>
-
-                                <TransformComponent wrapperClass="!w-full !h-full" contentClass="!w-full !h-full flex items-center justify-center">
-                                    <div
-                                        className="min-w-full min-h-full flex items-center justify-center p-8 transition-opacity duration-300"
-                                        style={{ opacity: svg ? 1 : 0.5 }}
-                                        dangerouslySetInnerHTML={{ __html: svg }}
-                                    />
-                                </TransformComponent>
-                            </>
+                            </div>
                         )}
-                    </TransformWrapper>
+
+                        {/* Zoom Pan Pinch Wrapper */}
+                        <TransformWrapper
+                            initialScale={1}
+                            minScale={0.5}
+                            maxScale={4}
+                            centerOnInit
+                        >
+                            {({ zoomIn, zoomOut, resetTransform }) => (
+                                <>
+                                    {/* Floating Controls */}
+                                    <div className="absolute bottom-4 right-4 z-10 flex flex-col gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg p-1">
+                                        <button onClick={() => zoomIn()} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-500"><ZoomIn className="w-4 h-4" /></button>
+                                        <button onClick={() => zoomOut()} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-500"><ZoomOut className="w-4 h-4" /></button>
+                                        <button onClick={() => resetTransform()} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-500"><Move className="w-4 h-4" /></button>
+                                    </div>
+
+                                    <TransformComponent wrapperClass="!w-full !h-full" contentClass="!w-full !h-full flex items-center justify-center">
+                                        <div
+                                            className="min-w-full min-h-full flex items-center justify-center p-8 transition-opacity duration-300"
+                                            style={{ opacity: svg ? 1 : 0.5 }}
+                                            dangerouslySetInnerHTML={{ __html: svg }}
+                                        />
+                                    </TransformComponent>
+                                </>
+                            )}
+                        </TransformWrapper>
+                    </div>
                 </div>
             </div>
         </div>
