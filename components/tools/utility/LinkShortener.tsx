@@ -42,7 +42,8 @@ export default function LinkShortener() {
             if (err.code === '23505') { // Unique violation
                 setError('Custom code already exists. Try another.');
             } else {
-                setError('Failed to shorten link. Make sure Supabase is set up properly.');
+                // Show the actual error message for debugging
+                setError(`Error: ${err.message || 'Unknown error'}`);
             }
         } finally {
             setLoading(false);
@@ -63,7 +64,7 @@ export default function LinkShortener() {
                                 type="text"
                                 value={url}
                                 onChange={(e) => setUrl(e.target.value)}
-                                placeholder="https://example.com/very-long-url..."
+                                placeholder="https://example.com/paste-your-long-link-here..."
                                 className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl focus:border-blue-500 outline-none transition-all font-medium"
                                 required
                             />
