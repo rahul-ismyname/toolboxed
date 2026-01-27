@@ -52,7 +52,7 @@ export default function LinkShortener() {
 
     return (
         <div className="w-full max-w-2xl mx-auto space-y-8">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-xl">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 shadow-xl">
                 <form onSubmit={handleShorten} className="space-y-6">
                     <div>
                         <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
@@ -120,6 +120,44 @@ export default function LinkShortener() {
             <p className="text-center text-slate-400 text-sm">
                 Links are permanently stored and track clicks automatically.
             </p>
+
+            {/* SEO Content & FAQ */}
+            <div className="grid md:grid-cols-2 gap-6 mt-12 w-full">
+                <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+                        <span className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-500/10 text-blue-600 flex items-center justify-center">🚀</span>
+                        Why use this Shortener?
+                    </h2>
+                    <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
+                        <li>• <strong>Instant & Free:</strong> No sign-up required for basic use.</li>
+                        <li>• <strong>Permanent Links:</strong> We never delete your created links.</li>
+                        <li>• <strong>Ad-Free Redirects:</strong> Visitors go straight to your destination.</li>
+                    </ul>
+                </div>
+
+                <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+                        <span className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-500/10 text-purple-600 flex items-center justify-center">💡</span>
+                        Frequently Asked Questions
+                    </h2>
+                    <div className="space-y-3 text-sm text-slate-600 dark:text-slate-400">
+                        <details className="cursor-pointer group">
+                            <summary className="font-semibold group-open:text-purple-600 transition-colors list-none flex items-center justify-between">
+                                Is it really free?
+                                <span className="group-open:rotate-180 transition-transform">▼</span>
+                            </summary>
+                            <p className="mt-2 pl-2 border-l-2 border-purple-100 dark:border-slate-700">Yes, Toolboxed Link Shortener is 100% free to use for personal and business links.</p>
+                        </details>
+                        <details className="cursor-pointer group">
+                            <summary className="font-semibold group-open:text-purple-600 transition-colors list-none flex items-center justify-between">
+                                Do links expire?
+                                <span className="group-open:rotate-180 transition-transform">▼</span>
+                            </summary>
+                            <p className="mt-2 pl-2 border-l-2 border-purple-100 dark:border-slate-700">No, unlike other services, our links do not have an expiration date.</p>
+                        </details>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
