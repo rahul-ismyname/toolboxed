@@ -6,15 +6,17 @@ import { Star } from 'lucide-react';
 
 // Curated list of high-value tools to feature
 const FEATURED_SLUGS = [
-    'time-block-planner',
-    'animated-patterns',
+    'mockup-studio',
+    'link-shortener',
+    'pdf-master',
     'landing-page-builder',
-    'mind-map',
+    'time-block-planner',
     'resume-builder',
-    'kanban-board',
+    'pomodoro-timer',
+    'invoice-builder',
     'mermaid-visualizer',
+    'animated-patterns',
     'stickman-animator',
-    'image-converter',
     'sql-formatter',
 ];
 

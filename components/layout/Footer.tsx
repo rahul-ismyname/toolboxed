@@ -40,7 +40,7 @@ export function Footer() {
                         <ul className="space-y-3 text-sm text-slate-500 dark:text-slate-400">
                             <li><Link href="/privacy" className="hover:text-emerald-500 transition-colors">Privacy Policy</Link></li>
                             <li><Link href="/terms" className="hover:text-emerald-500 transition-colors">Terms of Service</Link></li>
-                            <li><a href="mailto:contact@toolboxed.online" className="hover:text-emerald-500 transition-colors">Contact Us</a></li>
+                            <li><a href="mailto:r43381812@gmail.com" className="hover:text-emerald-500 transition-colors">Contact Us</a></li>
                         </ul>
                     </div>
                 </div>

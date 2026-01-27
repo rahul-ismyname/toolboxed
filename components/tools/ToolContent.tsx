@@ -1232,6 +1232,28 @@ const toolContentData: Record<string, ToolData> = {
             { question: 'What image formats are supported?', answer: 'You can upload PNG, JPG, and WebP images. For best results, use screenshots that match the aspect ratio of the target device.' },
             { question: 'Can I use these mockups commercially?', answer: 'Absolutely! The mockups you generate are yours to use in pitch decks, social media, marketing campaigns, or personal portfolios.' }
         ]
+    },
+    'link-shortener': {
+        title: 'Unlimited Link Shortener',
+        description: 'Create clean, shortened URLs that never expire. Perfect for social media, marketing campaigns, and sharing long links easily.',
+        features: [
+            '**Permanent Links**: Your shortened URLs work forever without any subscription.',
+            '**QR Code Integration**: Automatically generate a QR code for every shortened link.',
+            '**Privacy Focused**: No tracking cookies or personal data collection on redirects.',
+            '**Custom Slugs**: (Optional) choose a memorable alias for your links.',
+            '**Instant Redirects**: High-performance routing ensures zero lag for your users.'
+        ],
+        howToUse: [
+            { title: 'Paste URL', description: 'Enter the long URL you want to shorten into the input field.' },
+            { title: 'Shorten', description: 'Click the "Shorten" button to generate your new link.' },
+            { title: 'Copy & Share', description: 'Copy the shortened URL and use it anywhere.' },
+            { title: 'Get QR', description: 'Click the QR icon to download the code for print or digital use.' }
+        ],
+        faqs: [
+            { question: 'Is it free?', answer: 'Yes, shortening links is and always will be 100% free on Toolboxed.' },
+            { question: 'Do the links expire?', answer: 'No, our links are permanent and do not expire.' },
+            { question: 'Can I track clicks?', answer: 'Currently, we prioritize privacy and do not track individual user clicks.' }
+        ]
     }
 };
 
@@ -1323,9 +1345,9 @@ export function ToolContent({ slug }: ToolContentProps) {
                     </div>
                     <span className="text-sm font-bold tracking-tight">4.9/5 User Rating</span>
                 </div>
-                <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
+                <h1 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
                     Free {data.title} Online
-                </h2>
+                </h1>
                 <p className="text-xl leading-relaxed text-slate-600 dark:text-slate-400">{data.description}</p>
             </section>
 

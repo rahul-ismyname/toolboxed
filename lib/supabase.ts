@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { turso, generateId } from './turso';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -7,7 +8,7 @@ export const supabase = supabaseUrl && supabaseKey
     ? createClient(supabaseUrl, supabaseKey)
     : null;
 
-export type InvoiceData = any; // Using 'any' for flexibility with the existing invoice structure
+export type InvoiceData = any;
 
 export interface InvoiceMetadata {
     title?: string;
@@ -16,95 +17,106 @@ export interface InvoiceMetadata {
 }
 
 export async function saveInvoice(data: InvoiceData, meta?: InvoiceMetadata) {
-    if (!supabase) throw new Error('Supabase not configured');
+    const id = generateId();
+    const payload = {
+        id,
+        data: JSON.stringify(data),
+        title: meta?.title || null,
+        description: meta?.description || null,
+        is_public: meta?.isPublic ? 1 : 0,
+    };
 
-    // Prepare payload
-    const payload: any = { data };
-    if (meta) {
-        if (meta.title) payload.title = meta.title;
-        if (meta.description) payload.description = meta.description;
-        if (meta.isPublic !== undefined) payload.is_public = meta.isPublic;
+    try {
+        await turso.execute({
+            sql: "INSERT INTO invoices (id, data, title, description, is_public) VALUES (?, ?, ?, ?, ?)",
+            args: [payload.id, payload.data, payload.title, payload.description, payload.is_public]
+        });
+
+        // Return structured like Supabase result for compatibility
+        return { ...payload, data };
+    } catch (error) {
+        console.error('Turso saveInvoice error:', error);
+        throw error;
     }
-
-    const { data: result, error } = await supabase
-        .from('invoices')
-        .insert([payload])
-        .select()
-        .single();
-
-    if (error) throw error;
-    return result;
 }
 
 export async function getInvoice(id: string) {
-    if (!supabase) return null;
+    try {
+        // Increment view count
+        await turso.execute({
+            sql: "UPDATE invoices SET views = views + 1 WHERE id = ?",
+            args: [id]
+        });
 
-    // Increment view count (fire and forget)
-    await supabase.rpc('increment_invoice_views', { row_id: id });
+        const rs = await turso.execute({
+            sql: "SELECT * FROM invoices WHERE id = ?",
+            args: [id]
+        });
 
-    const { data, error } = await supabase
-        .from('invoices')
-        .select('*')
-        .eq('id', id)
-        .single();
+        if (rs.rows.length === 0) return null;
 
-    if (error) return null;
-    return data;
+        const row = rs.rows[0];
+        return {
+            ...row,
+            data: JSON.parse(row.data as string),
+            is_public: !!row.is_public
+        };
+    } catch (error) {
+        console.error('Turso getInvoice error:', error);
+        return null;
+    }
 }
 
 // --- LINK SHORTENER ---
 
 export async function createShortLink(originalUrl: string, customCode?: string) {
-    if (!supabase) throw new Error('Supabase not configured');
-
-    // Generate a random 6-char code if custom one not provided
+    const id = generateId();
     const shortCode = customCode || Math.random().toString(36).substring(2, 8);
 
-    const { data, error } = await supabase
-        .from('short_links')
-        .insert([{
-            original_url: originalUrl,
-            short_code: shortCode
-        }])
-        .select()
-        .single();
+    try {
+        await turso.execute({
+            sql: "INSERT INTO short_links (id, original_url, short_code) VALUES (?, ?, ?)",
+            args: [id, originalUrl, shortCode]
+        });
 
-    if (error) throw error;
-    return data;
+        return { id, original_url: originalUrl, short_code: shortCode };
+    } catch (error) {
+        console.error('Turso createShortLink error:', error);
+        throw error;
+    }
 }
 
 export async function getOriginalUrl(code: string) {
-    if (!supabase) return null;
+    try {
+        // Increment clicks
+        await turso.execute({
+            sql: "UPDATE short_links SET clicks = clicks + 1 WHERE short_code = ?",
+            args: [code]
+        });
 
-    // Increment clicks (fire and forget)
-    await supabase.rpc('increment_link_clicks', { code_param: code });
+        const rs = await turso.execute({
+            sql: "SELECT original_url FROM short_links WHERE short_code = ?",
+            args: [code]
+        });
 
-    const { data, error } = await supabase
-        .from('short_links')
-        .select('original_url')
-        .eq('short_code', code)
-        .maybeSingle();
-
-    if (error) {
-        console.error('Link Shortener Error:', error);
+        if (rs.rows.length === 0) return null;
+        return rs.rows[0].original_url as string;
+    } catch (error) {
+        console.error('Turso getOriginalUrl error:', error);
         return null;
     }
-    return data?.original_url;
 }
 
 export async function getPublicTemplates() {
-    if (!supabase) return [];
-
-    const { data, error } = await supabase
-        .from('invoices')
-        .select('*')
-        .eq('is_public', true)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-    if (error) {
-        console.error('Error fetching templates:', error);
+    try {
+        const rs = await turso.execute("SELECT * FROM invoices WHERE is_public = 1 ORDER BY created_at DESC LIMIT 20");
+        return rs.rows.map(row => ({
+            ...row,
+            data: JSON.parse(row.data as string),
+            is_public: true
+        }));
+    } catch (error) {
+        console.error('Turso getPublicTemplates error:', error);
         return [];
     }
-    return data;
 }

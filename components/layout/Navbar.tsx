@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, X, Rocket, Grid } from 'lucide-react';
+import { Search, X, Rocket, Grid } from 'lucide-react';
 import { useState } from 'react';
 import { InlineSearch } from '@/components/ui/InlineSearch';
 import { ModeToggle } from '@/components/ui/ModeToggle';
@@ -41,9 +41,9 @@ export function Navbar() {
                         <button
                             onClick={() => setIsOpen(!isOpen)}
                             className="p-2 text-slate-600 hover:bg-slate-50 rounded-lg"
-                            aria-label={isOpen ? "Close menu" : "Open menu"}
+                            aria-label={isOpen ? "Close search" : "Open search"}
                         >
-                            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                            {isOpen ? <X className="w-6 h-6" /> : <Search className="w-6 h-6" />}
                         </button>
                     </div>
                 </div>

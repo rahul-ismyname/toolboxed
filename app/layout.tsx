@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   creator: 'Toolboxed',
   publisher: 'Toolboxed',
   alternates: {
-    canonical: '/',
+    canonical: './',
   },
   robots: {
     index: true,
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     images: [`${appUrl}/og-image.png`],
   },
   verification: {
-    google: 'google-site-verification-placeholder',
+    google: 'google8bf7740618fe603b',
   },
 };
 

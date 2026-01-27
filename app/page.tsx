@@ -128,7 +128,7 @@ export default function Home() {
             <p className="text-slate-500 dark:text-slate-400 mb-8">
               We are constantly adding new utilities. Submit a request or contribute on GitHub.
             </p>
-            <a href="mailto:contact@toolboxed.online?subject=New Tool Request" className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-medium hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors shadow-lg shadow-slate-200/50 dark:shadow-none">
+            <a href="mailto:r43381812@gmail.com?subject=New Tool Request" className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-medium hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors shadow-lg shadow-slate-200/50 dark:shadow-none">
               Request a Tool
             </a>
           </div>
