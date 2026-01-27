@@ -54,66 +54,106 @@ export function JsonToCsv() {
     };
 
     return (
-        <div className="space-y-8">
-            <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                    <div className="flex justify-between items-center text-xs font-black text-slate-400 uppercase tracking-widest pl-2">
-                        <span className="flex items-center gap-2"><FileJson className="w-4 h-4" /> JSON Input</span>
+        <div className="max-w-5xl mx-auto space-y-8 lg:space-y-12 animate-in fade-in duration-500">
+            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl shadow-indigo-500/5 border border-slate-100 dark:border-slate-800 overflow-hidden">
+                <div className="p-8 sm:p-12 lg:p-16">
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-12 lg:gap-20">
+                        {/* Input Phase */}
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between px-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-500/20">
+                                        <FileJson className="w-5 h-5" />
+                                    </div>
+                                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Source Object (JSON)</h3>
+                                </div>
+                                <button
+                                    onClick={() => { setJson(''); setCsv(''); setError(''); }}
+                                    className="p-3 bg-red-50 dark:bg-red-950/30 text-red-500 hover:bg-red-100 rounded-xl transition-all active:scale-90"
+                                    title="Purge Stream"
+                                >
+                                    <Trash2 className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <div className="relative group">
+                                <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-[2.5rem] blur opacity-0 group-focus-within:opacity-5 transition duration-1000"></div>
+                                <textarea
+                                    value={json}
+                                    onChange={(e) => setJson(e.target.value)}
+                                    placeholder='[{"id": 1, "name": "Antigravity"}, {"id": 2, "name": "Protocol"}]'
+                                    className="relative w-full h-[400px] p-10 bg-slate-50 dark:bg-slate-950 border-2 border-transparent focus:border-indigo-500/20 rounded-[2.5rem] text-slate-900 dark:text-white font-mono text-sm leading-relaxed outline-none shadow-inner resize-none scrollbar-hide"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Output Phase */}
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between px-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-emerald-500 text-white rounded-xl shadow-lg shadow-emerald-500/20">
+                                        <FileText className="w-5 h-5" />
+                                    </div>
+                                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Manifest Output (CSV)</h3>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={downloadCsv}
+                                        disabled={!csv}
+                                        className="p-3 bg-white dark:bg-slate-800 text-slate-400 hover:text-emerald-500 rounded-xl shadow-lg border border-slate-50 dark:border-slate-800 transition-all active:scale-90 disabled:opacity-0"
+                                        title="Export Manifest"
+                                    >
+                                        <Download className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={copyToClipboard}
+                                        disabled={!csv}
+                                        className="p-3 bg-white dark:bg-slate-800 text-slate-400 hover:text-emerald-500 rounded-xl shadow-lg border border-slate-50 dark:border-slate-800 transition-all active:scale-90 disabled:opacity-0"
+                                        title="Sync Buffer"
+                                    >
+                                        {copied ? <Check className="w-5 h-5 text-emerald-500" /> : <Copy className="w-5 h-5" />}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="relative group">
+                                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-[2.5rem] blur opacity-0 group-hover:opacity-5 transition duration-1000"></div>
+                                <textarea
+                                    value={csv}
+                                    readOnly
+                                    placeholder='Manifest will materialize here...'
+                                    className="relative w-full h-[400px] p-10 bg-slate-50/50 dark:bg-slate-950/50 border-2 border-transparent rounded-[2.5rem] text-slate-600 dark:text-slate-400 font-mono text-xs leading-relaxed outline-none shadow-inner resize-none scrollbar-hide"
+                                />
+                            </div>
+                        </div>
                     </div>
-                    <textarea
-                        value={json}
-                        onChange={(e) => setJson(e.target.value)}
-                        placeholder='[{"id": 1, "name": "John"}, {"id": 2, "name": "Jane"}]'
-                        className="w-full h-80 p-6 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-2xl outline-none focus:border-emerald-500/50 transition-all font-mono text-sm resize-none shadow-sm"
-                    />
-                </div>
-                <div className="space-y-3">
-                    <div className="flex justify-between items-center text-xs font-black text-slate-400 uppercase tracking-widest pl-2">
-                        <span className="flex items-center gap-2"><FileText className="w-4 h-4" /> CSV Output</span>
+
+                    {/* Action Nexus */}
+                    <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6 pt-12 border-t border-slate-50 dark:border-slate-800/50">
+                        <button
+                            onClick={convert}
+                            className="w-full sm:w-auto px-12 py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-4"
+                        >
+                            <ArrowRightLeft className="w-5 h-5 animate-pulse" />
+                            Synthesize CSV
+                        </button>
                     </div>
-                    <textarea
-                        value={csv}
-                        readOnly
-                        placeholder='CSV result will appear here...'
-                        className="w-full h-80 p-6 bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800 rounded-2xl outline-none font-mono text-sm resize-none shadow-inner text-slate-600 dark:text-slate-400"
-                    />
+
+                    {error && (
+                        <div className="mt-8 p-6 bg-red-50/90 dark:bg-red-950/90 backdrop-blur-md border border-red-100 dark:border-red-900/30 rounded-2xl flex items-start gap-4 animate-in fade-in zoom-in-95 duration-300 max-w-2xl mx-auto">
+                            <Trash2 className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />
+                            <div className="space-y-1 text-center sm:text-left">
+                                <div className="text-[10px] font-black uppercase tracking-widest text-red-900 dark:text-red-200">Structural Exception</div>
+                                <div className="text-xs text-red-600 dark:text-red-400 font-bold leading-relaxed">{error}</div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-4">
-                <button
-                    onClick={convert}
-                    className="px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2 uppercase tracking-widest text-xs"
-                >
-                    <ArrowRightLeft className="w-4 h-4" /> Convert to CSV
-                </button>
-                <button
-                    onClick={copyToClipboard}
-                    disabled={!csv}
-                    className="px-8 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-black rounded-xl hover:bg-slate-50 transition-all flex items-center gap-2 uppercase tracking-widest text-xs disabled:opacity-30"
-                >
-                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />} Copy Result
-                </button>
-                <button
-                    onClick={downloadCsv}
-                    disabled={!csv}
-                    className="px-8 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-black rounded-xl hover:bg-slate-50 transition-all flex items-center gap-2 uppercase tracking-widest text-xs disabled:opacity-30"
-                >
-                    <Download className="w-4 h-4" /> Download .csv
-                </button>
-                <button
-                    onClick={() => { setJson(''); setCsv(''); setError(''); }}
-                    className="p-3 text-slate-400 hover:text-red-500 transition-colors"
-                >
-                    <Trash2 className="w-5 h-5" />
-                </button>
+            <div className="text-center">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300">
+                    Structural Transformation Node // JSON {'<>'} CSV
+                </p>
             </div>
-
-            {error && (
-                <div className="max-w-md mx-auto p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-xl text-red-600 dark:text-red-400 text-sm font-bold text-center">
-                    {error}
-                </div>
-            )}
         </div>
     );
 }

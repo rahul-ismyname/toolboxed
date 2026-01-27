@@ -507,51 +507,51 @@ export function PDFMaster() {
 
                         {/* Mode Specific Options */}
                         {mode === 'split' && files.length > 0 && (
-                            <div className="space-y-8">
-                                <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl w-fit">
+                            <div className="space-y-6 lg:space-y-8">
+                                <div className="flex flex-wrap p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl w-full sm:w-fit gap-1">
                                     {(['range', 'every', 'chunks', 'selection'] as const).map(m => (
                                         <button
                                             key={m}
                                             onClick={() => setSplitMode(m)}
-                                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${splitMode === m ? 'bg-white dark:bg-slate-700 text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                            className={`flex-1 sm:flex-none px-3 lg:px-4 py-2.5 lg:py-2 rounded-xl text-[10px] lg:text-xs font-black uppercase tracking-widest transition-all ${splitMode === m ? 'bg-white dark:bg-slate-700 text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                                         >
-                                            {m === 'range' ? 'Custom Range' : m === 'every' ? 'All Pages' : m === 'chunks' ? 'Fixed Chunks' : 'Visual Select'}
+                                            {m === 'range' ? 'Custom' : m === 'every' ? 'All' : m === 'chunks' ? 'Fixed' : 'Visual'}
                                         </button>
                                     ))}
                                 </div>
 
                                 {splitMode === 'range' && (
                                     <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                                        <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Pages to Extract</label>
+                                        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Pages to Extract</label>
                                         <input
                                             type="text"
                                             value={pageRange}
                                             onChange={(e) => setPageRange(e.target.value)}
-                                            placeholder="e.g. 1, 3-5, 8"
-                                            className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl focus:border-emerald-500 outline-none transition-all font-medium"
+                                            placeholder="e.g. 1, 3-5"
+                                            className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl focus:border-emerald-500 outline-none transition-all text-sm font-bold"
                                         />
                                     </div>
                                 )}
 
                                 {splitMode === 'chunks' && (
                                     <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                                        <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Pages per File</label>
+                                        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Pages per File</label>
                                         <input
                                             type="number"
                                             min="1"
                                             value={chunkSize}
                                             onChange={(e) => setChunkSize(parseInt(e.target.value) || 1)}
-                                            className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl focus:border-emerald-500 outline-none transition-all font-medium"
+                                            className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl focus:border-emerald-500 outline-none transition-all text-sm font-bold"
                                         />
                                     </div>
                                 )}
 
                                 {(splitMode === 'selection' || splitMode === 'every') && pdfPreviews.length > 0 && (
                                     <div className="animate-in fade-in duration-500">
-                                        <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-6">
-                                            {splitMode === 'selection' ? 'Select Pages to Include' : 'Preview all pages'}
+                                        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">
+                                            {splitMode === 'selection' ? 'Select Pages' : 'Preview all pages'}
                                         </label>
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-h-[400px] overflow-y-auto p-2">
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 lg:gap-4 max-h-[400px] overflow-y-auto p-1 custom-scrollbar">
                                             {pdfPreviews.map((preview, idx) => (
                                                 <div
                                                     key={idx}
@@ -562,20 +562,20 @@ export function PDFMaster() {
                                                             );
                                                         }
                                                     }}
-                                                    className={`relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer transition-all border-4 ${splitMode === 'selection'
+                                                    className={`relative aspect-[3/4] rounded-xl lg:rounded-2xl overflow-hidden cursor-pointer transition-all border-4 shadow-sm ${splitMode === 'selection'
                                                         ? selectedPages.includes(idx)
                                                             ? 'border-emerald-500 ring-4 ring-emerald-500/20'
-                                                            : 'border-slate-100 dark:border-slate-800 hover:border-slate-200'
-                                                        : 'border-slate-50 dark:border-slate-900 shadow-sm'
+                                                            : 'border-white dark:border-slate-800 hover:border-slate-200'
+                                                        : 'border-white dark:border-slate-800'
                                                         }`}
                                                 >
                                                     <img src={preview} alt={`Page ${idx + 1}`} className="w-full h-full object-cover" />
-                                                    <div className="absolute top-2 right-2 bg-slate-900/50 backdrop-blur-md text-white px-2 py-0.5 rounded text-[10px] font-bold">
+                                                    <div className="absolute top-2 right-2 bg-slate-900/60 backdrop-blur-md text-white px-2 py-0.5 rounded text-[9px] font-black">
                                                         {idx + 1}
                                                     </div>
                                                     {splitMode === 'selection' && selectedPages.includes(idx) && (
                                                         <div className="absolute inset-0 bg-emerald-500/10 flex items-center justify-center">
-                                                            <CheckCircle2 className="w-8 h-8 text-emerald-500 fill-white" />
+                                                            <CheckCircle2 className="w-6 h-6 lg:w-8 lg:h-8 text-emerald-500 fill-white" />
                                                         </div>
                                                     )}
                                                 </div>
@@ -587,56 +587,66 @@ export function PDFMaster() {
                         )}
 
                         {mode === 'protect' && files.length > 0 && (
-                            <div className="mb-8">
-                                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Set Password</label>
+                            <div className="mb-8 space-y-4">
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400">Set Password</label>
                                 <input
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="Enter secure password"
-                                    className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl focus:border-purple-500 outline-none transition-all font-medium"
+                                    className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl focus:border-purple-500 outline-none transition-all text-sm font-bold"
                                 />
                             </div>
                         )}
 
                         {mode === 'sign' && files.length > 0 && (
-                            <div className="mb-8 space-y-4">
-                                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Draw Your Signature</label>
-                                <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-4">
-                                    <canvas
-                                        ref={canvasRef}
-                                        width={600}
-                                        height={200}
-                                        className="w-full h-[200px] bg-white rounded-lg cursor-crosshair"
-                                    />
+                            <div className="mb-0 space-y-6">
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400">Adopt Your Signature</label>
+                                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl lg:rounded-3xl border-2 border-slate-100 dark:border-slate-700 p-3 lg:p-4">
+                                    <div className="relative w-full h-[180px] lg:h-[220px] bg-white rounded-xl lg:rounded-2xl border border-slate-100 overflow-hidden shadow-inner cursor-crosshair touch-none" style={{ touchAction: 'none' }}>
+                                        <canvas
+                                            ref={canvasRef}
+                                            className="w-full h-full"
+                                        />
+                                    </div>
                                     <div className="flex gap-2 mt-4">
-                                        <button onClick={clearSignature} className="px-4 py-2 bg-white dark:bg-slate-700 text-slate-600 rounded-xl text-xs font-bold border">Clear</button>
-                                        <button onClick={saveSignature} className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold">Adopt Signature</button>
+                                        <button
+                                            onClick={clearSignature}
+                                            className="flex-1 py-3 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-600 transition-all hover:bg-slate-50"
+                                        >
+                                            Clear
+                                        </button>
+                                        <button
+                                            onClick={saveSignature}
+                                            className="flex-1 py-3 bg-slate-900 dark:bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-black/10 dark:shadow-emerald-500/20 active:scale-95 transition-all"
+                                        >
+                                            Adopt Signature
+                                        </button>
                                     </div>
                                 </div>
 
                                 {/* Signature Position & Preview */}
                                 {signatureImage && (
-                                    <div className="space-y-4 animate-in fade-in duration-300">
-                                        <div className="p-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl border border-emerald-100 dark:border-emerald-500/20 flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-white rounded p-1 border border-slate-100">
+                                    <div className="space-y-6 animate-in fade-in duration-300">
+                                        <div className="p-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl border border-emerald-100 dark:border-emerald-500/20 flex items-center gap-4">
+                                            <div className="w-12 h-12 bg-white rounded-lg p-1 border border-emerald-100 shadow-sm shrink-0">
                                                 <img src={signatureImage} alt="Sig" className="w-full h-full object-contain" />
                                             </div>
                                             <div className="flex-1">
-                                                <p className="text-sm font-bold text-emerald-600">Signature Captured!</p>
-                                                <p className="text-xs text-slate-500">Ready to be placed on the document.</p>
+                                                <p className="text-[10px] lg:text-xs font-black text-emerald-600 uppercase tracking-widest mb-0.5">Ready to place!</p>
+                                                <p className="text-[10px] text-slate-500 font-bold">Tap on the document below to place.</p>
                                             </div>
                                         </div>
 
                                         {/* Visual Placement Preview */}
                                         {pdfPreviews.length > 0 && (
                                             <div className="space-y-6">
-                                                <div className="flex items-center justify-between">
-                                                    <label className="block text-xs font-black uppercase tracking-widest text-slate-400">Place Signatures on Pages</label>
-                                                    <div className="flex gap-2">
+                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400">Place on Pages</label>
+                                                    <div className="flex items-center gap-2">
                                                         <button
                                                             onClick={() => setActivePlacementId(null)}
-                                                            className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${!activePlacementId ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200'}`}
+                                                            className={`flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${!activePlacementId ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900' : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'}`}
                                                         >
                                                             Add New
                                                         </button>
@@ -646,23 +656,23 @@ export function PDFMaster() {
                                                                     setPlacements(prev => prev.filter(p => p.id !== activePlacementId));
                                                                     setActivePlacementId(null);
                                                                 }}
-                                                                className="px-4 py-2 bg-red-50 text-red-600 border-red-100 rounded-xl text-xs font-bold border hover:bg-red-100 transition-all"
+                                                                className="flex-1 sm:flex-none px-4 py-2.5 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-100 dark:border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest border hover:bg-red-100 transition-all"
                                                             >
-                                                                Remove Selected
+                                                                Remove
                                                             </button>
                                                         )}
                                                     </div>
                                                 </div>
 
-                                                <div className="space-y-8 max-h-[600px] overflow-y-auto p-4 rounded-3xl bg-slate-50 dark:bg-slate-950/50 border-2 border-slate-100 dark:border-slate-800/50">
+                                                <div className="space-y-8 max-h-[500px] overflow-y-auto p-3 lg:p-6 rounded-3xl bg-slate-50 dark:bg-slate-950/50 border-2 border-slate-100 dark:border-slate-800/50 custom-scrollbar">
                                                     {pdfPreviews.map((preview, pageIndex) => (
                                                         <div key={pageIndex} className="relative group">
-                                                            <div className="absolute -left-12 top-0 text-[10px] font-black text-slate-300 uppercase vertical-text tracking-widest h-full flex items-center">
-                                                                Page {pageIndex + 1}
+                                                            <div className="absolute -left-2 sm:-left-12 top-0 text-[8px] font-black text-slate-400 dark:text-slate-600 uppercase sm:vertical-text tracking-widest sm:h-full flex items-center bg-white dark:bg-slate-900 sm:bg-transparent px-2 py-1 rounded-full sm:p-0 shadow-sm sm:shadow-none z-10 border sm:border-0 border-slate-100 dark:border-slate-800">
+                                                                P{pageIndex + 1}
                                                             </div>
                                                             <div
                                                                 onClick={(e) => handlePreviewClick(pageIndex, e)}
-                                                                className="relative mx-auto border-4 border-white dark:border-slate-800 rounded-2xl overflow-hidden cursor-crosshair shadow-xl bg-white dark:bg-slate-900 transition-all hover:ring-4 hover:ring-slate-200 dark:hover:ring-slate-800"
+                                                                className="relative mx-auto border-2 lg:border-4 border-white dark:border-slate-800 rounded-lg lg:rounded-2xl overflow-hidden cursor-crosshair shadow-lg bg-white dark:bg-slate-900 transition-all hover:ring-2 lg:hover:ring-4 hover:ring-indigo-500"
                                                                 style={{ width: 'fit-content', maxWidth: '100%' }}
                                                             >
                                                                 <img src={preview} alt={`Page ${pageIndex + 1}`} className="max-w-full h-auto" />
@@ -686,11 +696,11 @@ export function PDFMaster() {
                                                                             <img
                                                                                 src={signatureImage}
                                                                                 alt="Signature"
-                                                                                className={`w-full h-auto object-contain rounded-lg shadow-lg ${activePlacementId === placement.id ? 'bg-emerald-500/30 border-2 border-emerald-500 ring-4 ring-emerald-500/20' : 'bg-slate-500/20 border-2 border-slate-400'}`}
+                                                                                className={`w-full h-auto object-contain rounded-lg shadow-lg ${activePlacementId === placement.id ? 'bg-indigo-500/20 border-2 border-indigo-500 ring-4 ring-indigo-500/10' : 'bg-slate-500/20 border-2 border-white'}`}
                                                                             />
                                                                             {activePlacementId === placement.id && (
-                                                                                <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-3 py-1.5 rounded-full font-black shadow-xl whitespace-nowrap uppercase tracking-wider animate-bounce">
-                                                                                    Active Placement
+                                                                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-[8px] px-2 py-1 rounded-full font-black shadow-xl whitespace-nowrap uppercase tracking-widest animate-bounce">
+                                                                                    Active
                                                                                 </div>
                                                                             )}
                                                                         </div>
@@ -700,7 +710,7 @@ export function PDFMaster() {
                                                         </div>
                                                     ))}
                                                 </div>
-                                                <p className="text-center text-xs text-slate-400 font-medium">Tip: Click on any page to add or move a signature. Use "Add New" to place multiple spots.</p>
+                                                <p className="text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest">Tip: Click on a page to move placement.</p>
                                             </div>
                                         )}
 
@@ -715,12 +725,12 @@ export function PDFMaster() {
                                                             setSignSize(size);
                                                         }
                                                     }}
-                                                    className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${(activePlacementId ? placements.find(p => p.id === activePlacementId)?.size === size : signSize === size)
-                                                        ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900'
-                                                        : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+                                                    className={`py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${(activePlacementId ? placements.find(p => p.id === activePlacementId)?.size === size : signSize === size)
+                                                        ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900'
+                                                        : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-slate-300'
                                                         }`}
                                                 >
-                                                    {size.charAt(0).toUpperCase() + size.slice(1)} Size
+                                                    {size}
                                                 </button>
                                             ))}
                                         </div>

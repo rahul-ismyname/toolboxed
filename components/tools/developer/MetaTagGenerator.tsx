@@ -44,177 +44,200 @@ export function MetaTagGenerator() {
     const [activeTab, setActiveTab] = useState<'inputs' | 'previews'>('inputs');
 
     return (
-        <div className="w-full max-w-6xl mx-auto space-y-4 lg:space-y-8 animate-in fade-in duration-500">
-
-            {/* Mobile Tabs */}
-            <div className="lg:hidden flex p-1.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 sticky top-0 z-40">
-                <button
-                    onClick={() => setActiveTab('inputs')}
-                    className={`flex-1 py-2.5 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${activeTab === 'inputs' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-400'}`}
-                >
-                    Configure
-                </button>
-                <button
-                    onClick={() => setActiveTab('previews')}
-                    className={`flex-1 py-2.5 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${activeTab === 'previews' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-400'}`}
-                >
-                    Previews
-                </button>
+        <div className="max-w-6xl mx-auto space-y-8 lg:space-y-12 animate-in fade-in duration-500">
+            {/* Contextual Header */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 px-4">
+                <div className="flex items-center gap-4">
+                    <div className="p-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl shadow-xl">
+                        <Globe className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">SEO Protocol Engine</h2>
+                        <p className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-wider">Meta Generator</p>
+                    </div>
+                </div>
+                {/* Mobile Navigation Nexus */}
+                <div className="lg:hidden flex p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 w-full sm:w-auto">
+                    <button
+                        onClick={() => setActiveTab('inputs')}
+                        className={`flex-1 sm:px-8 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === 'inputs' ? 'bg-white dark:bg-slate-900 text-emerald-500 shadow-lg' : 'text-slate-400'}`}
+                    >
+                        Configure
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('previews')}
+                        className={`flex-1 sm:px-8 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === 'previews' ? 'bg-white dark:bg-slate-900 text-emerald-500 shadow-lg' : 'text-slate-400'}`}
+                    >
+                        Previews
+                    </button>
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-                {/* Inputs Column */}
-                <div className={`space-y-6 ${activeTab === 'inputs' ? 'block' : 'hidden lg:block'}`}>
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl lg:rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 p-6 lg:p-8 space-y-4">
-                        <div className="flex items-center gap-2 mb-2">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                {/* Configuration Matrix */}
+                <div className={`space-y-8 ${activeTab === 'inputs' ? 'block' : 'hidden lg:block'}`}>
+                    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl shadow-indigo-500/5 border border-slate-100 dark:border-slate-800 p-8 sm:p-12 space-y-8">
+                        <div className="flex items-center gap-3 px-2">
                             <Layout className="w-5 h-5 text-emerald-500" />
-                            <h3 className="font-bold text-slate-700 dark:text-slate-200">Page Information</h3>
+                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Structural Schema</h3>
                         </div>
 
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Page Title</label>
-                            <input
-                                type="text"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                placeholder="e.g. My Awesome Website | Home"
-                                className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 outline-none focus:border-emerald-500 transition-colors text-sm"
-                            />
-                            <div className={`text-[10px] text-right font-bold ${title.length > 60 ? 'text-red-400' : 'text-slate-400'}`}>{title.length} / 60</div>
-                        </div>
-
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Description</label>
-                            <textarea
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                placeholder="A brief description of your page content..."
-                                className="w-full h-24 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 outline-none focus:border-emerald-500 transition-colors resize-none text-sm"
-                            />
-                            <div className={`text-[10px] text-right font-bold ${description.length > 160 ? 'text-red-400' : 'text-slate-400'}`}>{description.length} / 160</div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Website URL</label>
+                        <div className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-300 px-1">Page Title</label>
                                 <input
                                     type="text"
-                                    value={url}
-                                    onChange={(e) => setUrl(e.target.value)}
-                                    placeholder="https://example.com"
-                                    className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 outline-none focus:border-emerald-500 transition-colors text-sm"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    placeholder="Site Title | High-Impact Suffix"
+                                    className="w-full bg-slate-50 dark:bg-slate-950/50 border-2 border-transparent focus:border-emerald-500/30 rounded-2xl p-5 outline-none transition-all text-sm font-bold shadow-inner"
                                 />
+                                <div className="flex justify-end px-2">
+                                    <span className={`text-[10px] font-black tracking-widest ${title.length > 60 ? 'text-red-500' : 'text-slate-300'}`}>{title.length} / 60</span>
+                                </div>
                             </div>
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Social Image URL</label>
-                                <input
-                                    type="text"
-                                    value={imageUrl}
-                                    onChange={(e) => setImageUrl(e.target.value)}
-                                    placeholder="https://example.com/og-image.jpg"
-                                    className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 outline-none focus:border-emerald-500 transition-colors text-sm"
-                                />
-                            </div>
-                        </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Keywords</label>
-                                <input
-                                    type="text"
-                                    value={keywords}
-                                    onChange={(e) => setKeywords(e.target.value)}
-                                    placeholder="design, tools, seo..."
-                                    className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 outline-none focus:border-emerald-500 transition-colors text-sm"
+                            <div className="space-y-2">
+                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-300 px-1">Description</label>
+                                <textarea
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    placeholder="Synthesize a concise description for the crawler..."
+                                    className="w-full h-32 bg-slate-50 dark:bg-slate-950/50 border-2 border-transparent focus:border-emerald-500/30 rounded-2xl p-5 outline-none transition-all resize-none text-sm font-bold shadow-inner leading-relaxed"
                                 />
+                                <div className="flex justify-end px-2">
+                                    <span className={`text-[10px] font-black tracking-widest ${description.length > 160 ? 'text-red-500' : 'text-slate-300'}`}>{description.length} / 160</span>
+                                </div>
                             </div>
-                            <div className="space-y-1">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Author</label>
-                                <input
-                                    type="text"
-                                    value={author}
-                                    onChange={(e) => setAuthor(e.target.value)}
-                                    placeholder="Your Name"
-                                    className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 outline-none focus:border-emerald-500 transition-colors text-sm"
-                                />
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-300 px-1">Origin URL</label>
+                                    <input
+                                        type="text"
+                                        value={url}
+                                        onChange={(e) => setUrl(e.target.value)}
+                                        placeholder="https://protocol.io"
+                                        className="w-full bg-slate-50 dark:bg-slate-950/50 border-2 border-transparent focus:border-emerald-500/30 rounded-2xl p-4 outline-none transition-all text-xs font-bold shadow-inner"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-300 px-1">Social Manifest URL</label>
+                                    <input
+                                        type="text"
+                                        value={imageUrl}
+                                        onChange={(e) => setImageUrl(e.target.value)}
+                                        placeholder="https://assets.io/og.jpg"
+                                        className="w-full bg-slate-50 dark:bg-slate-950/50 border-2 border-transparent focus:border-emerald-500/30 rounded-2xl p-4 outline-none transition-all text-xs font-bold shadow-inner"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-300 px-1">Keywords</label>
+                                    <input
+                                        type="text"
+                                        value={keywords}
+                                        onChange={(e) => setKeywords(e.target.value)}
+                                        placeholder="vector, semantic, logic..."
+                                        className="w-full bg-slate-50 dark:bg-slate-950/50 border-2 border-transparent focus:border-emerald-500/30 rounded-2xl p-4 outline-none transition-all text-sm font-bold shadow-inner"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-300 px-1">Author Entity</label>
+                                    <input
+                                        type="text"
+                                        value={author}
+                                        onChange={(e) => setAuthor(e.target.value)}
+                                        placeholder="Lead Architect"
+                                        className="w-full bg-slate-50 dark:bg-slate-950/50 border-2 border-transparent focus:border-emerald-500/30 rounded-2xl p-4 outline-none transition-all text-sm font-bold shadow-inner"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Previews Column */}
-                <div className={`space-y-6 ${activeTab === 'previews' ? 'block' : 'hidden lg:block'}`}>
-
-                    {/* Google Preview */}
-                    <div className="bg-white rounded-2xl lg:rounded-3xl shadow-xl border border-slate-200 p-5 lg:p-6 overflow-hidden">
-                        <div className="flex items-center gap-2 mb-4 border-b border-slate-100 pb-4">
+                {/* Projection Manifests */}
+                <div className={`space-y-8 ${activeTab === 'previews' ? 'block' : 'hidden lg:block'}`}>
+                    {/* Google Projection */}
+                    <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 p-8 sm:p-12 space-y-8 group hover:shadow-indigo-500/5 transition-all">
+                        <div className="flex items-center gap-4 border-b border-slate-50 pb-6">
                             <Search className="w-5 h-5 text-blue-500" />
-                            <h3 className="font-bold text-slate-700 text-sm lg:text-base">Google Result</h3>
+                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Search Projection</h3>
                         </div>
-                        <div className="space-y-1 w-full overflow-hidden">
-                            <div className="flex items-center gap-2 text-[10px] text-slate-700 mb-1">
-                                <div className="w-5 h-5 lg:w-6 lg:h-6 bg-slate-100 rounded-full flex items-center justify-center shrink-0">
-                                    <Globe className="w-3 h-3 text-slate-400" />
+                        <div className="space-y-2 overflow-hidden">
+                            <div className="flex items-center gap-3 text-[10px] text-slate-700 mb-2">
+                                <div className="p-2 bg-slate-50 rounded-full">
+                                    <Globe className="w-4 h-4 text-slate-400" />
                                 </div>
-                                <div className="flex flex-col leading-none truncate overflow-hidden">
-                                    <span className="font-normal truncate">{title || 'Site Name'}</span>
-                                    <span className="text-slate-500 truncate">{url || 'https://example.com'}</span>
+                                <div className="leading-tight">
+                                    <div className="font-bold text-slate-900">{title || 'Protocol'}</div>
+                                    <div className="text-slate-500">{url || 'https://protocol.io'}</div>
                                 </div>
                             </div>
-                            <h4 className="text-lg lg:text-xl text-[#1a0dab] hover:underline cursor-pointer truncate font-normal">
-                                {title || 'Your Page Title Shows Here'}
+                            <h4 className="text-xl lg:text-2xl text-[#1a0dab] hover:underline cursor-pointer truncate font-medium">
+                                {title || 'Origin Header Synthesis'}
                             </h4>
-                            <p className="text-xs lg:text-sm text-[#4d5156] line-clamp-2 leading-snug">
-                                {description || 'This is how your page description will appear in Google search results. Keep it between 150-160 characters for best visibility.'}
+                            <p className="text-sm text-[#4d5156] line-clamp-2 leading-relaxed opacity-80">
+                                {description || 'Awaiting structural synthesis. This is how the description will materialize in the global index.'}
                             </p>
                         </div>
                     </div>
 
-                    {/* Facebook/OG Preview */}
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl lg:rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-                        <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                                <h3 className="font-black text-slate-600 dark:text-slate-300 text-[10px] lg:text-xs uppercase tracking-widest">Social Share Preview</h3>
+                    {/* Social/OG Projection */}
+                    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden group hover:shadow-indigo-500/5 transition-all">
+                        <div className="p-8 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Social Manifest</h3>
                             </div>
                         </div>
-                        <div className="border border-slate-200 dark:border-slate-700 m-4 lg:m-6 rounded-lg lg:rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950">
-                            <div className="aspect-[1.91/1] bg-slate-200 dark:bg-slate-800 relative flex items-center justify-center overflow-hidden">
+                        <div className="m-8 border border-slate-100 dark:border-slate-800 rounded-[1.5rem] overflow-hidden bg-slate-50/50 dark:bg-slate-950/50">
+                            <div className="aspect-[1.91/1] bg-slate-100 dark:bg-slate-800 relative flex items-center justify-center overflow-hidden">
                                 {imageUrl ? (
-                                    <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                                    <img src={imageUrl} alt="Projection" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                                 ) : (
-                                    <div className="text-slate-400 flex flex-col items-center">
-                                        <ImageIcon className="w-6 h-6 lg:w-8 lg:h-8 opacity-50 mb-2" />
-                                        <span className="text-[8px] lg:text-[10px] uppercase font-black tracking-widest">No Image</span>
+                                    <div className="text-slate-300 dark:text-slate-700 flex flex-col items-center">
+                                        <ImageIcon className="w-8 h-8 opacity-20 mb-3" />
+                                        <span className="text-[9px] uppercase font-black tracking-widest opacity-20">Manifest Pending</span>
                                     </div>
                                 )}
                             </div>
-                            <div className="p-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700">
-                                <div className="text-[9px] uppercase font-bold text-slate-500 mb-0.5 truncate">{url ? new URL(url).hostname : 'EXAMPLE.COM'}</div>
-                                <div className="font-bold text-slate-900 dark:text-slate-100 mb-0.5 truncate text-xs lg:text-sm">{title || 'Your Object Title'}</div>
-                                <div className="text-[10px] lg:text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{description || 'Your object description...'}</div>
+                            <div className="p-6 bg-white dark:bg-slate-900/50 border-t border-slate-50 dark:border-slate-800">
+                                <div className="text-[9px] uppercase font-black text-slate-300 mb-1 tracking-widest truncate">{url ? new URL(url).hostname : 'PROTOCOL.IO'}</div>
+                                <div className="font-black text-slate-900 dark:text-white mb-1 truncate text-base">{title || 'Synthetic Origin'}</div>
+                                <div className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 font-medium">{description || 'Materializing description manifest...'}</div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Output Code */}
-                    <div className="bg-slate-900 rounded-2xl lg:rounded-3xl shadow-xl overflow-hidden text-slate-300 font-mono relative group">
-                        <div className="flex bg-slate-950/50 p-4 border-b border-slate-800 justify-between items-center">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">HTML Snippet</span>
+                    {/* Snippet Output */}
+                    <div className="bg-slate-950 rounded-[2.5rem] shadow-2xl overflow-hidden text-slate-300 font-mono relative group border border-slate-800">
+                        <div className="flex bg-slate-900/50 p-6 border-b border-slate-800/80 justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">HTML Fragment</span>
+                            </div>
                             <button
                                 onClick={handleCopy}
-                                className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 hover:text-emerald-300 transition-colors border border-slate-700 shadow-lg active:scale-95"
+                                className="p-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 hover:text-emerald-300 transition-all border border-slate-700 shadow-xl active:scale-90"
                             >
-                                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                                {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                             </button>
                         </div>
-                        <div className="p-5 lg:p-6 text-[10px] lg:text-xs leading-relaxed overflow-x-auto whitespace-pre custom-scrollbar">
+                        <div className="p-8 lg:p-12 text-[10px] sm:text-xs leading-relaxed overflow-x-auto whitespace-pre custom-scrollbar opacity-80 group-hover:opacity-100 transition-opacity">
                             {generateCode()}
                         </div>
                     </div>
-
                 </div>
+            </div>
+
+            <div className="text-center">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300">
+                    SEO Manifest Synthesizer // v2.0
+                </p>
             </div>
         </div>
     );

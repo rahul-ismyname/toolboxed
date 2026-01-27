@@ -50,91 +50,120 @@ export function TimestampConverter() {
     };
 
     return (
-        <div className="space-y-8">
-            {/* Live Timer */}
-            <div className="bg-emerald-500 text-white rounded-2xl p-8 shadow-lg shadow-emerald-500/20 flex flex-col items-center justify-center text-center">
-                <div className="flex items-center text-emerald-100 font-medium mb-2">
-                    <Clock className="w-5 h-5 mr-2" />
-                    Current Unix Timestamp
+        <div className="max-w-5xl mx-auto space-y-6 lg:space-y-10 animate-in fade-in duration-500">
+            {/* Live Clock Nexus */}
+            <div className="bg-slate-900 dark:bg-slate-950 rounded-[3rem] p-8 sm:p-12 shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-emerald-500/10 to-transparent pointer-events-none" />
+                <div className="relative z-10 text-center">
+                    <div className="flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.4em] text-emerald-500 mb-6">
+                        <Clock className="w-5 h-5" />
+                        Live Unix Temporal Index
+                    </div>
+                    <div className="text-5xl sm:text-8xl font-black text-white tracking-tighter mb-10 font-mono">
+                        {now}
+                    </div>
+                    <button
+                        onClick={() => copyToClipboard(now.toString(), 'live')}
+                        className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all backdrop-blur-md border border-white/5 active:scale-95 flex items-center gap-3 mx-auto"
+                    >
+                        {copied === 'live' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                        {copied === 'live' ? 'Synchronized' : 'Sync Index'}
+                    </button>
                 </div>
-                <div className="text-5xl md:text-7xl font-mono font-bold tracking-tight mb-4">
-                    {now}
-                </div>
-                <button
-                    onClick={() => copyToClipboard(now.toString(), 'live')}
-                    className="inline-flex items-center px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors backdrop-blur-sm"
-                >
-                    {copied === 'live' ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
-                    {copied === 'live' ? 'Copied' : 'Copy Timestamp'}
-                </button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Epoch to Human */}
-                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-6 md:p-8">
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">Epoch to Human Date</h3>
-                    <div className="space-y-4">
-                        <div className="relative">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+                {/* Epoch to Human Date */}
+                <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl shadow-indigo-500/5 border border-slate-100 dark:border-slate-800 p-8 sm:p-10 transition-all hover:shadow-indigo-500/10">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-8 px-1">Epoch Nexus Conversion</h3>
+                    <div className="space-y-6">
+                        <div className="space-y-3">
+                            <label className="text-[9px] font-black uppercase tracking-widest text-slate-300 px-1">Source Index</label>
                             <input
                                 type="number"
                                 value={epochInput}
                                 onChange={(e) => setEpochInput(e.target.value)}
                                 placeholder="1672322..."
-                                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl font-mono text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                                className="w-full px-6 py-5 bg-slate-50 dark:bg-slate-950 border-2 border-slate-50 dark:border-slate-800 rounded-2xl font-mono text-xl font-black text-slate-900 dark:text-white outline-none focus:border-emerald-500 transition-all shadow-inner"
                             />
                         </div>
                         <button
                             onClick={handleEpochConvert}
-                            className="w-full py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center justify-center"
+                            className="w-full py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl flex items-center justify-center gap-3"
                         >
-                            Convert <ArrowRight className="w-4 h-4 ml-2" />
+                            Deconstruct Index <ArrowRight className="w-4 h-4" />
                         </button>
+
                         {humanResult && (
-                            <div className="p-4 bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-100 dark:border-slate-800 break-all text-sm font-mono text-slate-600 dark:text-slate-300">
-                                {humanResult}
+                            <div className="mt-8 p-8 bg-slate-50/50 dark:bg-slate-950/50 rounded-[2rem] border border-slate-50 dark:border-slate-800 group animate-in slide-in-from-top-4 duration-500">
+                                <div className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-4">Human Manifest</div>
+                                <div className="text-sm font-bold text-slate-700 dark:text-slate-200 leading-relaxed break-words">
+                                    {humanResult}
+                                </div>
+                                <button
+                                    onClick={() => copyToClipboard(humanResult, 'human-res')}
+                                    className="mt-6 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500 hover:text-emerald-600 transition-colors"
+                                >
+                                    {copied === 'human-res' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                                    {copied === 'human-res' ? 'Manifest Synced' : 'Sync Manifest'}
+                                </button>
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* Human to Epoch */}
-                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-6 md:p-8">
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">Human Date to Epoch</h3>
-                    <div className="space-y-4">
-                        <div className="relative">
+                {/* Human Date to Epoch */}
+                <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl shadow-indigo-500/5 border border-slate-100 dark:border-slate-800 p-8 sm:p-10 transition-all hover:shadow-indigo-500/10">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-8 px-1">Manifest Nexus Conversion</h3>
+                    <div className="space-y-6">
+                        <div className="space-y-3">
+                            <label className="text-[9px] font-black uppercase tracking-widest text-slate-300 px-1">Temporal Value</label>
                             <input
                                 type="datetime-local"
                                 value={dateInput}
-                                onChange={(e) => setDateInput(e.target.value)}
-                                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl font-mono text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                                onChange={(e) => {
+                                    setNow(Math.floor(new Date(e.target.value).getTime() / 1000));
+                                    setDateInput(e.target.value);
+                                }}
+                                className="w-full px-6 py-5 bg-slate-50 dark:bg-slate-950 border-2 border-slate-50 dark:border-slate-800 rounded-2xl text-sm font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500 transition-all shadow-sm"
                             />
                         </div>
-                        <div className="flex items-center justify-between">
-                            <label className="flex items-center text-sm text-slate-500 cursor-pointer select-none">
-                                <input
-                                    type="checkbox"
-                                    checked={isMilliseconds}
-                                    onChange={(e) => setIsMilliseconds(e.target.checked)}
-                                    className="mr-2 accent-emerald-500 w-4 h-4"
-                                />
-                                Use Milliseconds
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-6">
+                            <label className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-slate-400 cursor-pointer select-none group">
+                                <div className={`w-10 h-6 rounded-full transition-all relative ${isMilliseconds ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-800'}`}>
+                                    <input
+                                        type="checkbox"
+                                        checked={isMilliseconds}
+                                        onChange={(e) => setIsMilliseconds(e.target.checked)}
+                                        className="sr-only"
+                                    />
+                                    <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-all ${isMilliseconds ? 'translate-x-4' : ''}`} />
+                                </div>
+                                Milliseconds
                             </label>
                             <button
                                 onClick={handleDateConvert}
-                                className="px-6 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center"
+                                className="flex-1 sm:flex-none px-8 py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl flex items-center justify-center gap-3"
                             >
-                                Convert <ArrowRight className="w-4 h-4 ml-2" />
+                                Generate Index <ArrowRight className="w-4 h-4" />
                             </button>
                         </div>
+
                         {epochResult && (
-                            <div className="relative p-4 bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center justify-between group">
-                                <span className="text-lg font-mono font-medium text-slate-900 dark:text-white">{epochResult}</span>
-                                <button
-                                    onClick={() => copyToClipboard(epochResult, 'epoch-res')}
-                                    className="p-1.5 text-slate-400 hover:text-emerald-500 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-colors"
-                                >
-                                    {copied === 'epoch-res' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                                </button>
+                            <div className="mt-8 relative group">
+                                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-indigo-500 rounded-[2rem] blur opacity-5"></div>
+                                <div className="relative p-8 bg-slate-50/50 dark:bg-slate-950/50 rounded-[2rem] border border-slate-50 dark:border-slate-800 flex items-center justify-between animate-in slide-in-from-top-4 duration-500">
+                                    <div className="space-y-1">
+                                        <div className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Calculated Index</div>
+                                        <div className="text-2xl font-black font-mono text-slate-900 dark:text-white tracking-widest">{epochResult}</div>
+                                    </div>
+                                    <button
+                                        onClick={() => copyToClipboard(epochResult, 'epoch-res')}
+                                        className="p-5 bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-50 dark:border-slate-800 text-slate-300 hover:text-emerald-500 transition-all active:scale-90"
+                                    >
+                                        {copied === 'epoch-res' ? <Check className="w-5 h-5 text-emerald-500" /> : <Copy className="w-5 h-5" />}
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>

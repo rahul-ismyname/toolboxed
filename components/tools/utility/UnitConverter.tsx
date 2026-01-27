@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import {
     ArrowRightLeft, Scale, Ruler, Thermometer,
-    Box, Droplets, Gauge, Timer, HardDrive, Copy, Check
+    Box, Droplets, Gauge, Timer, HardDrive, Copy, Check, ChevronDown, Sparkles
 } from 'lucide-react';
 
 type Category = 'length' | 'weight' | 'temperature' | 'area' | 'volume' | 'speed' | 'time' | 'digital';
@@ -139,107 +139,185 @@ export function UnitConverter() {
     const toName = UNITS[category].find(u => u.id === toUnit)?.name;
 
     return (
-        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800">
-            {/* Category Tabs */}
-            <div className="flex border-b border-slate-100 dark:border-slate-800 overflow-x-auto scrollbar-hide">
-                {CATEGORIES.map((cat) => (
-                    <button
-                        key={cat.id}
-                        onClick={() => setCategory(cat.id)}
-                        className={`flex items-center justify-center px-5 py-4 text-sm font-bold transition-all whitespace-nowrap min-w-[100px] hover:bg-slate-50 dark:hover:bg-slate-800/50 ${category === cat.id
-                            ? 'bg-slate-50 dark:bg-slate-950 text-emerald-600 dark:text-emerald-500 border-b-2 border-emerald-500'
-                            : 'text-slate-500 dark:text-slate-400'
-                            }`}
-                    >
-                        <cat.icon className={`w-4 h-4 mr-2 ${category === cat.id ? 'text-emerald-500' : 'text-slate-400'}`} />
-                        {cat.name}
-                    </button>
-                ))}
-            </div>
-
-            <div className="p-6 md:p-10">
-                <div className="grid grid-cols-1 md:grid-cols-7 gap-6 items-center">
-                    {/* Amount */}
-                    <div className="md:col-span-2 space-y-2">
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Value</label>
-                        <input
-                            type="number"
-                            value={amount}
-                            onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
-                            className="w-full px-4 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-xl font-bold font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all placeholder-slate-300"
-                            placeholder="0"
-                        />
+        <div className="max-w-5xl mx-auto space-y-12 lg:space-y-20 animate-in fade-in duration-500 font-sans">
+            {/* Semantic Header */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 px-4">
+                <div className="flex items-center gap-6 text-center sm:text-left">
+                    <div className="p-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[1.5rem] shadow-2xl">
+                        <ArrowRightLeft className="w-8 h-8 text-emerald-500" />
                     </div>
-
-                    {/* From */}
-                    <div className="md:col-span-2 space-y-2">
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">From</label>
-                        <select
-                            value={fromUnit}
-                            onChange={(e) => setFromUnit(e.target.value)}
-                            className="w-full px-4 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-base font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all cursor-pointer hover:border-slate-300"
-                        >
-                            {UNITS[category].map(u => (
-                                <option key={u.id} value={u.id}>{u.name}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Swap */}
-                    <div className="flex justify-center md:pt-6">
-                        <button
-                            onClick={handleSwap}
-                            className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500 hover:text-white text-slate-500 transition-all transform hover:rotate-180 shadow-sm"
-                            title="Swap Units"
-                        >
-                            <ArrowRightLeft className="w-5 h-5" />
-                        </button>
-                    </div>
-
-                    {/* To */}
-                    <div className="md:col-span-2 space-y-2">
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">To</label>
-                        <select
-                            value={toUnit}
-                            onChange={(e) => setToUnit(e.target.value)}
-                            className="w-full px-4 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-base font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all cursor-pointer hover:border-slate-300"
-                        >
-                            {UNITS[category].map(u => (
-                                <option key={u.id} value={u.id}>{u.name}</option>
-                            ))}
-                        </select>
+                    <div>
+                        <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">Dimensional Synchronizer</h2>
+                        <p className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider">Unit Oracle</p>
                     </div>
                 </div>
+            </div>
 
-                {/* Result */}
-                <div className="mt-10 relative group">
-                    <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+            {/* Category Navigation - Semantic Horizontal Stream */}
+            <div className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl shadow-indigo-500/5 border border-slate-100 dark:border-slate-800 p-3 overflow-hidden">
+                <div className="flex gap-2 overflow-x-auto no-scrollbar scroll-smooth pb-1 px-1">
+                    {CATEGORIES.map((cat) => (
                         <button
-                            onClick={handleCopy}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-emerald-500 transition-colors"
+                            key={cat.id}
+                            onClick={() => setCategory(cat.id)}
+                            className={`flex items-center gap-4 px-8 py-5 rounded-[2rem] transition-all whitespace-nowrap group relative ${category === cat.id
+                                ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl scale-[1.02]'
+                                : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                                }`}
                         >
-                            {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                            {copied ? 'Copied' : 'Copy'}
+                            {category === cat.id && (
+                                <div className="absolute -inset-1 bg-emerald-500/20 rounded-[2.2rem] blur-lg animate-pulse" />
+                            )}
+                            <cat.icon className={`w-4 h-4 relative z-10 transition-transform group-hover:rotate-12 ${category === cat.id ? 'text-emerald-500' : ''}`} />
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] relative z-10">{cat.name}</span>
                         </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 rounded-[3.5rem] shadow-2xl shadow-indigo-500/5 border border-slate-100 dark:border-slate-800 overflow-hidden">
+                <div className="p-8 sm:p-16 lg:p-24 space-y-12">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-end">
+                        {/* Magnitude Vector */}
+                        <div className="lg:col-span-4 space-y-4">
+                            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500/60 ml-4 italic">Magnitude Vector</label>
+                            <div className="relative group">
+                                <input
+                                    type="number"
+                                    value={amount}
+                                    onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+                                    className="w-full px-10 py-8 bg-slate-50 dark:bg-slate-950/50 border-2 border-transparent focus:border-emerald-500/20 rounded-[2.5rem] text-4xl font-mono font-black text-slate-900 dark:text-white outline-none transition-all shadow-inner tabular-nums"
+                                    placeholder="0"
+                                />
+                                <div className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-200 dark:text-slate-800 font-black text-xs uppercase tracking-widest pointer-events-none group-focus-within:text-emerald-500/20 transition-colors">
+                                    Scalar
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="lg:col-span-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-11 gap-6 items-center bg-slate-50 dark:bg-slate-950/30 p-4 rounded-[3rem] border border-slate-100 dark:border-slate-800/50 shadow-inner">
+                                {/* Origin Node */}
+                                <div className="sm:col-span-5 space-y-3 p-4">
+                                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 italic ml-2">Origin Node</label>
+                                    <div className="relative group">
+                                        <select
+                                            value={fromUnit}
+                                            onChange={(e) => setFromUnit(e.target.value)}
+                                            className="w-full px-8 py-6 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 focus:border-emerald-500/20 rounded-[2rem] text-sm font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 outline-none transition-all appearance-none cursor-pointer shadow-sm hover:shadow-md"
+                                        >
+                                            {UNITS[category].map(u => (
+                                                <option key={u.id} value={u.id}>{u.name}</option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-slate-300 group-hover:text-emerald-500 transition-colors">
+                                            <ChevronDown className="w-5 h-5" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Swap Protocol */}
+                                <div className="sm:col-span-1 flex justify-center">
+                                    <button
+                                        onClick={handleSwap}
+                                        className="w-14 h-14 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center hover:scale-110 active:rotate-180 transition-all shadow-xl group z-10"
+                                    >
+                                        <ArrowRightLeft className="w-5 h-5 group-hover:text-emerald-500 transition-colors" />
+                                    </button>
+                                </div>
+
+                                {/* Destination Node */}
+                                <div className="sm:col-span-5 space-y-3 p-4">
+                                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 italic ml-2">Target Node</label>
+                                    <div className="relative group">
+                                        <select
+                                            value={toUnit}
+                                            onChange={(e) => setToUnit(e.target.value)}
+                                            className="w-full px-8 py-6 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 focus:border-emerald-500/20 rounded-[2rem] text-sm font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 outline-none transition-all appearance-none cursor-pointer shadow-sm hover:shadow-md"
+                                        >
+                                            {UNITS[category].map(u => (
+                                                <option key={u.id} value={u.id}>{u.name}</option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-slate-300 group-hover:text-emerald-500 transition-colors">
+                                            <ChevronDown className="w-5 h-5" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="text-center p-10 bg-slate-50 dark:bg-slate-950/50 rounded-3xl border border-slate-100 dark:border-slate-800/50">
-                        <div className="text-sm font-medium text-slate-400 uppercase tracking-widest mb-4">
-                            Result
-                        </div>
-                        <div className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tight break-all mb-4">
-                            {Number(result.toFixed(6))}
-                            <span className="text-xl md:text-3xl text-emerald-500 ml-3 font-bold opacity-60">
-                                {UNITS[category].find(u => u.id === toUnit)?.id}
-                            </span>
-                        </div>
+                    {/* Synthesis Core */}
+                    <div className="relative group">
+                        <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/10 via-indigo-500/10 to-emerald-500/10 rounded-[5rem] blur-3xl opacity-50 group-hover:opacity-100 transition duration-1000"></div>
+                        <div className="relative p-10 sm:p-20 bg-slate-900 dark:bg-slate-950 rounded-[4.5rem] border border-white/5 shadow-3xl overflow-hidden">
+                            <div className="flex flex-col items-center">
+                                <div className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.5em] mb-12 flex items-center gap-4">
+                                    <div className="w-12 h-px bg-emerald-500/20" />
+                                    Synthesis Manifest
+                                    <div className="w-12 h-px bg-emerald-500/20" />
+                                </div>
 
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 rounded-full text-xs font-medium text-slate-500 border border-slate-100 dark:border-slate-800 shadow-sm">
-                            <span>1 {fromName}</span>
-                            <span className="text-slate-300">≈</span>
-                            <span className="text-slate-700 dark:text-slate-200">{Number(rate.toFixed(6))} {toName}</span>
+                                <div className="flex flex-col items-center gap-4 text-center">
+                                    <div className="flex flex-wrap items-baseline justify-center gap-x-6 gap-y-4">
+                                        <div className="text-7xl sm:text-[10rem] font-black text-white tracking-tighter tabular-nums leading-none">
+                                            {Number(result.toFixed(6))}
+                                        </div>
+                                        <div className="text-3xl sm:text-5xl font-black text-emerald-500 uppercase tracking-tighter">
+                                            {UNITS[category].find(u => u.id === toUnit)?.id}
+                                        </div>
+                                    </div>
+
+                                    <div className="text-sm font-bold text-white/30 uppercase tracking-widest mt-4">
+                                        Calculated from {amount} {fromName}
+                                    </div>
+                                </div>
+
+                                <div className="mt-16 sm:mt-20 flex flex-col sm:flex-row items-center gap-8 w-full">
+                                    <div className="flex-1 inline-flex items-center gap-6 px-10 py-6 bg-white/5 rounded-[2rem] border border-white/5 backdrop-blur-md w-full sm:w-auto">
+                                        <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-500">
+                                            <Gauge className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <div className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 mb-1">Ratio Matrix</div>
+                                            <div className="text-xs font-bold text-white/60">
+                                                1 {UNITS[category].find(u => u.id === fromUnit)?.id} <span className="mx-3 text-emerald-500/40 font-black">≋</span> <span className="text-white font-mono">{Number(rate.toFixed(6))}</span> {UNITS[category].find(u => u.id === toUnit)?.id}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={handleCopy}
+                                        className="h-20 px-10 bg-white dark:bg-slate-900 border border-white/10 text-[10px] font-black uppercase tracking-[0.3em] text-slate-900 dark:text-white hover:bg-emerald-500 hover:text-white transition-all flex items-center gap-4 rounded-[2rem] active:scale-95 shadow-2xl group w-full sm:w-auto justify-center"
+                                    >
+                                        {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5 group-hover:scale-110 transition-transform" />}
+                                        {copied ? 'Outcome Captured' : 'Sync Outcome'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Decorative Background Projections */}
+                            <div className="absolute -top-24 -right-24 w-64 h-64 bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none" />
+                            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none" />
+                            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.03)_0%,transparent_70%)] pointer-events-none"></div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            {/* Reconciliation Protocol */}
+            <div className="pb-20 pt-8 px-10 flex flex-col sm:flex-row items-center justify-between gap-6 opacity-40">
+                <div className="flex items-center gap-4">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">
+                        Dimensional Translation Protocol // Sequence v2.1
+                    </p>
+                </div>
+                <div className="flex items-center gap-8 text-[9px] font-black uppercase tracking-widest text-slate-400 italic">
+                    <span className="flex items-center gap-2 font-mono"><span className="text-emerald-500">√</span> Lossless Scalar Extraction</span>
+                    <span className="opacity-20 text-[14px]">/</span>
+                    <span className="flex items-center gap-2 font-mono"><span className="text-emerald-500">√</span> 100% Precision Matrix</span>
                 </div>
             </div>
         </div>

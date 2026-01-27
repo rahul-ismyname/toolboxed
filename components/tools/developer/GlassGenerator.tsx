@@ -37,97 +37,137 @@ box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);`;
     };
 
     return (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl lg:rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="p-6 md:p-12 grid lg:grid-cols-2 gap-8 lg:gap-12">
-                {/* Controls */}
-                <div className="space-y-6 lg:space-y-8">
-                    <h3 className="text-lg lg:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <Wand2 className="w-5 h-5 text-emerald-500" />
-                        Styling Controls
-                    </h3>
+        <div className="max-w-4xl mx-auto space-y-8 lg:space-y-12 animate-in fade-in duration-500">
+            {/* Structural Header */}
+            <div className="flex flex-col sm:flex-row items-center gap-6 px-4">
+                <div className="p-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[1.5rem] shadow-2xl">
+                    <Palette className="w-8 h-8" />
+                </div>
+                <div className="text-center sm:text-left">
+                    <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">Visual Surface Engine</h2>
+                    <p className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider">Glass Generator</p>
+                </div>
+            </div>
 
-                    <div className="space-y-5 lg:space-y-6">
-                        <div className="space-y-3">
-                            <div className="flex justify-between text-[10px] lg:text-xs font-black text-slate-400 uppercase tracking-widest">
-                                <span>Blur Radius</span>
-                                <span className="text-slate-900 dark:text-white font-bold">{blur}px</span>
-                            </div>
-                            <input
-                                type="range" min="0" max="40" step="1"
-                                value={blur} onChange={(e) => setBlur(Number(e.target.value))}
-                                className="w-full h-2.5 lg:h-2 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-                            />
+            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl shadow-indigo-500/5 border border-slate-100 dark:border-slate-800 overflow-hidden">
+                <div className="p-8 sm:p-12 lg:p-16 grid lg:grid-cols-2 gap-12 lg:gap-20">
+                    {/* Control Matrix */}
+                    <div className="space-y-10">
+                        <div className="flex items-center gap-4 px-2">
+                            <Wand2 className="w-5 h-5 text-emerald-500" />
+                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Synthesis Controls</h3>
                         </div>
 
-                        <div className="space-y-3">
-                            <div className="flex justify-between text-[10px] lg:text-xs font-black text-slate-400 uppercase tracking-widest">
-                                <span>Transparency</span>
-                                <span className="text-slate-900 dark:text-white font-bold">{transparency}</span>
-                            </div>
-                            <input
-                                type="range" min="0" max="1" step="0.01"
-                                value={transparency} onChange={(e) => setTransparency(Number(e.target.value))}
-                                className="w-full h-2.5 lg:h-2 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-                            />
-                        </div>
-
-                        <div className="space-y-3">
-                            <div className="flex justify-between text-[10px] lg:text-xs font-black text-slate-400 uppercase tracking-widest">
-                                <span>Color Tint</span>
-                                <span className="text-slate-900 dark:text-white font-mono font-bold">{color}</span>
-                            </div>
-                            <div className="flex flex-wrap gap-4 items-center">
+                        <div className="space-y-8">
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center px-1">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-300">Blur Intensity</span>
+                                    <span className="text-xs font-black text-emerald-500 font-mono bg-emerald-500/10 px-3 py-1 rounded-full">{blur}PX</span>
+                                </div>
                                 <input
-                                    type="color" value={color} onChange={(e) => setColor(e.target.value)}
-                                    className="w-10 h-10 lg:w-12 lg:h-12 rounded-lg border-0 cursor-pointer p-0 bg-transparent"
+                                    type="range" min="0" max="40" step="1"
+                                    value={blur} onChange={(e) => setBlur(Number(e.target.value))}
+                                    className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 transition-all hover:accent-emerald-400"
                                 />
-                                <div className="flex gap-2">
-                                    {['#ffffff', '#000000', '#3b82f6', '#10b981', '#ef4444'].map(c => (
-                                        <button key={c} onClick={() => setColor(c)} className="w-7 h-7 lg:w-8 lg:h-8 rounded-full border border-slate-200" style={{ backgroundColor: c }} />
-                                    ))}
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center px-1">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-300">Opacity Delta</span>
+                                    <span className="text-xs font-black text-emerald-500 font-mono bg-emerald-500/10 px-3 py-1 rounded-full">{transparency}</span>
+                                </div>
+                                <input
+                                    type="range" min="0" max="1" step="0.01"
+                                    value={transparency} onChange={(e) => setTransparency(Number(e.target.value))}
+                                    className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 transition-all hover:accent-emerald-400"
+                                />
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center px-1">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-300">Chromatic Tint</span>
+                                    <span className="text-xs font-black text-emerald-500 font-mono bg-emerald-500/10 px-3 py-1 rounded-full uppercase">{color}</span>
+                                </div>
+                                <div className="flex flex-wrap gap-4 items-center p-4 bg-slate-50/50 dark:bg-slate-950/50 rounded-2xl border border-slate-50 dark:border-slate-800/50 shadow-inner">
+                                    <div className="relative group/color">
+                                        <input
+                                            type="color" value={color} onChange={(e) => setColor(e.target.value)}
+                                            className="w-12 h-12 rounded-xl border-4 border-white dark:border-slate-800 cursor-pointer p-0 bg-transparent shadow-lg transition-transform group-hover/color:scale-110"
+                                        />
+                                    </div>
+                                    <div className="flex gap-3">
+                                        {['#ffffff', '#000000', '#3b82f6', '#10b981', '#f43f5e'].map(c => (
+                                            <button
+                                                key={c}
+                                                onClick={() => setColor(c)}
+                                                className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 active:scale-90 ${color === c ? 'border-emerald-500 shadow-lg scale-110' : 'border-white dark:border-slate-800 shadow-sm'}`}
+                                                style={{ backgroundColor: c }}
+                                            />
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    {/* Projection Chamber */}
+                    <div className="relative flex flex-col justify-center gap-8">
+                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-[3rem] opacity-90"></div>
+
+                        {/* Dynamic Background Elements */}
+                        <div className="absolute top-10 left-10 w-32 h-32 bg-yellow-300 rounded-full blur-3xl opacity-40 animate-pulse"></div>
+                        <div className="absolute bottom-10 right-10 w-48 h-48 bg-emerald-400 rounded-full blur-3xl opacity-40 animate-pulse delay-700"></div>
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
+
+                        <div
+                            className="w-full aspect-square sm:aspect-video lg:aspect-square flex flex-col items-center justify-center text-center transition-all duration-500 relative z-10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.4)] px-12 group hover:scale-[1.02]"
+                            style={{
+                                background: color.startsWith('#') ? hexToRgba(color, transparency) : color,
+                                backdropFilter: `blur(${blur}px)`,
+                                WebkitBackdropFilter: `blur(${blur}px)`,
+                                border: `1px solid rgba(255, 255, 255, ${outline})`,
+                                borderRadius: '3rem'
+                            }}
+                        >
+                            <div className="p-6 bg-white/10 rounded-[2rem] backdrop-blur-md mb-8 ring-1 ring-white/20 transition-transform group-hover:scale-110">
+                                <Layout className="w-12 h-12 text-white opacity-90" />
+                            </div>
+                            <h4 className="text-3xl font-black text-white mb-3 tracking-tight">Synthetic Surface</h4>
+                            <p className="text-white/70 text-sm font-medium leading-relaxed max-w-xs">
+                                Dynamic glassmorphism rendered via CSS engine protocol.
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Preview */}
-                <div className="rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-6 lg:p-8 flex items-center justify-center min-h-[250px] lg:min-h-[300px] relative overflow-hidden">
-                    {/* Background Noise/Shapes */}
-                    <div className="absolute top-5 left-5 w-24 h-24 lg:top-10 lg:left-10 lg:w-32 lg:h-32 bg-yellow-300 rounded-full blur-2xl opacity-50 animate-pulse" />
-                    <div className="absolute bottom-5 right-5 w-32 h-32 lg:bottom-10 lg:right-10 lg:w-48 lg:h-48 bg-emerald-400 rounded-full blur-3xl opacity-50" />
-
-                    <div
-                        className="w-full max-w-[280px] lg:max-w-sm p-6 lg:p-8 shadow-2xl flex flex-col items-center justify-center text-center transition-all duration-300 relative z-10"
-                        style={{
-                            background: color.startsWith('#') ? hexToRgba(color, transparency) : color,
-                            backdropFilter: `blur(${blur}px)`,
-                            border: `1px solid rgba(255, 255, 255, ${outline})`,
-                            borderRadius: '24px'
-                        }}
-                    >
-                        <Layout className="w-8 h-8 lg:w-12 lg:h-12 text-white mb-4 opacity-80" />
-                        <h4 className="text-lg lg:text-2xl font-black text-white mb-2">Glass Card</h4>
-                        <p className="text-white/80 text-[10px] lg:text-sm">Perfect for modern UI designs with a premium aesthetic.</p>
+                {/* Manifest Block */}
+                <div className="p-8 sm:p-12 bg-slate-50/50 dark:bg-slate-950/50 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mb-8 px-4">
+                        <div className="flex items-center gap-3">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Material CSS Schema</span>
+                        </div>
+                        <button
+                            onClick={copyCode}
+                            className="w-full sm:w-auto px-8 py-4 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-[1.2rem] shadow-xl border border-slate-50 dark:border-slate-800 flex items-center justify-center gap-4 transition-all hover:shadow-2xl active:scale-95 group/copy"
+                        >
+                            {copied ? <Check className="w-5 h-5 text-emerald-500" /> : <Copy className="w-5 h-5 text-slate-300 group-hover/copy:text-emerald-500 transition-colors" />}
+                            <span className="text-[10px] font-black uppercase tracking-widest">{copied ? 'System Copied' : 'Transfer Code'}</span>
+                        </button>
+                    </div>
+                    <div className="relative group/code">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-indigo-500 rounded-3xl blur opacity-0 group-hover/code:opacity-5 transition duration-1000"></div>
+                        <pre className="relative p-8 sm:p-10 bg-white dark:bg-slate-900 rounded-[2rem] font-mono text-[10px] sm:text-xs leading-relaxed border border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 overflow-x-auto shadow-inner custom-scrollbar">
+                            {cssCode}
+                        </pre>
                     </div>
                 </div>
             </div>
 
-            {/* Code Output */}
-            <div className="p-8 bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800">
-                <div className="flex justify-between items-center mb-4">
-                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Generated CSS</span>
-                    <button
-                        onClick={copyCode}
-                        className="flex items-center gap-2 text-sm font-bold text-emerald-500 hover:text-emerald-600 transition-colors"
-                    >
-                        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                        {copied ? 'Copied!' : 'Copy to Clipboard'}
-                    </button>
-                </div>
-                <pre className="p-6 bg-white dark:bg-slate-900 rounded-2xl font-mono text-sm leading-relaxed border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 overflow-x-auto">
-                    {cssCode}
-                </pre>
+            <div className="text-center">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300">
+                    Surface Manifest // Level 4 Visualization
+                </p>
             </div>
         </div>
     );

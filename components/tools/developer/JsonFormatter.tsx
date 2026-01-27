@@ -17,8 +17,8 @@ export function JsonFormatter() {
                 : JSON.stringify(parsed, null, 2);
             setInput(formatted);
             setError(null);
-        } catch (e: any) {
-            setError(e.message);
+        } catch (e: unknown) {
+            setError(e instanceof Error ? e.message : String(e));
         }
     };
 
@@ -35,94 +35,107 @@ export function JsonFormatter() {
     };
 
     return (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800">
-            {/* Toolbar */}
-            <div className="border-b border-slate-100 dark:border-slate-800 px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50 flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
-                    <FileJson className="w-5 h-5 text-emerald-500" />
-                    JSON Formatter & Validator
+        <div className="max-w-4xl mx-auto space-y-8 lg:space-y-12 animate-in fade-in duration-500">
+            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl shadow-indigo-500/5 border border-slate-100 dark:border-slate-800 overflow-hidden">
+                {/* Header Evolution */}
+                <div className="p-8 sm:p-12 border-b border-slate-50 dark:border-slate-800/50">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-8">
+                        <div className="flex items-center gap-6">
+                            <div className="p-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-3xl shadow-xl">
+                                <FileJson className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">Structural Validation</h2>
+                                <p className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-wider">JSON Architect</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                            <button
+                                onClick={copyToClipboard}
+                                disabled={!input}
+                                className="flex-1 sm:flex-none p-4 bg-white dark:bg-slate-800 text-slate-400 hover:text-emerald-500 rounded-2xl shadow-lg border border-slate-50 dark:border-slate-800 transition-all active:scale-90 disabled:opacity-30"
+                            >
+                                {copied ? <Check className="w-5 h-5 text-emerald-500" /> : <Copy className="w-5 h-5" />}
+                            </button>
+                            <button
+                                onClick={clearAll}
+                                className="flex-1 sm:flex-none p-4 bg-red-50 dark:bg-red-950/30 text-red-500 hover:bg-red-100 dark:hover:bg-red-950/50 rounded-2xl transition-all active:scale-90"
+                            >
+                                <Trash2 className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => formatJson(false)}
-                        className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
-                    >
-                        <Maximize2 className="w-4 h-4" />
-                        Prettify
-                    </button>
-                    <button
-                        onClick={() => formatJson(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-medium rounded-lg transition-colors"
-                    >
-                        <Minimize2 className="w-4 h-4" />
-                        Minify
-                    </button>
-                    <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-1"></div>
-                    <button
-                        onClick={copyToClipboard}
-                        disabled={!input}
-                        className="p-2 text-slate-500 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-lg transition-all disabled:opacity-30"
-                    >
-                        {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                    </button>
-                    <button
-                        onClick={clearAll}
-                        className="p-2 text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-all"
-                    >
-                        <Trash2 className="w-5 h-5" />
-                    </button>
+
+                <div className="p-8 sm:p-12 space-y-8">
+                    {/* Action Nexus */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <button
+                            onClick={() => formatJson(false)}
+                            className="py-5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all shadow-xl shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-4"
+                        >
+                            <Maximize2 className="w-5 h-5" />
+                            Prettify Manifest
+                        </button>
+                        <button
+                            onClick={() => formatJson(true)}
+                            className="py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all shadow-xl active:scale-95 flex items-center justify-center gap-4"
+                        >
+                            <Minimize2 className="w-5 h-5" />
+                            Compress Payload
+                        </button>
+                    </div>
+
+                    <div className="relative group">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-indigo-500 rounded-[2rem] blur opacity-0 group-focus-within:opacity-5 transition duration-1000"></div>
+                        <textarea
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Enter structural data for analysis..."
+                            className={`relative w-full h-[350px] lg:h-[500px] p-8 bg-slate-50 dark:bg-slate-950 border-2 rounded-[2rem] font-mono text-sm leading-relaxed outline-none transition-all resize-none shadow-inner custom-scrollbar ${error
+                                ? 'border-red-500/20 focus:border-red-500'
+                                : 'border-transparent focus:border-emerald-500/30'
+                                }`}
+                        />
+
+                        {error && (
+                            <div className="absolute bottom-6 left-6 right-6 p-6 bg-red-500/90 backdrop-blur-xl border border-red-400/30 rounded-2xl flex items-start gap-5 animate-in slide-in-from-bottom-4">
+                                <AlertCircle className="w-6 h-6 text-white shrink-0 mt-1" />
+                                <div className="space-y-1">
+                                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Validation Protocol Failure</div>
+                                    <div className="text-xs text-white/90 font-mono break-all leading-relaxed">{error}</div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        <div className="p-6 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-50 dark:border-slate-800/50 text-center">
+                            <div className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1">Integrity</div>
+                            <div className={`text-[10px] font-black uppercase tracking-widest ${error ? 'text-red-500' : input ? 'text-emerald-500' : 'text-slate-300'}`}>
+                                {error ? 'Corrupt' : input ? 'Locked' : 'Standby'}
+                            </div>
+                        </div>
+                        <div className="p-6 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-50 dark:border-slate-800/50 text-center">
+                            <div className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1">Magnitude</div>
+                            <div className="text-xs font-black text-slate-900 dark:text-white font-mono uppercase">
+                                {input.length} CHR
+                            </div>
+                        </div>
+                        <div className="p-6 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-50 dark:border-slate-800/50 text-center col-span-2 sm:col-span-1">
+                            <div className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1">Complexity</div>
+                            <div className="text-xs font-black text-slate-900 dark:text-white font-mono uppercase">
+                                {input ? input.split('\n').length : 0} LNS
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div className="p-6 md:p-8">
-                <div className="relative">
-                    <textarea
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder='Paste your JSON here... Example: {"id":1,"name":"Toolboxed"}'
-                        className={`w-full h-[500px] p-6 bg-slate-50 dark:bg-slate-950 border-2 rounded-2xl font-mono text-sm leading-relaxed outline-none transition-all resize-none shadow-inner ${error
-                                ? 'border-red-300 dark:border-red-900/50 focus:border-red-500'
-                                : 'border-slate-100 dark:border-slate-800 focus:border-emerald-500/50'
-                            }`}
-                    />
-
-                    {error && (
-                        <div className="absolute bottom-6 left-6 right-6 p-4 bg-red-50 dark:bg-red-950/50 border border-red-100 dark:border-red-900/30 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2">
-                            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                            <div className="space-y-1">
-                                <div className="text-sm font-bold text-red-900 dark:text-red-200">Invalid JSON Format</div>
-                                <div className="text-xs text-red-600 dark:text-red-400 font-mono break-all">{error}</div>
-                            </div>
-                        </div>
-                    )}
-
-                    {!input && !error && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20 dark:opacity-10 grayscale">
-                            <FileJson className="w-32 h-32" />
-                        </div>
-                    )}
-                </div>
-
-                <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="p-4 bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-100 dark:border-slate-800/50 text-center">
-                        <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Status</div>
-                        <div className={`text-sm font-bold ${error ? 'text-red-500' : input ? 'text-emerald-500' : 'text-slate-400'}`}>
-                            {error ? 'Invalid' : input ? 'Valid' : 'Waiting...'}
-                        </div>
-                    </div>
-                    <div className="p-4 bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-100 dark:border-slate-800/50 text-center">
-                        <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Characters</div>
-                        <div className="text-sm font-bold text-slate-900 dark:text-white font-mono">
-                            {input.length}
-                        </div>
-                    </div>
-                    <div className="p-4 bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-100 dark:border-slate-800/50 text-center">
-                        <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Lines</div>
-                        <div className="text-sm font-bold text-slate-900 dark:text-white font-mono">
-                            {input ? input.split('\n').length : 0}
-                        </div>
-                    </div>
-                </div>
+            <div className="text-center">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300">
+                    Structural Node // JSON Standard 8259
+                </p>
             </div>
         </div>
     );

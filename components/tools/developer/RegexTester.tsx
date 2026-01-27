@@ -59,105 +59,132 @@ export function RegexTester() {
         setFlags(prev => prev.includes(flag) ? prev.replace(flag, '') : prev + flag);
     };
 
+    const [activeTab, setActiveTab] = useState<'editor' | 'cheat-sheet'>('editor');
+
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Tester Area */}
-            <div className="lg:col-span-2 space-y-6">
-
-                {/* Pattern Input */}
-                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
-                    <div className="flex items-center gap-2 mb-4 font-semibold text-slate-700 dark:text-slate-200">
-                        <ScanSearch className="w-5 h-5 text-emerald-500" />
-                        <span>Regular Expression</span>
-                    </div>
-                    <div className="flex flex-col md:flex-row gap-4">
-                        <div className="flex-1 relative">
-                            <span className="absolute left-4 top-3 text-slate-400 font-mono text-lg">/</span>
-                            <input
-                                type="text"
-                                value={pattern}
-                                onChange={(e) => setPattern(e.target.value)}
-                                className="w-full pl-8 pr-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl font-mono text-lg text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
-                                placeholder="Enter regex pattern..."
-                            />
-                            <span className="absolute right-4 top-3 text-slate-400 font-mono text-lg">/</span>
-                        </div>
-                        <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-1.5">
-                            {['g', 'i', 'm'].map(flag => (
-                                <button
-                                    key={flag}
-                                    onClick={() => toggleFlag(flag)}
-                                    className={`w-10 h-10 rounded-lg font-bold font-mono transition-colors ${flags.includes(flag)
-                                            ? 'bg-emerald-500 text-white shadow-sm'
-                                            : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800'
-                                        }`}
-                                    title={`Toggle '${flag}' flag`}
-                                >
-                                    {flag}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Error Banner */}
-                {error && (
-                    <div className="bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900/50 rounded-xl p-4 flex items-center gap-3 text-red-600 dark:text-red-400 animate-in fade-in slide-in-from-top-2">
-                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                        <span className="font-mono text-sm">{error}</span>
-                    </div>
-                )}
-
-                {/* Test String & Output */}
-                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden min-h-[400px] flex flex-col">
-                    <div className="px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                        <div className="font-semibold text-slate-700 dark:text-slate-200">Test String</div>
-                        <div className="text-xs font-medium px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-md">
-                            {matches.length} Match{matches.length !== 1 ? 'es' : ''}
-                        </div>
-                    </div>
-
-                    <div className="relative flex-1">
-                        {/* Editor Layer */}
-                        <textarea
-                            value={testString}
-                            onChange={(e) => setTestString(e.target.value)}
-                            className="absolute inset-0 w-full h-full p-6 bg-transparent font-mono text-lg leading-relaxed text-transparent caret-slate-900 dark:caret-white outline-none resize-none z-10 selection:bg-emerald-500/20"
-                            spellCheck={false}
-                        />
-                        {/* Highlighting Layer */}
-                        <div className="absolute inset-0 w-full h-full p-6 font-mono text-lg leading-relaxed whitespace-pre-wrap break-words text-slate-400 dark:text-slate-500 pointer-events-none z-0">
-                            {highlightedText}
-                        </div>
-                    </div>
-                </div>
+        <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+            {/* Mobile Tab Switcher */}
+            <div className="flex lg:hidden p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl w-full">
+                <button
+                    onClick={() => setActiveTab('editor')}
+                    className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'editor' ? 'bg-white dark:bg-slate-700 text-slate-900 shadow-sm' : 'text-slate-500'}`}
+                >
+                    Regex Lab
+                </button>
+                <button
+                    onClick={() => setActiveTab('cheat-sheet')}
+                    className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'cheat-sheet' ? 'bg-white dark:bg-slate-700 text-slate-900 shadow-sm' : 'text-slate-500'}`}
+                >
+                    Cheat Sheet
+                </button>
             </div>
 
-            {/* Sidebar Cheat Sheet */}
-            <div className="space-y-6">
-                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
-                    <div className="flex items-center gap-2 mb-4 font-bold text-slate-900 dark:text-white">
-                        <Info className="w-5 h-5 text-emerald-500" />
-                        <span>Cheat Sheet</span>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                {/* Main Tester Area */}
+                <div className={`lg:col-span-2 space-y-6 ${activeTab === 'editor' ? 'flex flex-col' : 'hidden lg:flex lg:flex-col'}`}>
+
+                    {/* Pattern Input */}
+                    <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl shadow-indigo-500/5 border border-slate-100 dark:border-slate-800 p-6 sm:p-8">
+                        <div className="flex items-center gap-2 mb-6 font-black text-[10px] uppercase tracking-widest text-slate-400">
+                            <ScanSearch className="w-5 h-5 text-emerald-500" />
+                            <span>Regular Expression Engine</span>
+                        </div>
+                        <div className="flex flex-col md:flex-row gap-4">
+                            <div className="flex-1 relative group">
+                                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 font-mono text-xl group-focus-within:text-emerald-500 transition-colors">/</span>
+                                <input
+                                    type="text"
+                                    value={pattern}
+                                    onChange={(e) => setPattern(e.target.value)}
+                                    className="w-full pl-10 pr-10 py-4 sm:py-5 bg-slate-50 dark:bg-slate-950 border-2 border-slate-50 dark:border-slate-800 rounded-2xl font-mono text-base sm:text-lg text-slate-900 dark:text-white outline-none focus:border-emerald-500 transition-all shadow-inner"
+                                    placeholder="your-regex-here"
+                                />
+                                <span className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 font-mono text-xl group-focus-within:text-emerald-500 transition-colors">/</span>
+                            </div>
+                            <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-1.5 shadow-sm">
+                                {['g', 'i', 'm'].map(flag => (
+                                    <button
+                                        key={flag}
+                                        onClick={() => toggleFlag(flag)}
+                                        className={`w-12 h-12 rounded-xl font-black font-mono text-sm transition-all active:scale-90 ${flags.includes(flag)
+                                            ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl'
+                                            : 'text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                            }`}
+                                        title={`Toggle '${flag}' flag`}
+                                    >
+                                        {flag}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
-                    <div className="space-y-4">
-                        <CheatItem title="Character Classes" items={[
-                            { code: '.', desc: 'Any character' },
-                            { code: '\\d', desc: 'Digit (0-9)' },
-                            { code: '\\w', desc: 'Word char (a-z, 0-9, _)' },
-                            { code: '\\s', desc: 'Whitespace' },
-                        ]} />
-                        <CheatItem title="Quantifiers" items={[
-                            { code: '*', desc: '0 or more' },
-                            { code: '+', desc: '1 or more' },
-                            { code: '?', desc: '0 or 1' },
-                            { code: '{3}', desc: 'Exactly 3' },
-                        ]} />
-                        <CheatItem title="Anchors" items={[
-                            { code: '^', desc: 'Start of string' },
-                            { code: '$', desc: 'End of string' },
-                            { code: '\\b', desc: 'Word boundary' },
-                        ]} />
+
+                    {/* Error Banner */}
+                    {error && (
+                        <div className="bg-red-50 dark:bg-red-950/90 backdrop-blur-md border border-red-100 dark:border-red-900/30 rounded-2xl p-5 flex items-start gap-4 text-red-600 dark:text-red-400 animate-in fade-in zoom-in-95">
+                            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                            <div className="space-y-1">
+                                <div className="text-[10px] font-black uppercase tracking-widest">Syntax Error Detected</div>
+                                <div className="font-mono text-xs break-all leading-relaxed">{error}</div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Test String & Output */}
+                    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl shadow-indigo-500/5 border border-slate-100 dark:border-slate-800 overflow-hidden min-h-[450px] flex flex-col group">
+                        <div className="px-8 py-5 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center">
+                            <div className="font-black text-[10px] uppercase tracking-widest text-slate-400">Target Expression</div>
+                            <div className="flex items-center gap-3">
+                                <button onClick={() => setTestString('')} className="p-2 text-slate-300 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                                <div className="px-3 py-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest rounded-lg border border-emerald-500/20">
+                                    {matches.length} MATCH{matches.length !== 1 ? 'ES' : ''}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="relative flex-1 bg-slate-50/30 dark:bg-slate-950/30">
+                            {/* Editor Layer */}
+                            <textarea
+                                value={testString}
+                                onChange={(e) => setTestString(e.target.value)}
+                                className="absolute inset-0 w-full h-full p-8 bg-transparent font-mono text-base sm:text-lg leading-relaxed text-transparent caret-slate-900 dark:caret-white outline-none resize-none z-10 selection:bg-emerald-500/20 custom-scrollbar"
+                                spellCheck={false}
+                                placeholder="Paste your test text here..."
+                            />
+                            {/* Highlighting Layer */}
+                            <div className="absolute inset-0 w-full h-full p-8 font-mono text-base sm:text-lg leading-relaxed whitespace-pre-wrap break-words text-slate-300 dark:text-slate-600 pointer-events-none z-0 overflow-y-auto custom-scrollbar">
+                                {highlightedText}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Sidebar Cheat Sheet */}
+                <div className={`space-y-6 ${activeTab === 'cheat-sheet' ? 'block' : 'hidden lg:block'}`}>
+                    <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-xl border border-slate-50 dark:border-slate-800 p-8 sticky top-24">
+                        <div className="flex items-center gap-2 mb-8 font-black text-[10px] uppercase tracking-widest text-slate-400">
+                            <Info className="w-5 h-5 text-emerald-500" />
+                            <span>Survival Manual</span>
+                        </div>
+                        <div className="space-y-8">
+                            <CheatItem title="Classes" items={[
+                                { code: '.', desc: 'Wildcard' },
+                                { code: '\\d', desc: 'Digit' },
+                                { code: '\\w', desc: 'Word' },
+                                { code: '\\s', desc: 'Space' },
+                            ]} />
+                            <CheatItem title="Quantifiers" items={[
+                                { code: '*', desc: '0+' },
+                                { code: '+', desc: '1+' },
+                                { code: '?', desc: '0 or 1' },
+                                { code: '{n}', desc: 'Exactly n' },
+                            ]} />
+                            <CheatItem title="Anchors" items={[
+                                { code: '^', desc: 'Start' },
+                                { code: '$', desc: 'End' },
+                                { code: '\\b', desc: 'Bound' },
+                            ]} />
+                        </div>
                     </div>
                 </div>
             </div>

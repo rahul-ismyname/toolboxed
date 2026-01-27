@@ -85,76 +85,80 @@ export function UrlEncoder() {
     };
 
     return (
-        <div className="space-y-8">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800">
-                <div className="border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
-                    <div className="flex items-center space-x-2 text-sm font-medium text-slate-600 dark:text-slate-400">
-                        <Link className="w-4 h-4" />
-                        <span>URL Encoder / Decoder</span>
+        <div className="max-w-6xl mx-auto space-y-8 lg:space-y-12 animate-in fade-in duration-500">
+            {/* Engine Header */}
+            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl shadow-indigo-500/5 border border-slate-100 dark:border-slate-800 overflow-hidden">
+                <div className="p-8 sm:p-10 border-b border-slate-50 dark:border-slate-800/50 bg-slate-50/30 dark:bg-slate-950/30 flex flex-col sm:flex-row items-center justify-between gap-6">
+                    <div className="flex items-center gap-6">
+                        <div className="p-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl shadow-xl">
+                            <Link className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">Navigation Synthesis</h2>
+                            <p className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-wider">URL Engine</p>
+                        </div>
                     </div>
                     <button
                         onClick={clearAll}
-                        className="text-xs text-red-500 hover:text-red-600 font-medium flex items-center px-2 py-1 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                        className="w-full sm:w-auto px-6 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-xl active:scale-95 transition-all flex items-center justify-center gap-2"
                     >
-                        <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                        Clear All
+                        <Trash2 className="w-4 h-4" />
+                        Purge Buffer
                     </button>
                 </div>
 
-                <div className="p-6 md:p-8">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start relative">
-                        {/* Center Icon (Desktop) */}
-                        <div className="hidden lg:flex absolute left-1/2 top-32 -translate-x-1/2 z-10 pointer-events-none">
-                            <div className="bg-white dark:bg-slate-900 p-2 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm text-slate-400">
-                                <ArrowRightLeft className="w-5 h-5" />
+                <div className="p-8 sm:p-12">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 relative">
+                        {/* Bridge Icon (Desktop) */}
+                        <div className="hidden lg:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                            <div className="bg-white dark:bg-slate-900 p-4 rounded-full border border-slate-100 dark:border-slate-800 shadow-2xl text-emerald-500 hover:scale-110 transition-transform">
+                                <ArrowRightLeft className="w-6 h-6" />
                             </div>
                         </div>
 
-                        {/* Decoded Input */}
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                                    Decoded URL
-                                </label>
+                        {/* Decoded Vector */}
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between px-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Decoded Sequence</label>
                                 <button
                                     onClick={() => copyToClipboard(decoded, false)}
-                                    className="text-xs flex items-center text-slate-500 hover:text-emerald-500 transition-colors"
+                                    className="p-2 text-slate-400 hover:text-emerald-500 transition-colors bg-slate-50 dark:bg-slate-950 rounded-lg"
                                 >
-                                    {copiedDecoded ? <Check className="w-3 H-3 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
-                                    {copiedDecoded ? 'Copied' : 'Copy'}
+                                    {copiedDecoded ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                                 </button>
                             </div>
-                            <textarea
-                                value={decoded}
-                                onChange={(e) => handleDecodedChange(e.target.value)}
-                                placeholder="https://example.com/search?q=hello world"
-                                className="w-full h-80 px-4 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all resize-none text-slate-900 dark:text-white placeholder:text-slate-400 font-mono text-sm leading-relaxed"
-                            />
+                            <div className="relative group">
+                                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-indigo-500 rounded-[2rem] blur opacity-0 group-focus-within:opacity-5 transition duration-1000"></div>
+                                <textarea
+                                    value={decoded}
+                                    onChange={(e) => handleDecodedChange(e.target.value)}
+                                    placeholder="Enter raw URL sequence..."
+                                    className="relative w-full h-[250px] sm:h-[350px] p-8 bg-slate-50 dark:bg-slate-950/50 border-2 border-transparent focus:border-emerald-500/20 rounded-[2rem] font-mono text-xs sm:text-sm leading-relaxed outline-none transition-all resize-none shadow-inner text-slate-600 dark:text-slate-400 placeholder:text-slate-300 dark:placeholder:text-slate-800"
+                                />
+                            </div>
                         </div>
 
-                        {/* Encoded Input */}
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                                    Encoded URL
-                                </label>
+                        {/* Encoded Vector */}
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between px-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Encoded Sequence</label>
                                 <button
                                     onClick={() => copyToClipboard(encoded, true)}
-                                    className="text-xs flex items-center text-slate-500 hover:text-emerald-500 transition-colors"
+                                    className="p-2 text-slate-400 hover:text-emerald-500 transition-colors bg-slate-50 dark:bg-slate-950 rounded-lg"
                                 >
-                                    {copiedEncoded ? <Check className="w-3 h-3 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
-                                    {copiedEncoded ? 'Copied' : 'Copy'}
+                                    {copiedEncoded ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                                 </button>
                             </div>
-                            <div className="relative">
+                            <div className="relative group">
+                                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-indigo-500 rounded-[2rem] blur opacity-0 group-focus-within:opacity-5 transition duration-1000"></div>
                                 <textarea
                                     value={encoded}
                                     onChange={(e) => handleEncodedChange(e.target.value)}
-                                    placeholder="https%3A%2F%2Fexample.com%2Fsearch%3Fq%3Dhello%20world"
-                                    className={`w-full h-80 px-4 py-4 bg-slate-50 dark:bg-slate-950 border rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all resize-none text-slate-900 dark:text-white placeholder:text-slate-400 font-mono text-sm leading-relaxed ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-200 dark:border-slate-800'}`}
+                                    placeholder="Enter percentile-encoded sequence..."
+                                    className={`relative w-full h-[250px] sm:h-[350px] p-8 bg-slate-50 dark:bg-slate-950/50 border-2 rounded-[2rem] font-mono text-xs sm:text-sm leading-relaxed outline-none transition-all resize-none shadow-inner placeholder:text-slate-300 dark:placeholder:text-slate-800 ${error ? 'border-red-500/20 text-red-600' : 'border-transparent text-slate-600 dark:text-slate-400 focus:border-emerald-500/20'}`}
                                 />
                                 {error && (
-                                    <div className="absolute bottom-4 right-4 text-xs font-semibold text-red-500 bg-red-50 dark:bg-red-950/50 px-2 py-1 rounded">
+                                    <div className="absolute bottom-6 right-6 px-4 py-2 bg-red-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-xl animate-in fade-in zoom-in">
                                         {error}
                                     </div>
                                 )}
@@ -164,39 +168,29 @@ export function UrlEncoder() {
                 </div>
             </div>
 
-            {/* Query Parameters Section */}
+            {/* Query manifest Section */}
             {queryParams.length > 0 && (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800">
-                    <div className="border-b border-slate-100 dark:border-slate-800 px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50">
-                        <div className="flex items-center space-x-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
-                            <Search className="w-4 h-4" />
-                            <span>Query Parameters</span>
-                            <span className="ml-2 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-xs text-slate-500">
-                                {queryParams.length}
-                            </span>
+                <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in slide-in-from-bottom-8">
+                    <div className="px-8 py-6 bg-slate-50/50 dark:bg-slate-950/50 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg">
+                                <Search className="w-4 h-4" />
+                            </div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Parameter Manifest</span>
                         </div>
+                        <span className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-black text-slate-500">
+                            {queryParams.length} KEYS FOUND
+                        </span>
                     </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left">
-                            <thead className="text-xs text-slate-500 uppercase bg-slate-50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800">
-                                <tr>
-                                    <th className="px-6 py-3 font-medium">Key</th>
-                                    <th className="px-6 py-3 font-medium">Value</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                {queryParams.map((param, index) => (
-                                    <tr key={index} className="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                        <td className="px-6 py-3 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                                            {param.key}
-                                        </td>
-                                        <td className="px-6 py-3 font-mono text-slate-900 dark:text-slate-200 break-all">
-                                            {param.value}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                    <div className="p-4 sm:p-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {queryParams.map((param, index) => (
+                                <div key={index} className="flex flex-col p-6 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl group hover:border-emerald-500/20 transition-all">
+                                    <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-2 group-hover:text-emerald-500 transition-colors">Key: {param.key}</span>
+                                    <span className="font-mono text-xs text-slate-600 dark:text-slate-400 break-all select-all leading-relaxed">{param.value}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}

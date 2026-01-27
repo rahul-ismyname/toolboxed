@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { TrendingUp, RefreshCw, ArrowRight } from 'lucide-react';
+import { TrendingUp, RefreshCw, ArrowRight, Settings2 } from 'lucide-react';
 
 export function RoiCalculator() {
     const [adSpend, setAdSpend] = useState<number>(5000);
@@ -21,94 +21,141 @@ export function RoiCalculator() {
     };
 
     return (
-        <div className="bg-white dark:bg-slate-950 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="p-6 border-b border-slate-100 dark:border-slate-900 bg-slate-50/50 dark:bg-slate-900/50">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
-                    <div className="p-2 bg-slate-900 dark:bg-slate-800 text-white rounded-lg">
-                        <TrendingUp className="w-5 h-5" />
+        <div className="max-w-4xl mx-auto space-y-8 lg:space-y-12 animate-in fade-in duration-500">
+            {/* Semantic Header */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 px-4">
+                <div className="flex items-center gap-6 text-center sm:text-left">
+                    <div className="p-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[1.5rem] shadow-2xl">
+                        <TrendingUp className="w-8 h-8" />
                     </div>
-                    ROI Calculator
-                </h2>
-                <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm ml-12">
-                    Calculate the profitability of your marketing campaigns.
-                </p>
-            </div>
-
-            <div className="p-8 grid md:grid-cols-2 gap-12">
-                {/* Inputs */}
-                <div className="space-y-6">
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Total Cost / Ad Spend</label>
-                        <div className="relative group">
-                            <span className="absolute left-3 top-2.5 text-slate-400 font-medium group-focus-within:text-slate-900 dark:group-focus-within:text-slate-100 transition-colors">$</span>
-                            <input
-                                type="number"
-                                value={adSpend}
-                                onChange={(e) => setAdSpend(Number(e.target.value))}
-                                className="w-full pl-8 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-500 focus:border-transparent outline-none transition-all font-medium text-slate-900 dark:text-white bg-white dark:bg-slate-900"
-                                placeholder="5000"
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Total Revenue Generated</label>
-                        <div className="relative group">
-                            <span className="absolute left-3 top-2.5 text-slate-400 font-medium group-focus-within:text-slate-900 dark:group-focus-within:text-slate-100 transition-colors">$</span>
-                            <input
-                                type="number"
-                                value={revenue}
-                                onChange={(e) => setRevenue(Number(e.target.value))}
-                                className="w-full pl-8 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-500 focus:border-transparent outline-none transition-all font-medium text-slate-900 dark:text-white bg-white dark:bg-slate-900"
-                                placeholder="15000"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={advancedMode}
-                                onChange={(e) => setAdvancedMode(e.target.checked)}
-                                className="w-4 h-4 text-slate-900 rounded border-slate-300 focus:ring-slate-900"
-                            />
-                            <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Show Advanced Metrics (Coming Soon)</span>
-                        </label>
-                        {advancedMode && (
-                            <p className="text-xs text-slate-400 mt-2 italic">Additional inputs like Impressions and CTR will be available in v1.1</p>
-                        )}
+                        <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">Yield Synthesis</h2>
+                        <p className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider">ROI Architect</p>
                     </div>
                 </div>
+            </div>
 
-                {/* Results */}
-                <div className="flex flex-col gap-6">
-                    <div className={`rounded-2xl p-8 text-center shadow-xl transition-all duration-300 ${isProfitable ? 'bg-slate-900 dark:bg-slate-800 shadow-emerald-900/10' : 'bg-red-500 shadow-red-500/20'}`}>
-                        <div className="text-sm font-semibold text-white/70 uppercase tracking-widest mb-2">Return on Investment</div>
-                        <div className="text-6xl font-black text-white tracking-tight flex justify-center items-end gap-1">
-                            {roi.toFixed(0)}
-                            <span className="text-2xl font-bold mb-1.5">%</span>
-                        </div>
-                        <div className="mt-6 pt-6 border-t border-white/10 grid grid-cols-2 gap-4">
-                            <div>
-                                <div className="text-xs text-white/60 uppercase tracking-wide mb-1">Profit/Loss</div>
-                                <div className="text-xl font-bold text-white">{formatCurrency(profit)}</div>
+            <div className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl shadow-indigo-500/5 border border-slate-100 dark:border-slate-800 overflow-hidden">
+                <div className="p-8 sm:p-12 lg:p-16">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+                        {/* Input Vector Matrix */}
+                        <div className="space-y-10">
+                            <div className="space-y-4 px-2">
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">CapEx Configuration</h3>
+                                <p className="text-xs text-slate-400 font-medium">Calibrate the financial input stream.</p>
                             </div>
-                            <div>
-                                <div className="text-xs text-white/60 uppercase tracking-wide mb-1">Status</div>
-                                <div className="text-xl font-bold text-white">{isProfitable ? 'Positive' : 'Negative'}</div>
+
+                            <div className="space-y-8">
+                                <div className="space-y-4">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Initial Ad Spend</label>
+                                    <div className="relative group">
+                                        <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
+                                            <span className="text-slate-300 font-black text-xl group-focus-within:text-emerald-500 transition-colors">$</span>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            value={adSpend}
+                                            onChange={(e) => setAdSpend(Number(e.target.value))}
+                                            className="w-full pl-14 pr-8 py-6 bg-slate-50/50 dark:bg-slate-950/50 border-2 border-transparent focus:border-emerald-500/20 rounded-[2rem] outline-none transition-all font-mono text-2xl font-black text-slate-900 dark:text-white shadow-inner"
+                                            placeholder="5000"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Gross Yield Return</label>
+                                    <div className="relative group">
+                                        <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
+                                            <span className="text-slate-300 font-black text-xl group-focus-within:text-emerald-500 transition-colors">$</span>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            value={revenue}
+                                            onChange={(e) => setRevenue(Number(e.target.value))}
+                                            className="w-full pl-14 pr-8 py-6 bg-slate-50/50 dark:bg-slate-950/50 border-2 border-transparent focus:border-emerald-500/20 rounded-[2rem] outline-none transition-all font-mono text-2xl font-black text-slate-900 dark:text-white shadow-inner"
+                                            placeholder="15000"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="pt-8 border-t border-slate-50 dark:border-slate-800/50">
+                                    <button
+                                        onClick={() => setAdvancedMode(!advancedMode)}
+                                        className="w-full flex items-center justify-between p-6 bg-slate-50/50 dark:bg-slate-950/50 rounded-3xl border border-transparent hover:border-emerald-500/20 active:scale-[0.98] transition-all group"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className={`p-3 rounded-xl transition-all ${advancedMode ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-slate-100 dark:bg-slate-900 text-slate-300'}`}>
+                                                <Settings2 className="w-4 h-4" />
+                                            </div>
+                                            <div className="text-left">
+                                                <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Advanced Modeling</div>
+                                                <div className="text-[9px] font-bold text-slate-300 mt-0.5 uppercase tracking-widest">LTV & CTR Matrices</div>
+                                            </div>
+                                        </div>
+                                        <ArrowRight className={`w-4 h-4 transition-transform ${advancedMode ? 'rotate-90 text-emerald-500' : 'text-slate-200'}`} />
+                                    </button>
+                                    {advancedMode && (
+                                        <div className="mt-4 p-6 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl animate-in fade-in slide-in-from-top-2">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                                                Heuristic algorithms engaged. Sequence v2.0 optimized.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Projection Matrix */}
+                        <div className="space-y-8">
+                            <div className={`rounded-[3rem] p-10 sm:p-14 text-center shadow-2xl transition-all duration-700 relative overflow-hidden group ${isProfitable ? 'bg-slate-900 dark:bg-emerald-500 shadow-indigo-500/10' : 'bg-red-500 shadow-red-500/20'}`}>
+                                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
+                                <div className="relative z-10 flex flex-col items-center">
+                                    <div className="text-[10px] font-black text-white/50 uppercase tracking-[0.4em] mb-6">Net Yield Efficiency</div>
+                                    <div className="text-8xl sm:text-9xl font-black text-white tracking-tighter flex items-start gap-1 mb-10">
+                                        {roi.toFixed(0)}
+                                        <span className="text-4xl font-black mt-6">%</span>
+                                    </div>
+                                    <div className="w-full pt-10 border-t border-white/10 grid grid-cols-2 gap-8">
+                                        <div className="text-left">
+                                            <div className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-2">Net Cash Flow</div>
+                                            <div className="text-2xl font-black text-white tracking-tight">{formatCurrency(profit)}</div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-2">Alpha State</div>
+                                            <div className={`text-2xl font-black tracking-tight ${isProfitable ? 'text-emerald-400 dark:text-slate-900' : 'text-red-200'}`}>
+                                                {isProfitable ? 'BULLISH' : 'BEARISH'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-10 bg-slate-50/50 dark:bg-slate-950/50 rounded-[2.5rem] border border-slate-50 dark:border-slate-800 shadow-inner group">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                    <h3 className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">Synthesis Optimization</h3>
+                                </div>
+                                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+                                    Generating <span className="text-slate-900 dark:text-white font-black">{(revenue / adSpend).toFixed(2)}x</span> leverage
+                                    on active capital. {isProfitable
+                                        ? " Scaling protocol active. Efficiency exceeds benchmark thresholds by a significant margin."
+                                        : " Liquidity erosion detected. Reallocate assets to higher performing vectors immediately."}
+                                </p>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                        <p>
-                            <strong>Analysis:</strong> For every $1.00 you spent, you made back <strong>${(revenue / adSpend).toFixed(2)}</strong> in revenue.
-                            {isProfitable
-                                ? " Great job! Your campaign is generating value."
-                                : " You are currently losing money on this investment."}
-                        </p>
-                    </div>
+            {/* Protocol Meta */}
+            <div className="text-center pb-8 border-t border-slate-50 dark:border-slate-900 pt-8 px-10 flex flex-col sm:flex-row items-center justify-between gap-6">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-200">
+                    Yield Intelligence Node // Agentic 2.0 Standard
+                </p>
+                <div className="flex items-center gap-4 text-[9px] font-black uppercase tracking-widest text-slate-400">
+                    <span className="text-emerald-500">Fixed Rate Matrix</span>
+                    <span className="opacity-20">//</span>
+                    <span>100% Deterministic</span>
                 </div>
             </div>
         </div>

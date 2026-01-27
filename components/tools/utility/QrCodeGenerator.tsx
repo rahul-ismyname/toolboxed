@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react"
 import { QRCodeSVG } from "qrcode.react"
-import { Download, Copy, Check, Settings, Upload, Image as ImageIcon, Palette, RefreshCcw } from "lucide-react"
+import { Download, Copy, Check, Settings, Upload, Image as ImageIcon, Palette, RefreshCcw, QrCode } from "lucide-react"
 
 type ErrorCorrectionLevel = "L" | "M" | "Q" | "H"
 
@@ -85,99 +85,114 @@ export function QrCodeGenerator() {
     }
 
     return (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800">
-            <div className="p-6 md:p-8">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
+        <div className="max-w-6xl mx-auto space-y-8 lg:space-y-12 animate-in fade-in duration-500">
+            {/* Semantic Header */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 px-4">
+                <div className="flex items-center gap-6 text-center sm:text-left">
+                    <div className="p-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[1.5rem] shadow-2xl">
+                        <QrCode className="w-8 h-8 text-emerald-500" />
+                    </div>
+                    <div>
+                        <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">Visual Encoding</h2>
+                        <p className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider">QR Oracle</p>
+                    </div>
+                </div>
+            </div>
 
-                    {/* Controls Section */}
-                    <div className="lg:col-span-7 space-y-8">
-                        {/* Input Content */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+                {/* Control Matrix */}
+                <div className="lg:col-span-7 bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl shadow-indigo-500/5 border border-slate-100 dark:border-slate-800 overflow-hidden">
+                    <div className="p-8 sm:p-12 lg:p-14 space-y-10">
+                        {/* Content Vector */}
                         <div className="space-y-4">
-                            <label htmlFor="content" className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
-                                Content
-                            </label>
+                            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 px-2">Manifest Content</label>
                             <textarea
-                                id="content"
                                 value={text}
                                 onChange={(e) => setText(e.target.value)}
-                                placeholder="Enter text, URL, or contact info..."
-                                className="w-full h-28 px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all resize-none text-slate-900 dark:text-white placeholder:text-slate-400 font-medium"
+                                placeholder="Enter text, URL, or secure signature..."
+                                className="w-full h-32 px-8 py-6 bg-slate-50/50 dark:bg-slate-950/50 border-2 border-transparent focus:border-emerald-500/20 rounded-[2rem] outline-none transition-all resize-none text-slate-900 dark:text-white placeholder:text-slate-300 font-mono text-sm leading-relaxed shadow-inner"
                             />
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            {/* Colors */}
-                            <div className="space-y-3">
-                                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-                                    <Palette className="w-4 h-4" /> Colors
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                            {/* Chromatic Matrix */}
+                            <div className="space-y-4">
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3 px-2">
+                                    <Palette className="w-4 h-4 text-emerald-500" /> Chromatic Palette
                                 </h3>
-                                <div className="flex gap-4">
-                                    <div className="flex-1">
-                                        <label className="text-xs text-slate-500 mb-1 block">Foreground</label>
-                                        <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-3 bg-slate-50/50 dark:bg-slate-950/50 p-2 rounded-[1.5rem] border border-transparent hover:border-slate-100 dark:hover:border-slate-800 transition-all cursor-pointer group shadow-sm">
                                             <input
                                                 type="color"
                                                 value={fgColor}
                                                 onChange={(e) => setFgColor(e.target.value)}
-                                                className="w-8 h-8 rounded cursor-pointer border-none bg-transparent p-0"
+                                                className="w-10 h-10 rounded-xl cursor-pointer border-none bg-transparent p-0 overflow-hidden"
                                             />
-                                            <span className="text-xs font-mono text-slate-600 dark:text-slate-400">{fgColor}</span>
+                                            <span className="text-[10px] font-black font-mono text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white uppercase">{fgColor}</span>
                                         </div>
+                                        <label className="text-[9px] font-bold uppercase tracking-widest text-slate-300 px-3 italic">Foreground</label>
                                     </div>
-                                    <div className="flex-1">
-                                        <label className="text-xs text-slate-500 mb-1 block">Background</label>
-                                        <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2">
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-3 bg-slate-50/50 dark:bg-slate-950/50 p-2 rounded-[1.5rem] border border-transparent hover:border-slate-100 dark:hover:border-slate-800 transition-all cursor-pointer group shadow-sm">
                                             <input
                                                 type="color"
                                                 value={bgColor}
                                                 onChange={(e) => setBgColor(e.target.value)}
-                                                className="w-8 h-8 rounded cursor-pointer border-none bg-transparent p-0"
+                                                className="w-10 h-10 rounded-xl cursor-pointer border-none bg-transparent p-0 overflow-hidden"
                                             />
-                                            <span className="text-xs font-mono text-slate-600 dark:text-slate-400">{bgColor}</span>
+                                            <span className="text-[10px] font-black font-mono text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white uppercase">{bgColor}</span>
                                         </div>
+                                        <label className="text-[9px] font-bold uppercase tracking-widest text-slate-300 px-3 italic">Background</label>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Settings */}
-                            <div className="space-y-3">
-                                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-                                    <Settings className="w-4 h-4" /> Settings
+                            {/* Integrity Protocol */}
+                            <div className="space-y-4">
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3 px-2">
+                                    <Settings className="w-4 h-4 text-emerald-500" /> Integrity Protocol
                                 </h3>
                                 <div className="space-y-3">
-                                    <div>
-                                        <label className="text-xs text-slate-500 mb-1 block">Error Correction</label>
+                                    <div className="relative group">
                                         <select
                                             value={errorLevel}
                                             onChange={(e) => setErrorLevel(e.target.value as ErrorCorrectionLevel)}
-                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 outline-none"
+                                            className="w-full bg-slate-50/50 dark:bg-slate-950/50 border-2 border-transparent focus:border-emerald-500/20 rounded-[1.5rem] px-6 py-4 text-xs font-bold text-slate-700 dark:text-slate-300 outline-none appearance-none cursor-pointer shadow-inner"
                                         >
-                                            <option value="L">Low (7%)</option>
-                                            <option value="M">Medium (15%)</option>
-                                            <option value="Q">Quartile (25%)</option>
-                                            <option value="H">High (30%)</option>
+                                            <option value="L">Low Accuracy (7%)</option>
+                                            <option value="M">Medium Accuracy (15%)</option>
+                                            <option value="Q">Quartile Accuracy (25%)</option>
+                                            <option value="H">High Fidelity (30%)</option>
                                         </select>
+                                        <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-300 group-hover:text-emerald-500 transition-colors">
+                                            <RefreshCcw className="w-3.5 h-3.5" />
+                                        </div>
                                     </div>
-                                    <label className="flex items-center gap-2 cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={includeMargin}
-                                            onChange={(e) => setIncludeMargin(e.target.checked)}
-                                            className="w-4 h-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500"
-                                        />
-                                        <span className="text-sm text-slate-600 dark:text-slate-400">Include Margin</span>
+                                    <label className="flex items-center gap-4 cursor-pointer group px-2">
+                                        <div className="relative flex items-center justify-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={includeMargin}
+                                                onChange={(e) => setIncludeMargin(e.target.checked)}
+                                                className="peer sr-only"
+                                            />
+                                            <div className="w-10 h-6 bg-slate-100 dark:bg-slate-800 rounded-full peer peer-checked:bg-emerald-500 transition-all shadow-inner" />
+                                            <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-4 shadow-sm" />
+                                        </div>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">Safety Margin</span>
                                     </label>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Logo Upload */}
-                        <div className="space-y-3">
-                            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-                                <ImageIcon className="w-4 h-4" /> Logo Overlay
+                        {/* Signature Overlay */}
+                        <div className="space-y-4">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3 px-2">
+                                <ImageIcon className="w-4 h-4 text-emerald-500" /> Core Signature Overlay
                             </h3>
-                            <div className="flex items-center gap-4">
-                                <div className="flex-1">
+                            <div className="flex flex-col sm:flex-row items-center gap-6">
+                                <div className="flex-1 w-full">
                                     <input
                                         type="file"
                                         accept="image/*"
@@ -187,71 +202,82 @@ export function QrCodeGenerator() {
                                     />
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors text-sm text-slate-600 dark:text-slate-400"
+                                        className="w-full flex items-center justify-center gap-4 px-8 py-5 bg-slate-50/30 dark:bg-slate-950/30 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[2rem] hover:bg-slate-50 dark:hover:bg-slate-950 hover:border-emerald-500/20 transition-all text-[10px] font-black uppercase tracking-widest text-slate-400 active:scale-[0.98]"
                                     >
-                                        {logoUrl ? 'Change Logo' : 'Upload Logo'}
+                                        {logoUrl ? 'Update Signature' : 'Deploy Overlay Signature'}
                                         <Upload className="w-4 h-4" />
                                     </button>
                                 </div>
                                 {logoUrl && (
-                                    <div className="flex flex-col items-center gap-2">
-                                        <div className="relative w-12 h-12 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-white">
+                                    <div className="flex items-center gap-6 p-4 bg-slate-50 dark:bg-slate-950 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-inner">
+                                        <div className="relative w-14 h-14 rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden bg-white flex-shrink-0">
                                             <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
                                             <button
                                                 onClick={() => setLogoUrl(null)}
-                                                className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity text-white"
+                                                className="absolute inset-0 bg-red-500/80 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity text-white text-xl font-black"
                                             >
-                                                <span className="sr-only">Remove</span>
                                                 ×
                                             </button>
                                         </div>
-                                        <input
-                                            type="range"
-                                            min="20"
-                                            max="60"
-                                            value={logoSize}
-                                            onChange={(e) => setLogoSize(Number(e.target.value))}
-                                            className="w-20 accent-emerald-500"
-                                            title="Logo Size"
-                                        />
+                                        <div className="flex flex-col gap-2">
+                                            <div className="flex justify-between items-center px-1">
+                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Dimension</span>
+                                                <span className="text-[8px] font-black text-emerald-500 font-mono italic">{logoSize}px</span>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="20"
+                                                max="60"
+                                                value={logoSize}
+                                                onChange={(e) => setLogoSize(Number(e.target.value))}
+                                                className="w-24 accent-emerald-500"
+                                            />
+                                        </div>
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        {/* Actions */}
-                        <div className="flex gap-2 pt-4">
-                            <div className="flex-1 flex gap-2">
+                        {/* Acquisition Protocol */}
+                        <div className="flex flex-col sm:flex-row gap-4 pt-6">
+                            <div className="flex-1 flex gap-3">
                                 <button
                                     onClick={() => handleDownload('png')}
                                     disabled={!text}
-                                    className="flex-1 inline-flex items-center justify-center px-4 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20"
+                                    className="flex-1 inline-flex items-center justify-center px-8 py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-2xl shadow-indigo-500/10 hover:scale-[1.02] active:scale-95 group"
                                 >
-                                    <Download className="w-4 h-4 mr-2" />
-                                    PNG
+                                    <Download className="w-4 h-4 mr-3 group-hover:animate-bounce" />
+                                    Acquire PNG
                                 </button>
                                 <button
                                     onClick={() => handleDownload('svg')}
                                     disabled={!text}
-                                    className="flex-1 inline-flex items-center justify-center px-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex-1 inline-flex items-center justify-center px-8 py-5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95"
                                 >
-                                    SVG
+                                    <RefreshCcw className="w-4 h-4 mr-3" />
+                                    Acquire SVG
                                 </button>
                             </div>
                             <button
                                 onClick={copyToClipboard}
                                 disabled={!text}
-                                className="flex-initial inline-flex items-center justify-center px-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[100px]"
+                                title="Sync to Buffer"
+                                className="inline-flex items-center justify-center px-8 py-5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 rounded-[1.8rem] transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:text-emerald-500 active:scale-95"
                             >
-                                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                                {copied ? <Check className="w-5 h-5 text-emerald-500 animate-in zoom-in" /> : <Copy className="w-5 h-5" />}
                             </button>
                         </div>
                     </div>
+                </div>
 
-                    {/* Preview Section */}
-                    <div className="lg:col-span-5 flex flex-col">
-                        <div className="sticky top-6 flex flex-col items-center justify-center p-8 bg-slate-100 dark:bg-slate-950/80 rounded-2xl border border-slate-200 dark:border-slate-800/80 h-full min-h-[400px]">
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 transition-all duration-300" style={{ backgroundColor: bgColor }}>
+                {/* Projection Matrix */}
+                <div className="lg:col-span-5 flex flex-col h-full">
+                    <div className="sticky top-6 flex flex-col items-center justify-center p-10 sm:p-20 bg-slate-900 dark:bg-slate-950 rounded-[3rem] border border-white/5 relative overflow-hidden group shadow-3xl min-h-[500px] h-full">
+                        {/* Immersive Pulse */}
+                        <div className="absolute -inset-2 bg-gradient-to-br from-emerald-500/10 via-indigo-500/10 to-emerald-500/10 rounded-[4rem] blur-3xl opacity-50 group-hover:opacity-100 transition duration-1000" />
+
+                        <div className="relative z-10 flex flex-col items-center gap-12">
+                            <div className="p-10 bg-white rounded-[2.5rem] shadow-[0_0_50px_rgba(255,255,255,0.1)] transition-transform duration-500 hover:scale-[1.03]" style={{ backgroundColor: bgColor }}>
                                 {text ? (
                                     <QRCodeSVG
                                         id="qr-code-svg"
@@ -269,22 +295,46 @@ export function QrCodeGenerator() {
                                             width: logoSize,
                                             excavate: true,
                                         } : undefined}
+                                        className="animate-in fade-in zoom-in-95 duration-700"
                                     />
                                 ) : (
-                                    <div className="w-64 h-64 flex flex-col items-center justify-center gap-4 text-slate-300 dark:text-slate-600">
-                                        <RefreshCcw className="w-12 h-12 opacity-50" />
-                                        <span className="text-sm font-medium">Preview will appear here</span>
+                                    <div className="w-64 h-64 flex flex-col items-center justify-center gap-6 text-slate-200">
+                                        <div className="relative">
+                                            <div className="absolute inset-0 bg-slate-100 animate-ping rounded-full opacity-20" />
+                                            <RefreshCcw className="w-16 h-16 opacity-30 relative z-10 animate-spin-slow" />
+                                        </div>
+                                        <span className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30">Awaiting Signal...</span>
                                     </div>
                                 )}
                             </div>
-                            <p className="mt-8 text-sm font-medium text-slate-500 dark:text-slate-400 text-center animate-pulse">
-                                {text ? "Scan to test content" : "Enter text to start generating"}
-                            </p>
+
+                            <div className="text-center space-y-4">
+                                <p className="text-[10px] font-black uppercase tracking-[0.5em] text-white/20">
+                                    {text ? "Scan Projection Matrix to Test" : "Initialize Manifest to Project"}
+                                </p>
+                                <div className="flex items-center justify-center gap-4 text-white/5">
+                                    <div className="w-12 h-px bg-current" />
+                                    <Settings className="w-3 h-3" />
+                                    <div className="w-12 h-px bg-current" />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Decorative Patterns */}
+                        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.03)_0%,transparent_70%)] pointer-events-none" />
+                        <div className="absolute bottom-10 left-10 font-mono text-[8px] text-white/5 uppercase tracking-widest vertical-rl opacity-50 select-none">
+                            FISCAL_ENCODING_PROTOCOL_X24
                         </div>
                     </div>
-
                 </div>
             </div>
+
+            {/* Reconciliation Protocol */}
+            <div className="text-center py-8 opacity-20 border-t border-slate-50 dark:border-slate-800 mt-12">
+                <p className="text-[10px] font-black uppercase tracking-[0.8em] text-slate-400">
+                    Dimensional QR Translation // SECURE_ORACLE_V2
+                </p>
+            </div>
         </div>
-    )
+    );
 }

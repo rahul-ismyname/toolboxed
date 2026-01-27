@@ -27,97 +27,132 @@ export function BmrCalculator() {
     ];
 
     return (
-        <div className="space-y-12">
-            <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 p-8 md:p-12">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                    {/* Inputs */}
-                    <div className="space-y-8">
-                        <div>
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Sex</label>
-                            <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-2xl">
-                                <button
-                                    onClick={() => setGender('male')}
-                                    className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all ${gender === 'male' ? 'bg-white dark:bg-slate-800 shadow-sm text-emerald-500' : 'text-slate-400'}`}
-                                >
-                                    Male
-                                </button>
-                                <button
-                                    onClick={() => setGender('female')}
-                                    className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all ${gender === 'female' ? 'bg-white dark:bg-slate-800 shadow-sm text-emerald-500' : 'text-slate-400'}`}
-                                >
-                                    Female
-                                </button>
+        <div className="max-w-5xl mx-auto space-y-12 lg:space-y-20 animate-in fade-in duration-500">
+            {/* Semantic Header */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 px-4">
+                <div className="flex items-center gap-6 text-center sm:text-left">
+                    <div className="p-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[1.5rem] shadow-2xl">
+                        <Zap className="w-8 h-8 text-emerald-500" />
+                    </div>
+                    <div>
+                        <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">Metabolic Architect</h2>
+                        <p className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider">BMR Oracle</p>
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl shadow-indigo-500/5 border border-slate-100 dark:border-slate-800 overflow-hidden">
+                <div className="p-8 sm:p-12 lg:p-14">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+                        {/* Parameter Matrix */}
+                        <div className="space-y-10">
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 px-2 italic">Biological Sex</label>
+                                <div className="flex bg-slate-50 dark:bg-slate-950 p-2 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-inner">
+                                    <button
+                                        onClick={() => setGender('male')}
+                                        className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest rounded-[1.5rem] transition-all ${gender === 'male' ? 'bg-white dark:bg-slate-800 text-emerald-500 shadow-xl' : 'text-slate-400'}`}
+                                    >
+                                        Male
+                                    </button>
+                                    <button
+                                        onClick={() => setGender('female')}
+                                        className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest rounded-[1.5rem] transition-all ${gender === 'female' ? 'bg-white dark:bg-slate-800 text-emerald-500 shadow-xl' : 'text-slate-400'}`}
+                                    >
+                                        Female
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-4">Age</label>
+                                    <input
+                                        type="number"
+                                        value={age}
+                                        onChange={(e) => setAge(Number(e.target.value))}
+                                        className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border-2 border-transparent focus:border-emerald-500/20 rounded-[1.5rem] outline-none transition-all font-mono font-black text-slate-900 dark:text-white shadow-inner text-center"
+                                    />
+                                </div>
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-4">Mass (kg)</label>
+                                    <input
+                                        type="number"
+                                        value={weight}
+                                        onChange={(e) => setWeight(Number(e.target.value))}
+                                        className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border-2 border-transparent focus:border-emerald-500/20 rounded-[1.5rem] outline-none transition-all font-mono font-black text-slate-900 dark:text-white shadow-inner text-center"
+                                    />
+                                </div>
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-4">Elevation (cm)</label>
+                                    <input
+                                        type="number"
+                                        value={height}
+                                        onChange={(e) => setHeight(Number(e.target.value))}
+                                        className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border-2 border-transparent focus:border-emerald-500/20 rounded-[1.5rem] outline-none transition-all font-mono font-black text-slate-900 dark:text-white shadow-inner text-center"
+                                    />
+                                </div>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Age</label>
-                                <input
-                                    type="number"
-                                    value={age}
-                                    onChange={(e) => setAge(Number(e.target.value))}
-                                    className="w-full p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl outline-none focus:border-emerald-500 transition-all font-bold"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Weight (kg)</label>
-                                <input
-                                    type="number"
-                                    value={weight}
-                                    onChange={(e) => setWeight(Number(e.target.value))}
-                                    className="w-full p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl outline-none focus:border-emerald-500 transition-all font-bold"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Height (cm)</label>
-                                <input
-                                    type="number"
-                                    value={height}
-                                    onChange={(e) => setHeight(Number(e.target.value))}
-                                    className="w-full p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl outline-none focus:border-emerald-500 transition-all font-bold"
-                                />
+                        {/* Projection Matrix */}
+                        <div className="relative">
+                            <div className="absolute -inset-6 bg-emerald-500/10 rounded-[4rem] blur-3xl opacity-50" />
+                            <div className="relative bg-slate-900 dark:bg-slate-950 rounded-[3rem] p-10 sm:p-14 border border-white/5 shadow-3xl overflow-hidden group">
+                                <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:scale-110 transition-transform duration-1000">
+                                    <Zap className="w-48 h-48 text-white" />
+                                </div>
+                                <div className="relative z-10 text-center space-y-4">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.5em] text-emerald-500/40 italic">Basal Metabolic Rate</span>
+                                    <div className="text-8xl font-black text-white tracking-tighter text-glow-emerald">
+                                        {Math.round(bmr)}
+                                    </div>
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Calories / 24H Cycle</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Result */}
-                    <div className="flex flex-col justify-center">
-                        <div className="bg-emerald-500 rounded-3xl p-8 text-white relative overflow-hidden shadow-lg shadow-emerald-500/20">
-                            <div className="relative z-10 text-center">
-                                <div className="text-xs font-bold uppercase tracking-widest opacity-80 mb-2">Your Basal Metabolic Rate</div>
-                                <div className="text-6xl font-black mb-2 tracking-tight">
-                                    {Math.round(bmr)}
-                                </div>
-                                <div className="text-lg font-bold opacity-90">Calories / day</div>
-                            </div>
-                            <Zap className="absolute -right-8 -bottom-8 w-48 h-48 opacity-10" />
+                    {/* Protocol Reconciliation */}
+                    <div className="mt-16 flex items-start gap-6 p-8 bg-slate-50 dark:bg-slate-950/50 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-inner group transition-all duration-500 hover:shadow-xl hover:shadow-indigo-500/5">
+                        <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 text-emerald-500 group-hover:scale-110 transition-transform">
+                            <Info className="w-6 h-6" />
                         </div>
-                        <div className="mt-6 flex items-start gap-3 p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800">
-                            <Info className="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5" />
-                            <p className="text-xs text-slate-500 leading-relaxed italic">
-                                BMR is the number of calories your body burns at complete rest to maintain vital functions (breathing, circulation, cell production).
+                        <div className="space-y-2">
+                            <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 italic">Mifflin-St Jeor Protocol</h4>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                                This calculation utilizes the Mifflin-St Jeor formula, widely recognized as the most accurate global standard for resting metabolic prediction.
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Daily Needs */}
-            <div className="space-y-6">
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 px-2">
-                    <Activity className="w-5 h-5 text-emerald-500" />
-                    Daily Calorie Needs Based on Activity
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Daily Energy Manifest */}
+            <div className="space-y-8 px-2">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-px bg-slate-100 dark:bg-slate-800 flex-1" />
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-400 whitespace-nowrap">
+                        Dynamic Activity Projections
+                    </h3>
+                    <div className="w-12 h-px bg-slate-100 dark:bg-slate-800 flex-1" />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                     {calorieTiers.map((tier) => (
-                        <div key={tier.label} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:border-emerald-500/50 group">
-                            <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1 group-hover:text-emerald-500 transition-colors uppercase">{tier.label}</div>
-                            <div className="text-2xl font-black text-slate-900 dark:text-white mb-2">{Math.round(bmr * tier.multiplier)}</div>
-                            <div className="text-[10px] text-slate-500 leading-tight">{tier.desc}</div>
+                        <div key={tier.label} className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:scale-[1.03] hover:border-emerald-500/30 group cursor-default">
+                            <div className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-4 group-hover:text-emerald-500 transition-colors italic">{tier.label}</div>
+                            <div className="text-3xl font-black text-slate-900 dark:text-white mb-2 font-mono tracking-tighter transition-all group-hover:translate-x-1">{Math.round(bmr * tier.multiplier)}</div>
+                            <div className="text-[9px] font-bold text-slate-400 leading-relaxed group-hover:text-slate-500 transition-colors uppercase">{tier.desc}</div>
                         </div>
                     ))}
                 </div>
+            </div>
+
+            <div className="text-center py-4 opacity-20 border-t border-slate-50 dark:border-slate-800 mt-12">
+                <p className="text-[10px] font-black uppercase tracking-[0.8em] text-slate-400">
+                    Dimensional Caloric Translation // METABOLIC_NODE_V7
+                </p>
             </div>
         </div>
     );

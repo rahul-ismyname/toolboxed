@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Database, Play, Copy, Check, Trash2, Settings2, AlertCircle } from 'lucide-react';
+import { Database, Play, Copy, Check, Trash2, AlertCircle } from 'lucide-react';
 import { format } from 'sql-formatter';
 
 const DIALECTS = [
@@ -20,6 +20,7 @@ export function SqlFormatter() {
     const [dialect, setDialect] = useState('sql');
     const [error, setError] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
+    const [activeTab, setActiveTab] = useState<'input' | 'output'>('input');
 
     const handleFormat = () => {
         if (!input.trim()) return;
@@ -31,26 +32,26 @@ export function SqlFormatter() {
             });
             setOutput(formatted);
             setError(null);
+            if (typeof window !== 'undefined' && window.innerWidth < 1024) setActiveTab('output');
         } catch (e: any) {
             setError(e.message || 'Invalid SQL');
+            if (typeof window !== 'undefined' && window.innerWidth < 1024) setActiveTab('output');
         }
     };
 
     const handleMinify = () => {
         if (!input.trim()) return;
         try {
-            // Minifying SQL is essentially formatting with 0 spaces? 
-            // sql-formatter doesn't strictly "minify", but we can simply remove newlines and extra spaces regex-style for a basic minify 
-            // or use the library if it supports it. For now, let's do a basic regex reduction for "minify" effect 
-            // since the library focuses on beautifying.
             const minified = input
                 .replace(/\s+/g, ' ')
                 .replace(/\s*([,;()=])\s*/g, '$1')
                 .trim();
             setOutput(minified);
             setError(null);
+            if (typeof window !== 'undefined' && window.innerWidth < 1024) setActiveTab('output');
         } catch (e: any) {
             setError(e.message);
+            if (typeof window !== 'undefined' && window.innerWidth < 1024) setActiveTab('output');
         }
     };
 
@@ -62,105 +63,133 @@ export function SqlFormatter() {
     };
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-12rem)] min-h-[600px]">
-            {/* Input Section */}
-            <div className="flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800">
-                <div className="px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                    <div className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-200">
-                        <Database className="w-4 h-4 text-emerald-500" />
-                        <span>Input SQL</span>
+        <div className="max-w-4xl mx-auto space-y-8 lg:space-y-12 animate-in fade-in duration-500">
+            {/* Header Nexus */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 px-4">
+                <div className="flex items-center gap-4">
+                    <div className="p-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl shadow-xl">
+                        <Database className="w-6 h-6" />
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div>
+                        <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Database Optimizer</h2>
+                        <p className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-wider">SQL Formatter</p>
+                    </div>
+                </div>
+                {/* Mobile Tab Pulse */}
+                <div className="lg:hidden flex p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 w-full sm:w-auto">
+                    <button
+                        onClick={() => setActiveTab('input')}
+                        className={`flex-1 sm:px-8 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === 'input' ? 'bg-white dark:bg-slate-900 text-emerald-500 shadow-lg' : 'text-slate-400'}`}
+                    >
+                        Source
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('output')}
+                        className={`flex-1 sm:px-8 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === 'output' ? 'bg-white dark:bg-slate-900 text-emerald-500 shadow-lg' : 'text-slate-400'}`}
+                    >
+                        Result
+                    </button>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-[500px] lg:h-[calc(100vh-20rem)]">
+                {/* Source Column */}
+                <div className={`flex flex-col bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden ${activeTab === 'input' ? 'flex' : 'hidden lg:flex'}`}>
+                    <div className="px-8 py-6 bg-slate-50/50 dark:bg-slate-950/30 border-b border-slate-50 dark:border-slate-800 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Input Protocol</span>
+                        </div>
                         <select
                             value={dialect}
                             onChange={(e) => setDialect(e.target.value)}
-                            className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-1.5 px-3 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+                            className="bg-transparent border-none text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 focus:outline-none cursor-pointer"
                         >
                             {DIALECTS.map(d => (
                                 <option key={d.value} value={d.value}>{d.label}</option>
                             ))}
                         </select>
-                        <button
-                            onClick={() => setInput('')}
-                            className="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
-                            title="Clear"
-                        >
-                            <Trash2 className="w-4 h-4" />
-                        </button>
                     </div>
-                </div>
-                <textarea
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="SELECT * FROM users WHERE active = 1..."
-                    className="flex-1 w-full p-6 bg-slate-50 dark:bg-slate-950 font-mono text-sm leading-relaxed outline-none resize-none"
-                    spellCheck={false}
-                />
-            </div>
-
-            {/* Controls (Mobile Only / Middle) */}
-            <div className="flex lg:hidden items-center justify-center gap-4">
-                <button
-                    onClick={handleFormat}
-                    className="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
-                >
-                    <Play className="w-5 h-5 fill-current" />
-                    Format
-                </button>
-            </div>
-
-            {/* Output Section */}
-            <div className="flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800 relative">
-                <div className="px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                    <div className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-200">
-                        <Check className="w-4 h-4 text-emerald-500" />
-                        <span>Formatted Output</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {/* Desktop Controls embedded in header */}
+                    <textarea
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="SELECT * FROM manifest WHERE status = 'ACTIVE'..."
+                        className="flex-1 p-8 bg-slate-50/30 dark:bg-slate-950/50 font-mono text-xs leading-relaxed outline-none resize-none custom-scrollbar text-slate-700 dark:text-slate-300"
+                        spellCheck={false}
+                    />
+                    <div className="p-6 bg-white dark:bg-slate-900 border-t border-slate-50 dark:border-slate-800 lg:hidden">
                         <button
                             onClick={handleFormat}
-                            className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition-all mr-2"
+                            disabled={!input.trim()}
+                            className="w-full py-5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-black uppercase tracking-[0.2em] text-[10px] rounded-[1.5rem] shadow-xl shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-4"
                         >
-                            <Play className="w-3 h-3 fill-current" />
-                            Format
-                        </button>
-                        <button
-                            onClick={handleMinify}
-                            className="text-xs font-medium text-slate-500 hover:text-emerald-500 transition-colors mr-4"
-                        >
-                            Minify
-                        </button>
-
-                        <button
-                            onClick={copyToClipboard}
-                            disabled={!output}
-                            className="p-1.5 text-slate-500 hover:text-emerald-500 transition-colors disabled:opacity-30"
-                            title="Copy"
-                        >
-                            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                            <Play className="w-4 h-4 fill-current" />
+                            Format SQL Module
                         </button>
                     </div>
                 </div>
 
-                <div className="relative flex-1 bg-slate-900">
-                    <textarea
-                        value={output}
-                        readOnly
-                        placeholder="-- Formatted SQL will appear here"
-                        className={`w-full h-full p-6 bg-slate-50 dark:bg-slate-950 font-mono text-sm leading-relaxed outline-none resize-none ${error ? 'text-red-500' : 'text-slate-700 dark:text-slate-300'}`}
-                    />
-
-                    {error && (
-                        <div className="absolute bottom-6 left-6 right-6 p-4 bg-red-50 dark:bg-red-950/50 border border-red-100 dark:border-red-900/30 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2">
-                            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                            <div className="space-y-1">
-                                <div className="text-sm font-bold text-red-900 dark:text-red-200">Formatting Error</div>
-                                <div className="text-xs text-red-600 dark:text-red-400 font-mono break-all">{error}</div>
-                            </div>
+                {/* Result Column */}
+                <div className={`flex flex-col bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden relative ${activeTab === 'output' ? 'flex' : 'hidden lg:flex'}`}>
+                    <div className="px-8 py-6 bg-slate-50/50 dark:bg-slate-950/30 border-b border-slate-50 dark:border-slate-800 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Output Manifest</span>
                         </div>
-                    )}
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={handleMinify}
+                                className="text-[9px] font-black uppercase tracking-widest text-slate-300 hover:text-emerald-500 transition-colors"
+                            >
+                                Minify
+                            </button>
+                            <button
+                                onClick={copyToClipboard}
+                                disabled={!output}
+                                className="p-2 text-slate-300 hover:text-emerald-500 transition-all active:scale-90 disabled:opacity-30"
+                            >
+                                {copied ? <Check className="w-5 h-5 text-emerald-500" /> : <Copy className="w-5 h-5" />}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="flex-1 relative overflow-hidden">
+                        <textarea
+                            value={output}
+                            readOnly
+                            placeholder="-- Formatted SQL projection"
+                            className={`w-full h-full p-8 bg-slate-50/50 dark:bg-slate-950/50 font-mono text-xs leading-relaxed outline-none resize-none custom-scrollbar ${error ? 'text-red-400 opacity-50' : 'text-slate-700 dark:text-slate-300'}`}
+                        />
+
+                        {error && (
+                            <div className="absolute inset-x-6 bottom-6 p-6 bg-red-500/90 backdrop-blur-xl border border-red-400/30 rounded-2xl flex items-start gap-5 animate-in slide-in-from-bottom-4">
+                                <AlertCircle className="w-6 h-6 text-white shrink-0 mt-1" />
+                                <div className="space-y-1">
+                                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Parser Integrity Error</div>
+                                    <div className="text-xs text-white/90 font-mono break-all leading-relaxed">{error}</div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Desktop Command Center */}
+                    <div className="hidden lg:flex p-6 border-t border-slate-50 dark:border-slate-800">
+                        <button
+                            onClick={handleFormat}
+                            disabled={!input.trim()}
+                            className="w-full py-5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-black uppercase tracking-[0.2em] text-[10px] rounded-[1.5rem] shadow-xl shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-4"
+                        >
+                            <Play className="w-4 h-4 fill-current" />
+                            Format SQL Module
+                        </button>
+                    </div>
                 </div>
+            </div>
+
+            <div className="text-center">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300">
+                    Query Processor // SQL ISO/IEC 9075
+                </p>
             </div>
         </div>
     );

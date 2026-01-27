@@ -540,5 +540,13 @@ export const tools: Tool[] = [
         category: 'Design',
         icon: Monitor,
         path: '/mockup-studio'
+    },
+    {
+        slug: 'link-shortener',
+        name: 'Link Shortener',
+        description: 'Shorten long URLs and track clicks instantly.',
+        category: 'Utility',
+        icon: Link2,
+        path: '/link-shortener'
     }
 ];

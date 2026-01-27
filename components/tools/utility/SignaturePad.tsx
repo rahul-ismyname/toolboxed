@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Download, Trash2, Undo } from 'lucide-react';
+import { Download, Trash2, Undo, PenTool, Eraser } from 'lucide-react';
 
 export function SignaturePad() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -131,25 +131,86 @@ export function SignaturePad() {
     };
 
     return (
-        <div className="w-full max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
+        <div className="w-full max-w-5xl mx-auto space-y-12 animate-in fade-in duration-500 font-sans">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 px-4">
+                <div className="flex items-center gap-6 text-center sm:text-left">
+                    <div className="p-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[1.5rem] shadow-2xl">
+                        <PenTool className="w-8 h-8 text-emerald-500" />
+                    </div>
+                    <div>
+                        <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">Identity Vector</h2>
+                        <p className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider">Biometric Canvas</p>
+                    </div>
+                </div>
+            </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-2xl lg:rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden p-5 lg:p-8 space-y-6">
+            <div className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl shadow-indigo-500/5 border border-slate-100 dark:border-slate-800 overflow-hidden p-8 lg:p-12 space-y-8">
 
-                {/* Toolbar */}
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                            <label className="w-8 h-8 lg:w-6 lg:h-6 rounded-full cursor-pointer border shadow-sm flex items-center justify-center transition-transform hover:scale-110 active:scale-95" style={{ backgroundColor: penColor }}>
+                {/* Drawing Monitor */}
+                <div className="relative group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-indigo-500/20 rounded-[2.5rem] blur-xl opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+                    <div className="relative w-full aspect-[4/3] sm:aspect-[2/1] bg-white dark:bg-white rounded-[2.5rem] border-2 border-slate-100 dark:border-slate-800 shadow-inner cursor-crosshair overflow-hidden touch-none" style={{ touchAction: 'none' }}>
+                        {/* Background Grid Pattern */}
+                        <div className="absolute inset-0 pointer-events-none opacity-10" style={{ backgroundImage: 'radial-gradient(#0f172a 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
+
+                        {/* Corner Accents */}
+                        <div className="absolute top-0 left-0 w-16 h-16 border-t-4 border-l-4 border-emerald-500/10 rounded-tl-[2rem] pointer-events-none" />
+                        <div className="absolute bottom-0 right-0 w-16 h-16 border-b-4 border-r-4 border-indigo-500/10 rounded-br-[2rem] pointer-events-none" />
+
+                        {isEmpty && (
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-4 text-center">
+                                <span className="text-2xl lg:text-4xl font-black text-slate-200 uppercase tracking-widest opacity-50 select-none animate-pulse">
+                                    Initiate Signing Sequence
+                                </span>
+                            </div>
+                        )}
+
+                        <canvas
+                            ref={canvasRef}
+                            onMouseDown={startDrawing}
+                            onMouseMove={draw}
+                            onMouseUp={stopDrawing}
+                            onMouseLeave={stopDrawing}
+                            onTouchStart={startDrawing}
+                            onTouchMove={draw}
+                            onTouchEnd={stopDrawing}
+                            className="w-full h-full block touch-none z-10 relative"
+                        />
+                    </div>
+                </div>
+
+                {/* Control Deck */}
+                <div className="flex flex-col xl:flex-row items-center justify-between gap-8 bg-slate-50 dark:bg-slate-950/50 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800">
+
+                    {/* Tools */}
+                    <div className="flex flex-wrap items-center justify-center gap-6">
+                        <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-2 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+                            {[
+                                { color: '#000000', label: 'Ink' },
+                                { color: '#10b981', label: 'Emerald' },
+                                { color: '#3b82f6', label: 'Cobalt' }
+                            ].map((ink) => (
+                                <button
+                                    key={ink.color}
+                                    onClick={() => setPenColor(ink.color)}
+                                    className={`w-11 h-11 rounded-xl transition-all flex items-center justify-center ${penColor === ink.color ? 'ring-2 ring-slate-900 dark:ring-white scale-110' : 'hover:scale-110 opacity-50 hover:opacity-100'}`}
+                                    style={{ backgroundColor: ink.color }}
+                                />
+                            ))}
+                            <div className="w-px h-8 bg-slate-100 dark:bg-slate-800 mx-2" />
+                            <label className="w-11 h-11 rounded-xl cursor-pointer border-2 border-dashed border-slate-300 flex items-center justify-center hover:border-emerald-500 hover:text-emerald-500 transition-colors">
                                 <input type="color" value={penColor} onChange={(e) => setPenColor(e.target.value)} className="opacity-0 w-0 h-0" />
+                                <div className="w-4 h-4 rounded-full bg-gradient-to-tr from-rose-500 via-emerald-500 to-blue-500" />
                             </label>
                         </div>
-                        <div className="w-px h-6 bg-slate-200 dark:bg-slate-800"></div>
-                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+
+                        <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-2 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
                             {[1, 2, 4, 6].map(width => (
                                 <button
                                     key={width}
                                     onClick={() => setPenWidth(width)}
-                                    className={`w-10 h-10 lg:w-8 lg:h-8 min-w-[40px] lg:min-w-[32px] rounded-lg flex items-center justify-center transition-all ${penWidth === width ? 'bg-slate-100 dark:bg-slate-800 text-emerald-500 ring-2 ring-emerald-500/20' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-400'}`}
+                                    className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${penWidth === width ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg' : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400'}`}
                                 >
                                     <div className="bg-current rounded-full" style={{ width: width * 1.5, height: width * 1.5 }}></div>
                                 </button>
@@ -157,62 +218,37 @@ export function SignaturePad() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-3">
                         <button
                             onClick={undo}
                             disabled={history.length === 0}
-                            className="p-3 lg:p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 disabled:opacity-30 transition-colors"
+                            className="w-14 h-14 bg-white dark:bg-slate-900 text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm flex items-center justify-center disabled:opacity-30 transition-all hover:scale-105 active:scale-95"
                             title="Undo"
                         >
-                            <Undo className="w-5 h-5 lg:w-4 lg:h-4" />
+                            <Undo className="w-5 h-5" />
                         </button>
                         <button
                             onClick={clearCanvas}
-                            className="p-3 lg:p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors"
+                            className="w-14 h-14 bg-white dark:bg-slate-900 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-rose-200 dark:hover:border-rose-900/50 shadow-sm flex items-center justify-center transition-all hover:scale-105 active:scale-95"
                             title="Clear"
                         >
-                            <Trash2 className="w-5 h-5 lg:w-4 lg:h-4" />
+                            <Trash2 className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={download}
+                            disabled={isEmpty}
+                            className="h-14 px-8 bg-slate-900 dark:bg-white hover:bg-emerald-500 dark:hover:bg-emerald-500 disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-slate-800 dark:disabled:text-slate-600 text-white dark:text-slate-900 hover:text-white dark:hover:text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-slate-900/10 disabled:shadow-none active:scale-95 transition-all flex items-center justify-center gap-3 min-w-[200px]"
+                        >
+                            <Download className="w-5 h-5" />
+                            <span>Capture Vector</span>
                         </button>
                     </div>
                 </div>
 
-                {/* Drawing Area */}
-                <div className="relative w-full aspect-[4/3] sm:aspect-[2/1] bg-white dark:bg-white rounded-2xl border-2 border-slate-200 dark:border-slate-700 shadow-inner cursor-crosshair overflow-hidden touch-none" style={{ touchAction: 'none' }}>
-                    {/* Background Grid Pattern */}
-                    <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: 'radial-gradient(#94a3b8 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
-
-                    {isEmpty && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20 px-4 text-center">
-                            <span className="text-2xl lg:text-4xl font-handwriting text-slate-400 select-none">Draw your signature here</span>
-                        </div>
-                    )}
-
-                    <canvas
-                        ref={canvasRef}
-                        onMouseDown={startDrawing}
-                        onMouseMove={draw}
-                        onMouseUp={stopDrawing}
-                        onMouseLeave={stopDrawing}
-                        onTouchStart={startDrawing}
-                        onTouchMove={draw}
-                        onTouchEnd={stopDrawing}
-                        className="w-full h-full block touch-none"
-                    />
-                </div>
-
-                {/* Footer / Actions */}
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-2">
-                    <div className="text-[10px] lg:text-xs text-slate-400 font-medium order-2 sm:order-1">
-                        SVG/Canvas Engine · Transparent background
-                    </div>
-                    <button
-                        onClick={download}
-                        disabled={isEmpty}
-                        className="w-full sm:w-auto py-4 px-10 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-slate-800 dark:disabled:text-slate-600 text-white font-black text-sm uppercase tracking-widest rounded-xl shadow-xl shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 order-1 sm:order-2"
-                    >
-                        <Download className="w-5 h-5" />
-                        Download Signature
-                    </button>
+                <div className="text-center pt-4 opacity-40">
+                    <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-400">
+                        High-Definition Vector Output // 200% Scale
+                    </p>
                 </div>
 
             </div>
