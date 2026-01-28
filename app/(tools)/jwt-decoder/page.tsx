@@ -4,14 +4,21 @@ import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-    title: 'JWT Decoder | Debug JSON Web Tokens Online',
-    description: 'Decode and inspect JSON Web Tokens (JWT) instantly. View header, payload, and signature claims. Secure client-side decoding, no server uploads.',
-    keywords: ['jwt decoder', 'jwt debugger', 'decode jwt online', 'json web token', 'jwt viewer'],
-    alternates: {
-        canonical: '/jwt-decoder',
-    },
-};
+import { getCombinedTitle } from '@/lib/i18n';
+
+export async function generateMetadata(): Promise<Metadata> {
+    const slug = 'jwt-decoder';
+    const combinedTitle = getCombinedTitle(slug);
+
+    return {
+        title: combinedTitle,
+        description: 'Decode and inspect JSON Web Tokens (JWT) instantly. View header, payload, and signature claims. Secure client-side decoding, no server uploads.',
+        keywords: ['jwt decoder', 'decodificador jwt', 'jwt डिकोडर', 'jwt debugger', 'decode jwt online', 'json web token', 'jwt viewer'],
+        alternates: {
+            canonical: '/jwt-decoder',
+        },
+    };
+}
 
 export default function JwtDecoderPage() {
     return (

@@ -1,12 +1,44 @@
 'use client';
 
-import { useState } from 'react';
-import { FileJson, Copy, Check, Trash2, Maximize2, Minimize2, AlertCircle } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { FileJson, Copy, Check, Trash2, Maximize2, Minimize2, AlertCircle, Share2 } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 export function JsonFormatter() {
     const [input, setInput] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
+    const [shareCopied, setShareCopied] = useState(false);
+
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Initialize from URL
+    useEffect(() => {
+        const urlConfig = searchParams.get('config');
+        if (urlConfig) {
+            try {
+                const decoded = JSON.parse(atob(decodeURIComponent(urlConfig)));
+                if (decoded.input) setInput(decoded.input);
+            } catch (e) {
+                console.error('Failed to decode config', e);
+            }
+        }
+    }, []); // Run once on mount
+
+    const handleShare = useCallback(() => {
+        const config = { input };
+        const encoded = encodeURIComponent(btoa(JSON.stringify(config)));
+        const url = `${window.location.origin}${pathname}?config=${encoded}`;
+
+        navigator.clipboard.writeText(url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+
+        // Update URL without refresh
+        router.replace(`${pathname}?config=${encoded}`, { scroll: false });
+    }, [input, pathname, router]);
 
     const formatJson = (minify = false) => {
         if (!input.trim()) return;
@@ -56,6 +88,13 @@ export function JsonFormatter() {
                                 className="flex-1 sm:flex-none p-4 bg-white dark:bg-slate-800 text-slate-400 hover:text-emerald-500 rounded-2xl shadow-lg border border-slate-50 dark:border-slate-800 transition-all active:scale-90 disabled:opacity-30"
                             >
                                 {copied ? <Check className="w-5 h-5 text-emerald-500" /> : <Copy className="w-5 h-5" />}
+                            </button>
+                            <button
+                                onClick={handleShare}
+                                disabled={!input}
+                                className="flex-1 sm:flex-none p-4 bg-white dark:bg-slate-800 text-slate-400 hover:text-emerald-500 rounded-2xl shadow-lg border border-slate-50 dark:border-slate-800 transition-all active:scale-90 disabled:opacity-30"
+                            >
+                                {shareCopied ? <Check className="w-5 h-5 text-emerald-500" /> : <Share2 className="w-5 h-5" />}
                             </button>
                             <button
                                 onClick={clearAll}

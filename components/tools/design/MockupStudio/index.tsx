@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { DeviceModel } from './DeviceModel';
 import { MockupControls } from './MockupControls';
 import { toPng } from 'html-to-image';
-import { Smartphone, Monitor, Download, Upload, RotateCw } from 'lucide-react';
+import { Smartphone, Monitor, Download, Upload, RotateCw, Share2, Check } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 export type DeviceType = 'iphone' | 'macbook';
 
@@ -14,6 +15,40 @@ export function MockupStudio() {
     const [image, setImage] = useState<string | null>(null);
     const [bgColor, setBgColor] = useState('#f8fafc');
     const [isDragging, setIsDragging] = useState(false);
+    const [shareCopied, setShareCopied] = useState(false);
+
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Initialize from URL
+    useEffect(() => {
+        const urlConfig = searchParams.get('config');
+        if (urlConfig) {
+            try {
+                const decoded = JSON.parse(atob(decodeURIComponent(urlConfig)));
+                if (decoded.device) setDevice(decoded.device);
+                if (decoded.rotation) setRotation(decoded.rotation);
+                if (decoded.bgColor) setBgColor(decoded.bgColor);
+                // Note: image is not synced due to size limits, but we could sync URL if it was a URL
+            } catch (e) {
+                console.error('Failed to decode config', e);
+            }
+        }
+    }, []); // Run once on mount
+
+    const handleShare = useCallback(() => {
+        const config = { device, rotation, bgColor };
+        const encoded = encodeURIComponent(btoa(JSON.stringify(config)));
+        const url = `${window.location.origin}${pathname}?config=${encoded}`;
+
+        navigator.clipboard.writeText(url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+
+        // Update URL without refresh
+        router.replace(`${pathname}?config=${encoded}`, { scroll: false });
+    }, [device, rotation, bgColor, pathname, router]);
     const [containerWidth, setContainerWidth] = useState(1000);
     const mockupRef = useRef<HTMLDivElement>(null);
 
@@ -110,6 +145,16 @@ export function MockupStudio() {
                     >
                         <Download className="w-5 h-5" />
                         Download
+                    </button>
+                    <button
+                        onClick={handleShare}
+                        className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-bold border transition-all active:scale-95 order-3 ${shareCopied
+                                ? 'bg-emerald-500 border-emerald-400 text-white shadow-lg shadow-emerald-500/20'
+                                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50'
+                            }`}
+                    >
+                        {shareCopied ? <Check className="w-5 h-5" /> : <Share2 className="w-5 h-5" />}
+                        {shareCopied ? 'Link Copied' : 'Share Scene'}
                     </button>
                     <div className="flex-1 flex gap-2 order-1 sm:order-2">
                         <div className="flex-1 flex gap-2 p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">

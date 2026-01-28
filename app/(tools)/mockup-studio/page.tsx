@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { MockupStudio } from '@/components/tools/design/MockupStudio';
 import { TitleSection } from '@/components/shared/TitleSection';
 import { BackButton } from '@/components/shared/BackButton';
@@ -23,7 +24,9 @@ export default function MockupPage() {
                     description="High-end presentation for your apps and websites."
                 />
 
-                <MockupStudio />
+                <Suspense fallback={<div className="min-h-[500px] animate-pulse bg-slate-100 dark:bg-slate-800 rounded-3xl" />}>
+                    <MockupStudio />
+                </Suspense>
             </div>
 
             <ToolContent slug="mockup-studio" />

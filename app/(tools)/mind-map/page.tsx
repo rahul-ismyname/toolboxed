@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { DynamicMindMapBuilder } from '@/components/tools/DynamicTools';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { BackButton } from '@/components/shared/BackButton';
@@ -27,7 +28,9 @@ export default function MindMapPage() {
                         Organize your thoughts on an infinite canvas.
                     </p>
                 </div>
-                <DynamicMindMapBuilder />
+                <Suspense fallback={<div className="min-h-[500px] animate-pulse bg-slate-100 dark:bg-slate-800 rounded-3xl" />}>
+                    <DynamicMindMapBuilder />
+                </Suspense>
             </div>
             <ToolContent slug="mind-map" />
         </div>

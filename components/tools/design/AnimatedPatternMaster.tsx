@@ -11,6 +11,7 @@ import {
     Zap,
     Share2
 } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 type PatternType = 'dots' | 'grid' | 'waves' | 'chevrons' | 'hexagons' | 'triangles' | 'stripes' | 'zigzag' | 'cubes' | 'circuit';
 
@@ -150,6 +151,36 @@ export function AnimatedPatternMaster() {
     });
 
     const [copied, setCopied] = useState(false);
+    const [shareCopied, setShareCopied] = useState(false);
+
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Initialize from URL
+    useEffect(() => {
+        const urlConfig = searchParams.get('config');
+        if (urlConfig) {
+            try {
+                const decoded = JSON.parse(atob(decodeURIComponent(urlConfig)));
+                setConfig(prev => ({ ...prev, ...decoded }));
+            } catch (e) {
+                console.error('Failed to decode config', e);
+            }
+        }
+    }, []); // Run once on mount
+
+    const handleShare = useCallback(() => {
+        const encoded = encodeURIComponent(btoa(JSON.stringify(config)));
+        const url = `${window.location.origin}${pathname}?config=${encoded}`;
+
+        navigator.clipboard.writeText(url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+
+        // Update URL without refresh
+        router.replace(`${pathname}?config=${encoded}`, { scroll: false });
+    }, [config, pathname, router]);
     const [activeTab, setActiveTab] = useState<'design' | 'preview'>('design');
     const [viewMode, setViewMode] = useState<'preview' | 'code'>('preview');
 
@@ -342,8 +373,11 @@ export function AnimatedPatternMaster() {
                         {copied ? 'Copied' : 'Copy Styles'}
                     </button>
 
-                    <button className="p-5 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white hover:bg-slate-50 transition-all active:scale-95">
-                        <Share2 className="w-5 h-5" />
+                    <button
+                        onClick={handleShare}
+                        className={`p-5 rounded-2xl transition-all active:scale-95 border-2 ${shareCopied ? 'bg-emerald-500 border-emerald-400 text-white shadow-lg shadow-emerald-500/20' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-900 dark:text-white hover:bg-slate-50'}`}
+                    >
+                        {shareCopied ? <Check className="w-5 h-5" /> : <Share2 className="w-5 h-5" />}
                     </button>
                 </div>
             </div>

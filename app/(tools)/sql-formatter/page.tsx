@@ -1,17 +1,25 @@
+import { Suspense } from 'react';
 import { SqlFormatter } from '@/components/tools/developer/SqlFormatter';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-    title: 'SQL Formatter & Validator | Beautify SQL Online',
-    description: 'Format, beautify, and validate SQL queries online. Supports PostgreSQL, MySQL, SQL Server, and more. Free developer tool.',
-    keywords: ['sql formatter', 'sql beautifier', 'format sql online', 'mysql formatter', 'postgresql formatter', 'sql validator'],
-    alternates: {
-        canonical: '/sql-formatter',
-    },
-};
+import { getCombinedTitle } from '@/lib/i18n';
+
+export async function generateMetadata(): Promise<Metadata> {
+    const slug = 'sql-formatter';
+    const combinedTitle = getCombinedTitle(slug);
+
+    return {
+        title: combinedTitle,
+        description: 'Format, beautify, and validate SQL queries online. Supports PostgreSQL, MySQL, SQL Server, and more. Free developer tool.',
+        keywords: ['sql formatter', 'formateador sql', 'sql फॉर्मेटर', 'sql beautifier', 'format sql online', 'mysql formatter', 'postgresql formatter', 'sql validator'],
+        alternates: {
+            canonical: '/sql-formatter',
+        },
+    };
+}
 
 export default function SQLFormatterPage() {
     return (
@@ -27,7 +35,9 @@ export default function SQLFormatterPage() {
                 </p>
             </div>
 
-            <SqlFormatter />
+            <Suspense fallback={<div className="min-h-[500px] animate-pulse bg-slate-100 dark:bg-slate-800 rounded-3xl" />}>
+                <SqlFormatter />
+            </Suspense>
             <ToolContent slug="sql-formatter" />
         </div>
     );

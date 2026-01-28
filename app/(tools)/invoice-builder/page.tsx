@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { DynamicInvoiceBuilder } from '@/components/tools/DynamicTools';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
@@ -11,7 +12,9 @@ export const metadata: Metadata = {
 export default function InvoicePage() {
     return (
         <>
-            <DynamicInvoiceBuilder />
+            <Suspense fallback={<div className="min-h-[500px] animate-pulse bg-slate-100 dark:bg-slate-800 rounded-3xl" />}>
+                <DynamicInvoiceBuilder />
+            </Suspense>
             <ToolContent slug="invoice-builder" />
         </>
     );

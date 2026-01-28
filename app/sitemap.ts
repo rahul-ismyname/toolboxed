@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { tools } from '@/config/tools';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-    const baseUrl = 'https://www.toolboxed.online';
+    const baseUrl = 'https://toolboxed.online';
 
     const toolUrls = tools.map((tool) => ({
         url: `${baseUrl}${tool.path}`,

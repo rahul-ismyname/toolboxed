@@ -1,12 +1,44 @@
 'use client';
 
-import { useState } from 'react';
-import { FileCode, Copy, Check, Trash2, ArrowLeftRight, AlertCircle } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { FileCode, Copy, Check, Trash2, ArrowLeftRight, AlertCircle, Share2 } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 export function Base64Tool() {
     const [input, setInput] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
+    const [shareCopied, setShareCopied] = useState(false);
+
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Initialize from URL
+    useEffect(() => {
+        const urlConfig = searchParams.get('config');
+        if (urlConfig) {
+            try {
+                const decoded = JSON.parse(atob(decodeURIComponent(urlConfig)));
+                if (decoded.input) setInput(decoded.input);
+            } catch (e) {
+                console.error('Failed to decode config', e);
+            }
+        }
+    }, []); // Run once on mount
+
+    const handleShare = useCallback(() => {
+        const config = { input };
+        const encoded = encodeURIComponent(btoa(JSON.stringify(config)));
+        const url = `${window.location.origin}${pathname}?config=${encoded}`;
+
+        navigator.clipboard.writeText(url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+
+        // Update URL without refresh
+        router.replace(`${pathname}?config=${encoded}`, { scroll: false });
+    }, [input, pathname, router]);
 
     const encode = () => {
         if (!input.trim()) return;
@@ -97,6 +129,13 @@ export function Base64Tool() {
                                 className="p-4 bg-white dark:bg-slate-800 text-emerald-500 rounded-2xl shadow-xl border border-slate-50 dark:border-slate-800 hover:scale-110 active:scale-90 transition-all disabled:opacity-0"
                             >
                                 {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                            </button>
+                            <button
+                                onClick={handleShare}
+                                disabled={!input}
+                                className="p-4 bg-white dark:bg-slate-800 text-emerald-500 rounded-2xl shadow-xl border border-slate-50 dark:border-slate-800 hover:scale-110 active:scale-90 transition-all disabled:opacity-0"
+                            >
+                                {shareCopied ? <Check className="w-5 h-5" /> : <Share2 className="w-5 h-5" />}
                             </button>
                             <button
                                 onClick={clearAll}

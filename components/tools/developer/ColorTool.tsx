@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Palette, Copy, Check, RefreshCw } from 'lucide-react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { Palette, Copy, Check, RefreshCw, Share2 } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { colord, extend } from 'colord';
 import namesPlugin from 'colord/plugins/names';
 
@@ -10,6 +11,38 @@ extend([namesPlugin]);
 export function ColorTool() {
     const [color, setColor] = useState('#10b981');
     const [copied, setCopied] = useState<string | null>(null);
+    const [shareCopied, setShareCopied] = useState(false);
+
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Initialize from URL
+    useEffect(() => {
+        const config = searchParams.get('config');
+        if (config) {
+            try {
+                const hex = atob(decodeURIComponent(config));
+                if (colord(hex).isValid()) {
+                    setColor(hex);
+                }
+            } catch (e) {
+                console.error('Failed to decode config', e);
+            }
+        }
+    }, []); // Run once on mount
+
+    const handleShare = useCallback(() => {
+        const encoded = encodeURIComponent(btoa(color));
+        const url = `${window.location.origin}${pathname}?config=${encoded}`;
+
+        navigator.clipboard.writeText(url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+
+        // Update URL without refresh
+        router.replace(`${pathname}?config=${encoded}`, { scroll: false });
+    }, [color, pathname, router]);
 
     const colorData = useMemo(() => {
         const c = colord(color);
@@ -100,6 +133,35 @@ export function ColorTool() {
                                         </button>
                                     </div>
                                 ))}
+                            </div>
+
+                            {/* Share & Randomize Controls */}
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={handleShare}
+                                    className={`flex-1 py-5 rounded-3xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all active:scale-[0.98] border shadow-xl ${shareCopied
+                                        ? 'bg-emerald-500 border-emerald-400 text-white shadow-emerald-500/20'
+                                        : 'bg-white dark:bg-slate-800 border-slate-50 dark:border-slate-800 text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700'
+                                        }`}
+                                >
+                                    {shareCopied ? (
+                                        <>
+                                            <Check className="w-5 h-5" />
+                                            Vector Shared
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Share2 className="w-5 h-5" />
+                                            Share Spectrum
+                                        </>
+                                    )}
+                                </button>
+                                <button
+                                    onClick={randomizeColor}
+                                    className="px-8 py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-3xl font-black text-sm uppercase tracking-widest shadow-2xl hover:scale-[1.02] active:scale-95 transition-all"
+                                >
+                                    New Data
+                                </button>
                             </div>
 
                             <div className="pt-6 border-t border-slate-50 dark:border-slate-800/50">

@@ -3,12 +3,28 @@ import { TitleSection } from '@/components/shared/TitleSection';
 import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
+import { toolContentData } from '@/config/tool-content';
+import { getCombinedTitle } from '@/lib/i18n';
 
-export const metadata: Metadata = {
-    title: 'Free Privacy Policy Generator | GDPR Ready Template',
-    description: 'Create a standard privacy policy for your website or app in seconds. Free, simple, and ready to use.',
-    keywords: ['privacy policy generator', 'free privacy policy', 'gdpr template', 'legal disclaimer generator'],
-};
+export async function generateMetadata({ searchParams }: { searchParams: { lang?: string } }): Promise<Metadata> {
+    const lang = searchParams.lang || 'en';
+    const slug = 'privacy-policy-gen';
+    const title = getCombinedTitle(slug);
+    const description = toolContentData[slug]?.localizedMetadata?.[lang]?.description || toolContentData[slug]?.description;
+
+    return {
+        title,
+        description,
+        alternates: {
+            canonical: `/${slug}`,
+            languages: {
+                'es': `/${slug}?lang=es`,
+                'pt': `/${slug}?lang=pt`,
+                'hi': `/${slug}?lang=hi`,
+            },
+        },
+    };
+}
 
 export default function PrivacyPolicyPage() {
     return (

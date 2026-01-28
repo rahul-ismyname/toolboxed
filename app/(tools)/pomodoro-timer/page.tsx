@@ -3,15 +3,28 @@ import { TitleSection } from '@/components/shared/TitleSection';
 import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
+import { toolContentData } from '@/config/tool-content';
+import { getCombinedTitle } from '@/lib/i18n';
 
-export const metadata: Metadata = {
-    title: 'Pomodoro Timer | Focus Timer for Productivity',
-    description: 'Free online Pomodoro timer. Boost your productivity with the 25-minute work, 5-minute break technique. Features audio notifications and visual progress.',
-    keywords: ['pomodoro timer', 'focus timer', 'productivity timer', 'study timer', 'tomato timer'],
-    alternates: {
-        canonical: '/pomodoro-timer',
-    },
-};
+export async function generateMetadata({ searchParams }: { searchParams: { lang?: string } }): Promise<Metadata> {
+    const lang = searchParams.lang || 'en';
+    const slug = 'pomodoro-timer';
+    const title = getCombinedTitle(slug);
+    const description = toolContentData[slug]?.localizedMetadata?.[lang]?.description || toolContentData[slug]?.description;
+
+    return {
+        title,
+        description,
+        alternates: {
+            canonical: `/${slug}`,
+            languages: {
+                'es': `/${slug}?lang=es`,
+                'pt': `/${slug}?lang=pt`,
+                'hi': `/${slug}?lang=hi`,
+            },
+        },
+    };
+}
 
 export default function PomodoroPage() {
     return (

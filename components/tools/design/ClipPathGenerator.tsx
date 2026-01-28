@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { Copy, Check, Scissors, RefreshCw, Triangle, Circle, Square, Star, Plus, MessageSquare, Image as ImageIcon, LayoutTemplate } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Copy, Check, Scissors, RefreshCw, Triangle, Circle, Square, Star, Plus, MessageSquare, Image as ImageIcon, LayoutTemplate, Share2 } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 type Point = { x: number; y: number };
 
@@ -22,12 +23,46 @@ export function ClipPathGenerator() {
     const [points, setPoints] = useState<Point[]>(SHAPES.pentagon);
     const [circleVal, setCircleVal] = useState(50);
     const [copied, setCopied] = useState(false);
+    const [shareCopied, setShareCopied] = useState(false);
+
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
     const [draggingPoint, setDraggingPoint] = useState<number | null>(null);
     const [bgImage, setBgImage] = useState('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80');
     const [showGhost, setShowGhost] = useState(true);
     const [showGrid, setShowGrid] = useState(true);
     const [snapToGrid, setSnapToGrid] = useState(false);
 
+    // Initialize from URL
+    useEffect(() => {
+        const urlConfig = searchParams.get('config');
+        if (urlConfig) {
+            try {
+                const decoded = JSON.parse(atob(decodeURIComponent(urlConfig)));
+                if (decoded.activeShape) setActiveShape(decoded.activeShape);
+                if (decoded.points) setPoints(decoded.points);
+                if (decoded.circleVal !== undefined) setCircleVal(decoded.circleVal);
+                if (decoded.bgImage) setBgImage(decoded.bgImage);
+            } catch (e) {
+                console.error('Failed to decode config', e);
+            }
+        }
+    }, []); // Run once on mount
+
+    const handleShare = useCallback(() => {
+        const config = { activeShape, points, circleVal, bgImage };
+        const encoded = encodeURIComponent(btoa(JSON.stringify(config)));
+        const url = `${window.location.origin}${pathname}?config=${encoded}`;
+
+        navigator.clipboard.writeText(url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+
+        // Update URL without refresh
+        router.replace(`${pathname}?config=${encoded}`, { scroll: false });
+    }, [activeShape, points, circleVal, bgImage, pathname, router]);
     const containerRef = useRef<HTMLDivElement>(null);
 
     const getClipPath = () => {
@@ -287,6 +322,12 @@ export function ClipPathGenerator() {
                                 className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 hover:text-emerald-300 transition-colors border border-slate-700"
                             >
                                 {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                            </button>
+                            <button
+                                onClick={handleShare}
+                                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 hover:text-emerald-300 transition-colors border border-slate-700"
+                            >
+                                {shareCopied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
                             </button>
                         </div>
                         <div className="flex bg-slate-950/50 p-4 border-b border-slate-800">

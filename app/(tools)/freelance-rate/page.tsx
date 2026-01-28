@@ -4,11 +4,21 @@ import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-    title: 'Freelance Hourly Rate Calculator | Calculate Your Billable Rate',
-    description: 'Determine exactly how much you should charge as a freelancer to meet your income goals. Accounts for taxes, expenses, and vacation time.',
-    keywords: ['freelance rate calculator', 'hourly rate calculator', 'contractor rate', 'billable hours calculator', 'freelance pricing'],
-};
+import { getCombinedTitle } from '@/lib/i18n';
+
+export async function generateMetadata(): Promise<Metadata> {
+    const slug = 'freelance-rate';
+    const combinedTitle = getCombinedTitle(slug);
+
+    return {
+        title: combinedTitle,
+        description: 'Determine exactly how much you should charge as a freelancer to meet your income goals. Accounts for taxes, expenses, and vacation time.',
+        keywords: ['freelance rate calculator', 'tarifa por hora', 'प्रति घंटा दर', 'hourly rate calculator', 'contractor rate', 'billable hours calculator', 'freelance pricing'],
+        alternates: {
+            canonical: '/freelance-rate',
+        },
+    };
+}
 
 export default function FreelanceCalcPage() {
     return (

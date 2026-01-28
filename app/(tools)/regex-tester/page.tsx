@@ -3,15 +3,28 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
+import { toolContentData } from '@/config/tool-content';
+import { getCombinedTitle } from '@/lib/i18n';
 
-export const metadata: Metadata = {
-    title: 'RegEx Tester & Debugger | Live Regular Expression Editor',
-    description: 'Test and debug JavaScript regular expressions online with real-time highlighting and cheat sheet. Supports global, case-insensitive, and multiline flags.',
-    keywords: ['regex tester', 'regex debugger', 'regular expression tester online', 'javascript regex editor', 'regex cheat sheet'],
-    alternates: {
-        canonical: '/regex-tester',
-    },
-};
+export async function generateMetadata({ searchParams }: { searchParams: { lang?: string } }): Promise<Metadata> {
+    const lang = searchParams.lang || 'en';
+    const slug = 'regex-tester';
+    const title = getCombinedTitle(slug);
+    const description = toolContentData[slug]?.localizedMetadata?.[lang]?.description || toolContentData[slug]?.description;
+
+    return {
+        title,
+        description,
+        alternates: {
+            canonical: `/${slug}`,
+            languages: {
+                'es': `/${slug}?lang=es`,
+                'pt': `/${slug}?lang=pt`,
+                'hi': `/${slug}?lang=hi`,
+            },
+        },
+    };
+}
 
 export default function RegexTesterPage() {
     return (

@@ -4,14 +4,21 @@ import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-    title: 'Lorem Ipsum Generator | Free Online Placeholder Text Tool',
-    description: 'Generate custom Lorem Ipsum text for your web designs or print projects. Choose between paragraphs, sentences, or words and copy the result instantly.',
-    keywords: ['lorem ipsum generator', 'placeholder text tool', 'dummy text online', 'filler text generator', 'web design placeholder', 'lorem ipsum paragraphs'],
-    alternates: {
-        canonical: '/lorem-ipsum',
-    },
-};
+import { getCombinedTitle } from '@/lib/i18n';
+
+export async function generateMetadata(): Promise<Metadata> {
+    const slug = 'lorem-ipsum';
+    const combinedTitle = getCombinedTitle(slug);
+
+    return {
+        title: combinedTitle,
+        description: 'Generate custom Lorem Ipsum text for your web designs or print projects. Choose between paragraphs, sentences, or words and copy the result instantly.',
+        keywords: ['lorem ipsum generator', 'generador de lorem ipsum', 'लोरेम इप्सम जेनरेटर', 'placeholder text tool', 'dummy text online', 'filler text generator', 'web design placeholder', 'lorem ipsum paragraphs'],
+        alternates: {
+            canonical: '/lorem-ipsum',
+        },
+    };
+}
 
 export default function LoremPage() {
     return (

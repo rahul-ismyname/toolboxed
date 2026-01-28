@@ -4,14 +4,21 @@ import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-    title: 'URL Encoder & Decoder | Percent-Encoding Online Tool',
-    description: 'Safely encode or decode URLs and query parameters. Convert special characters into percent-encoded format for safe transmission over the web.',
-    keywords: ['url encoder', 'url decoder', 'percent encoding', 'encode url online', 'decode url parameters', 'web developer tool'],
-    alternates: {
-        canonical: '/url-converter',
-    },
-};
+import { getCombinedTitle } from '@/lib/i18n';
+
+export async function generateMetadata(): Promise<Metadata> {
+    const slug = 'url-converter';
+    const combinedTitle = getCombinedTitle(slug);
+
+    return {
+        title: combinedTitle,
+        description: 'Safely encode or decode URLs and query parameters. Convert special characters into percent-encoded format for safe transmission over the web.',
+        keywords: ['url encoder', 'codificador de url', 'यूआरएल एनकोडर', 'url decoder', 'percent encoding', 'encode url online', 'decode url parameters', 'web developer tool'],
+        alternates: {
+            canonical: '/url-converter',
+        },
+    };
+}
 
 export default function UrlPage() {
     return (

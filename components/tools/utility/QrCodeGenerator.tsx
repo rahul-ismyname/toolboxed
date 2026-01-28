@@ -1,14 +1,16 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { QRCodeSVG } from "qrcode.react"
-import { Download, Copy, Check, Settings, Upload, Image as ImageIcon, Palette, RefreshCcw, QrCode } from "lucide-react"
+import { Download, Copy, Check, Settings, Upload, Image as ImageIcon, Palette, RefreshCcw, QrCode, Share2 } from "lucide-react"
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 type ErrorCorrectionLevel = "L" | "M" | "Q" | "H"
 
 export function QrCodeGenerator() {
     const [text, setText] = useState("")
     const [copied, setCopied] = useState(false)
+    const [shareCopied, setShareCopied] = useState(false);
 
     // Customization State
     const [fgColor, setFgColor] = useState("#000000")
@@ -17,6 +19,42 @@ export function QrCodeGenerator() {
     const [logoUrl, setLogoUrl] = useState<string | null>(null)
     const [logoSize, setLogoSize] = useState(24) // Percentage of QR size approx implies 24px default logic adjustment needed
     const [includeMargin, setIncludeMargin] = useState(true)
+
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Initialize from URL
+    useEffect(() => {
+        const urlConfig = searchParams.get('config');
+        if (urlConfig) {
+            try {
+                const decoded = JSON.parse(atob(decodeURIComponent(urlConfig)));
+                if (decoded.text !== undefined) setText(decoded.text);
+                if (decoded.fgColor) setFgColor(decoded.fgColor);
+                if (decoded.bgColor) setBgColor(decoded.bgColor);
+                if (decoded.errorLevel) setErrorLevel(decoded.errorLevel);
+                if (decoded.logoUrl) setLogoUrl(decoded.logoUrl);
+                if (decoded.logoSize) setLogoSize(decoded.logoSize);
+                if (decoded.includeMargin !== undefined) setIncludeMargin(decoded.includeMargin);
+            } catch (e) {
+                console.error('Failed to decode config', e);
+            }
+        }
+    }, []); // Run once on mount
+
+    const handleShare = useCallback(() => {
+        const config = { text, fgColor, bgColor, errorLevel, logoUrl, logoSize, includeMargin };
+        const encoded = encodeURIComponent(btoa(JSON.stringify(config)));
+        const url = `${window.location.origin}${pathname}?config=${encoded}`;
+
+        navigator.clipboard.writeText(url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+
+        // Update URL without refresh
+        router.replace(`${pathname}?config=${encoded}`, { scroll: false });
+    }, [text, fgColor, bgColor, errorLevel, logoUrl, logoSize, includeMargin, pathname, router]);
 
     const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -265,6 +303,14 @@ export function QrCodeGenerator() {
                                 className="inline-flex items-center justify-center px-8 py-5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 rounded-[1.8rem] transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:text-emerald-500 active:scale-95"
                             >
                                 {copied ? <Check className="w-5 h-5 text-emerald-500 animate-in zoom-in" /> : <Copy className="w-5 h-5" />}
+                            </button>
+                            <button
+                                onClick={handleShare}
+                                disabled={!text}
+                                title="Share Oracle State"
+                                className="inline-flex items-center justify-center px-8 py-5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 dark:text-slate-400 rounded-[1.8rem] transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:text-emerald-500 active:scale-95"
+                            >
+                                {shareCopied ? <Check className="w-5 h-5 text-emerald-500 animate-in zoom-in" /> : <Share2 className="w-5 h-5" />}
                             </button>
                         </div>
                     </div>

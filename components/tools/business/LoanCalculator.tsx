@@ -1,12 +1,46 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Landmark, ArrowRight, RefreshCw, Calculator, TrendingUp } from 'lucide-react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { Landmark, ArrowRight, RefreshCw, Calculator, TrendingUp, Copy, Check, Share2 } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 export function LoanCalculator() {
     const [amount, setAmount] = useState<number>(50000);
     const [rate, setRate] = useState<number>(8.5);
     const [tenure, setTenure] = useState<number>(5);
+
+    const [shareCopied, setShareCopied] = useState(false);
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Initialize from URL
+    useEffect(() => {
+        const urlConfig = searchParams.get('config');
+        if (urlConfig) {
+            try {
+                const decoded = JSON.parse(atob(decodeURIComponent(urlConfig)));
+                if (decoded.amount) setAmount(decoded.amount);
+                if (decoded.rate) setRate(decoded.rate);
+                if (decoded.tenure) setTenure(decoded.tenure);
+            } catch (e) {
+                console.error('Failed to decode config', e);
+            }
+        }
+    }, []); // Run once on mount
+
+    const handleShare = useCallback(() => {
+        const config = { amount, rate, tenure };
+        const encoded = encodeURIComponent(btoa(JSON.stringify(config)));
+        const url = `${window.location.origin}${pathname}?config=${encoded}`;
+
+        navigator.clipboard.writeText(url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+
+        // Update URL without refresh
+        router.replace(`${pathname}?config=${encoded}`, { scroll: false });
+    }, [amount, rate, tenure, pathname, router]);
 
     const calculation = useMemo(() => {
         const monthlyRate = (rate / 100) / 12;
@@ -38,6 +72,13 @@ export function LoanCalculator() {
                         <p className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider">Loan Architect</p>
                     </div>
                 </div>
+                <button
+                    onClick={handleShare}
+                    className="flex items-center gap-3 px-6 py-3 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-bold uppercase text-[10px] tracking-widest rounded-2xl shadow-lg border border-slate-100 dark:border-slate-800 hover:text-emerald-500 hover:border-emerald-500/20 transition-all active:scale-95"
+                >
+                    {shareCopied ? <Check className="w-4 h-4 text-emerald-500" /> : <Share2 className="w-4 h-4" />}
+                    {shareCopied ? 'Link Copied' : 'Share State'}
+                </button>
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl shadow-indigo-500/5 border border-slate-100 dark:border-slate-800 overflow-hidden">

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, MoreVertical, Trash2, Calendar, GripVertical, CheckCircle2, Circle, AlertCircle, X, Layout, CheckSquare, Clock } from 'lucide-react';
+import { Plus, MoreVertical, Trash2, Calendar, GripVertical, CheckCircle2, Circle, AlertCircle, X, Layout, CheckSquare, Clock, Share2, Check } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 // --- TYPES ---
 type Priority = 'low' | 'medium' | 'high';
@@ -60,9 +61,30 @@ export function KanbanBoard() {
     const [editingTask, setEditingTask] = useState<{ colId: string, task: Task } | null>(null);
     const [isNewTask, setIsNewTask] = useState(false);
 
-    // Initial Load
+    // Sharing State
+    const [shareCopied, setShareCopied] = useState(false);
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Initial Load & URL Sync
     useEffect(() => {
         setIsClient(true);
+
+        // Priority to URL config if present, then localStorage, then default
+        const urlConfig = searchParams.get('config');
+        if (urlConfig) {
+            try {
+                const decoded = JSON.parse(atob(decodeURIComponent(urlConfig)));
+                if (Array.isArray(decoded)) {
+                    setColumns(decoded);
+                    return; // Skip local storage load if URL present
+                }
+            } catch (e) {
+                console.error('Failed to decode config', e);
+            }
+        }
+
         const saved = localStorage.getItem('kanban-board');
         if (saved) {
             try {
@@ -81,7 +103,7 @@ export function KanbanBoard() {
                 console.error("Failed to load board", e);
             }
         }
-    }, []);
+    }, [searchParams]); // Add searchParams dependency
 
     // Auto Save
     useEffect(() => {
@@ -217,12 +239,28 @@ export function KanbanBoard() {
                     <Layout className="w-6 h-6 text-emerald-500" />
                     Project Board
                 </div>
-                <button
-                    onClick={() => { if (confirm('Clear all tasks? No undo.')) setColumns(INITIAL_DATA); }}
-                    className="text-xs font-semibold text-slate-400 hover:text-red-500 transition-colors"
-                >
-                    Clear Board
-                </button>
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => {
+                            const encoded = encodeURIComponent(btoa(JSON.stringify(columns)));
+                            const url = `${window.location.origin}${pathname}?config=${encoded}`;
+                            navigator.clipboard.writeText(url);
+                            setShareCopied(true);
+                            setTimeout(() => setShareCopied(false), 2000);
+                            router.replace(`${pathname}?config=${encoded}`, { scroll: false });
+                        }}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg text-xs font-bold hover:bg-emerald-100 transition-colors"
+                    >
+                        {shareCopied ? <Check className="w-3 h-3" /> : <Share2 className="w-3 h-3" />}
+                        {shareCopied ? 'Copied' : 'Share'}
+                    </button>
+                    <button
+                        onClick={() => { if (confirm('Clear all tasks? No undo.')) setColumns(INITIAL_DATA); }}
+                        className="text-xs font-semibold text-slate-400 hover:text-red-500 transition-colors"
+                    >
+                        Clear Board
+                    </button>
+                </div>
             </div>
 
             {/* Board Area */}

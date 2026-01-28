@@ -1,17 +1,32 @@
+import { Suspense } from 'react';
 import { GlassGenerator } from '@/components/tools/developer/GlassGenerator';
 import { TitleSection } from '@/components/shared/TitleSection';
 import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-    title: 'CSS Glassmorphism Generator | Modern Design Tool',
-    description: 'Create beautiful glass-styled UI elements with our visual Glassmorphism generator. Adjust blur, transparency, and borders, then copy the CSS code.',
-    keywords: ['glassmorphism generator', 'css glass effect', 'modern ui tools', 'backdrop filter tool', 'css design generator'],
-    alternates: {
-        canonical: '/glassmorphism-generator',
-    },
-};
+import { toolContentData } from '@/config/tool-content';
+import { getCombinedTitle } from '@/lib/i18n';
+
+export async function generateMetadata({ searchParams }: { searchParams: { lang?: string } }): Promise<Metadata> {
+    const lang = searchParams.lang || 'en';
+    const slug = 'glassmorphism-generator';
+    const title = getCombinedTitle(slug);
+    const description = toolContentData[slug]?.localizedMetadata?.[lang]?.description || toolContentData[slug]?.description;
+
+    return {
+        title,
+        description,
+        alternates: {
+            canonical: `/${slug}`,
+            languages: {
+                'es': `/${slug}?lang=es`,
+                'pt': `/${slug}?lang=pt`,
+                'hi': `/${slug}?lang=hi`,
+            },
+        },
+    };
+}
 
 export default function GlassPage() {
     return (
@@ -23,7 +38,9 @@ export default function GlassPage() {
                     description="Design premium UI components in seconds."
                 />
 
-                <GlassGenerator />
+                <Suspense fallback={<div className="min-h-[500px] animate-pulse bg-slate-100 dark:bg-slate-800 rounded-3xl" />}>
+                    <GlassGenerator />
+                </Suspense>
             </div>
 
             <ToolContent slug="glassmorphism-generator" />

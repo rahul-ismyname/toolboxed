@@ -1,17 +1,33 @@
+import { Suspense } from 'react';
 import { UnitConverter } from '@/components/tools/utility/UnitConverter';
 import { TitleSection } from '@/components/shared/TitleSection';
 import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-    title: 'Unit Converter | Length, Weight, Temperature',
-    description: 'Fast and accurate online unit converter. Convert between Metric and Imperial units for length, weight, and temperature.',
-    keywords: ['unit converter', 'metric converter', 'imperial converter', 'length converter', 'weight converter'],
-    alternates: {
-        canonical: '/unit-converter',
-    },
-};
+import { getCombinedTitle } from '@/lib/i18n';
+
+import { toolContentData } from '@/config/tool-content';
+
+export async function generateMetadata({ searchParams }: { searchParams: { lang?: string } }): Promise<Metadata> {
+    const lang = searchParams.lang || 'en';
+    const slug = 'unit-converter';
+    const title = getCombinedTitle(slug);
+    const description = toolContentData[slug]?.localizedMetadata?.[lang]?.description || toolContentData[slug]?.description;
+
+    return {
+        title,
+        description,
+        alternates: {
+            canonical: `/${slug}`,
+            languages: {
+                'es': `/${slug}?lang=es`,
+                'pt': `/${slug}?lang=pt`,
+                'hi': `/${slug}?lang=hi`,
+            },
+        },
+    };
+}
 
 export default function UnitConverterPage() {
     return (
@@ -23,7 +39,9 @@ export default function UnitConverterPage() {
                     description="Convert between Metric and Imperial units instantly."
                 />
 
-                <UnitConverter />
+                <Suspense fallback={<div className="min-h-[500px] animate-pulse bg-slate-100 dark:bg-slate-800 rounded-3xl" />}>
+                    <UnitConverter />
+                </Suspense>
             </div>
 
             <ToolContent slug="unit-converter" />

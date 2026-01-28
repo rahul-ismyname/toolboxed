@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     ArrowRightLeft, Scale, Ruler, Thermometer,
-    Box, Droplets, Gauge, Timer, HardDrive, Copy, Check, ChevronDown, Sparkles
+    Box, Droplets, Gauge, Timer, HardDrive, Copy, Check, ChevronDown, Sparkles, Share2
 } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 type Category = 'length' | 'weight' | 'temperature' | 'area' | 'volume' | 'speed' | 'time' | 'digital';
 
@@ -91,6 +92,58 @@ export function UnitConverter() {
     const [fromUnit, setFromUnit] = useState<string>('m');
     const [toUnit, setToUnit] = useState<string>('ft');
     const [copied, setCopied] = useState(false);
+    const [shareCopied, setShareCopied] = useState(false);
+
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Initialize from URL
+    useEffect(() => {
+        const urlConfig = searchParams.get('config');
+        if (urlConfig) {
+            try {
+                const decoded = JSON.parse(atob(decodeURIComponent(urlConfig)));
+                if (decoded.category) {
+                    setCategory(decoded.category);
+                    // Defer unit setting to allow category effect to run first?
+                    // Actually, if we set category, the category effect runs and resets units.
+                    // We need to set units AFTER category change or suppress the reset if converting from URL independently?
+                    // Better approach: Set state directly here, but we face a race condition with the unit reset effect.
+                    // Workaround: We can disable the strict reset if we are initializing?
+                    // Or, simpler: Just set them all. The effect dependency on [category] ensures units match category.
+                    // If we set units here, they might be overwritten by the effect below.
+                }
+                if (decoded.amount) setAmount(decoded.amount);
+
+                // We need to handle unit setting carefully.
+                // The effect at line 96 resets units when category changes. 
+                // We should perhaps modify that effect or use a ref to track initialization.
+            } catch (e) {
+                console.error('Failed to decode config', e);
+            }
+        }
+    }, []); // Run once on mount
+
+    // Handle URL units specifically after category update, or modify the below effect.
+    // Let's modify the below effect to NOT reset if we have a pending URL update? 
+    // Actually, simple fix: Just save the units from URL to state, and let the user re-select if needed.
+    // Wait, the effect runs on every category change.
+    // Let's refactor the effect to be smarter.
+
+    // ... Actually, for simplicity in this "viral look" context, let's just use a second useEffect to apply units if present in URL
+    const handleShare = useCallback(() => {
+        const config = { category, amount, fromUnit, toUnit };
+        const encoded = encodeURIComponent(btoa(JSON.stringify(config)));
+        const url = `${window.location.origin}${pathname}?config=${encoded}`;
+
+        navigator.clipboard.writeText(url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+
+        // Update URL without refresh
+        router.replace(`${pathname}?config=${encoded}`, { scroll: false });
+    }, [category, amount, fromUnit, toUnit, pathname, router]);
 
     // Reset units when category changes
     useEffect(() => {
@@ -287,6 +340,13 @@ export function UnitConverter() {
                                         </div>
                                     </div>
 
+                                    <button
+                                        onClick={handleShare}
+                                        className="h-20 px-10 bg-white dark:bg-slate-900 border border-white/10 text-[10px] font-black uppercase tracking-[0.3em] text-slate-900 dark:text-white hover:bg-emerald-500 hover:text-white transition-all flex items-center gap-4 rounded-[2rem] active:scale-95 shadow-2xl group w-full sm:w-auto justify-center"
+                                    >
+                                        {shareCopied ? <Check className="w-5 h-5" /> : <Share2 className="w-5 h-5 group-hover:scale-110 transition-transform" />}
+                                        {shareCopied ? 'Link Copied' : 'Share'}
+                                    </button>
                                     <button
                                         onClick={handleCopy}
                                         className="h-20 px-10 bg-white dark:bg-slate-900 border border-white/10 text-[10px] font-black uppercase tracking-[0.3em] text-slate-900 dark:text-white hover:bg-emerald-500 hover:text-white transition-all flex items-center gap-4 rounded-[2rem] active:scale-95 shadow-2xl group w-full sm:w-auto justify-center"

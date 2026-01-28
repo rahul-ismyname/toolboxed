@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Image, Copy, Check, ExternalLink, Settings2 } from 'lucide-react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { Image, Copy, Check, ExternalLink, Settings2, Share2 } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 export function PlaceholderGenerator() {
     const [width, setWidth] = useState<number>(600);
@@ -11,6 +12,42 @@ export function PlaceholderGenerator() {
     const [textColor, setTextColor] = useState<string>('#000000');
     const [format, setFormat] = useState<string>('png');
     const [copied, setCopied] = useState(false);
+    const [shareCopied, setShareCopied] = useState(false);
+
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Initialize from URL
+    useEffect(() => {
+        const urlConfig = searchParams.get('config');
+        if (urlConfig) {
+            try {
+                const decoded = JSON.parse(atob(decodeURIComponent(urlConfig)));
+                if (decoded.width) setWidth(decoded.width);
+                if (decoded.height) setHeight(decoded.height);
+                if (decoded.text !== undefined) setText(decoded.text);
+                if (decoded.bgColor) setBgColor(decoded.bgColor);
+                if (decoded.textColor) setTextColor(decoded.textColor);
+                if (decoded.format) setFormat(decoded.format);
+            } catch (e) {
+                console.error('Failed to decode config', e);
+            }
+        }
+    }, []); // Run once on mount
+
+    const handleShare = useCallback(() => {
+        const config = { width, height, text, bgColor, textColor, format };
+        const encoded = encodeURIComponent(btoa(JSON.stringify(config)));
+        const url = `${window.location.origin}${pathname}?config=${encoded}`;
+
+        navigator.clipboard.writeText(url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+
+        // Update URL without refresh
+        router.replace(`${pathname}?config=${encoded}`, { scroll: false });
+    }, [width, height, text, bgColor, textColor, format, pathname, router]);
 
     const placeholderUrl = useMemo(() => {
         const bg = bgColor.replace('#', '');
@@ -112,8 +149,8 @@ export function PlaceholderGenerator() {
                                     key={f}
                                     onClick={() => setFormat(f)}
                                     className={`flex-1 py-2 px-4 rounded-xl text-sm font-bold border-2 transition-all ${format === f
-                                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400'
-                                            : 'border-slate-100 dark:border-slate-800 text-slate-400 hover:border-slate-200 dark:hover:border-slate-700'
+                                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400'
+                                        : 'border-slate-100 dark:border-slate-800 text-slate-400 hover:border-slate-200 dark:hover:border-slate-700'
                                         }`}
                                 >
                                     {f.toUpperCase()}
@@ -146,6 +183,12 @@ export function PlaceholderGenerator() {
                                 className="p-2 bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all"
                             >
                                 {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                            </button>
+                            <button
+                                onClick={handleShare}
+                                className="p-2 bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all"
+                            >
+                                {shareCopied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
                             </button>
                             <a
                                 href={placeholderUrl}

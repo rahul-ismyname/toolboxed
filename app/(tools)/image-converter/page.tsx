@@ -5,14 +5,29 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-    title: 'Image Converter & Compressor | Compress PNG, JPG, WebP Online',
-    description: 'Free online image compressor and converter. Reduce file size of PNG and JPG images by up to 80% without quality loss. 100% private & browser-based.',
-    keywords: ['compress image', 'reduce image size', 'image converter', 'webp converter', 'png to jpg', 'jpg to webp'],
-    alternates: {
-        canonical: '/image-converter',
-    },
-};
+import { getCombinedTitle } from '@/lib/i18n';
+
+import { toolContentData } from '@/config/tool-content';
+
+export async function generateMetadata({ searchParams }: { searchParams: { lang?: string } }): Promise<Metadata> {
+    const lang = searchParams.lang || 'en';
+    const slug = 'image-converter';
+    const title = getCombinedTitle(slug);
+    const description = toolContentData[slug]?.localizedMetadata?.[lang]?.description || toolContentData[slug]?.description;
+
+    return {
+        title,
+        description,
+        alternates: {
+            canonical: `/${slug}`,
+            languages: {
+                'es': `/${slug}?lang=es`,
+                'pt': `/${slug}?lang=pt`,
+                'hi': `/${slug}?lang=hi`,
+            },
+        },
+    };
+}
 
 export default function ConverterPage() {
     return (

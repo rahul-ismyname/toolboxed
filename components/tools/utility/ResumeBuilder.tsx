@@ -4,8 +4,9 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import {
     Download, LayoutTemplate, Palette, Type, Save,
     Plus, Trash2, GripVertical, ChevronDown, ChevronUp,
-    Briefcase, GraduationCap, User, Wrench, FolderOpen, Mail, Phone, MapPin, Globe, Linkedin, Github, Sparkles
+    Briefcase, GraduationCap, User, Wrench, FolderOpen, Mail, Phone, MapPin, Globe, Linkedin, Github, Sparkles, Share2, Check
 } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 // --- TYPES ---
 interface ResumeData {
@@ -108,17 +109,34 @@ export function ResumeBuilder() {
     const [activeSection, setActiveSection] = useState<string | null>('personal');
     const [isClient, setIsClient] = useState(false);
 
+    // Sharing State
+    const [shareCopied, setShareCopied] = useState(false);
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
     useEffect(() => {
         setIsClient(true);
+
+        const urlConfig = searchParams.get('config');
+        if (urlConfig) {
+            try {
+                const decoded = JSON.parse(atob(decodeURIComponent(urlConfig)));
+                setData(prev => ({ ...INITIAL_DATA, ...decoded }));
+            } catch (e) {
+                console.error('Failed to decode config', e);
+            }
+        }
+
         const saved = localStorage.getItem('resume-data');
-        if (saved) {
+        if (saved && !urlConfig) {
             try {
                 setData(JSON.parse(saved));
             } catch (e) {
                 console.error("Failed to load saved resume", e);
             }
         }
-    }, []);
+    }, [searchParams]);
 
     useEffect(() => {
         if (isClient) {
@@ -554,6 +572,21 @@ export function ResumeBuilder() {
 
                 {/* PDF Actions */}
                 <div className="fixed bottom-12 right-12 z-50 flex flex-col gap-4 print:hidden">
+                    <button
+                        onClick={() => {
+                            const encoded = encodeURIComponent(btoa(JSON.stringify(data)));
+                            const url = `${window.location.origin}${pathname}?config=${encoded}`;
+                            navigator.clipboard.writeText(url);
+                            setShareCopied(true);
+                            setTimeout(() => setShareCopied(false), 2000);
+                            router.replace(`${pathname}?config=${encoded}`, { scroll: false });
+                        }}
+                        className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-8 py-5 rounded-[2rem] shadow-3xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center gap-4 font-black uppercase tracking-widest text-xs border border-white/10 dark:border-slate-800"
+                    >
+                        {shareCopied ? <Check className="w-5 h-5 text-emerald-500" /> : <Share2 className="w-5 h-5" />}
+                        <span>{shareCopied ? 'Copied' : 'Share'}</span>
+                    </button>
+
                     <button
                         onClick={handlePrint}
                         className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-8 py-5 rounded-[2rem] shadow-3xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center gap-4 font-black uppercase tracking-widest text-xs border border-white/10 dark:border-slate-800"

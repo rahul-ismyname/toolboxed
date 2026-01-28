@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { DynamicResumeBuilder } from '@/components/tools/DynamicTools';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { BackButton } from '@/components/shared/BackButton';
@@ -27,7 +28,9 @@ export default function ResumeBuilderPage() {
                         Create a professional, ATS-optimized resume in minutes.
                     </p>
                 </div>
-                <DynamicResumeBuilder />
+                <Suspense fallback={<div className="min-h-[500px] animate-pulse bg-slate-100 dark:bg-slate-800 rounded-3xl" />}>
+                    <DynamicResumeBuilder />
+                </Suspense>
             </div>
             <ToolContent slug="resume-builder" />
         </div>

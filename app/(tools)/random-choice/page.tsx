@@ -3,15 +3,28 @@ import { TitleSection } from '@/components/shared/TitleSection';
 import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
+import { toolContentData } from '@/config/tool-content';
+import { getCombinedTitle } from '@/lib/i18n';
 
-export const metadata: Metadata = {
-    title: 'Random Choice Maker | Decision Helper & Picker',
-    description: 'Can\'t decide? Enter your options and let our Random Choice Maker pick a winner with a fun shuffle animation.',
-    keywords: ['random choice generator', 'decision maker', 'random picker', 'list shuffler', 'lucky draw'],
-    alternates: {
-        canonical: '/random-choice',
-    },
-};
+export async function generateMetadata({ searchParams }: { searchParams: { lang?: string } }): Promise<Metadata> {
+    const lang = searchParams.lang || 'en';
+    const slug = 'random-choice';
+    const title = getCombinedTitle(slug);
+    const description = toolContentData[slug]?.localizedMetadata?.[lang]?.description || toolContentData[slug]?.description;
+
+    return {
+        title,
+        description,
+        alternates: {
+            canonical: `/${slug}`,
+            languages: {
+                'es': `/${slug}?lang=es`,
+                'pt': `/${slug}?lang=pt`,
+                'hi': `/${slug}?lang=hi`,
+            },
+        },
+    };
+}
 
 export default function RandomChoicePage() {
     return (

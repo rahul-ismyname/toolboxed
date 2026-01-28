@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { DynamicKanbanBoard } from '@/components/tools/DynamicTools';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { BackButton } from '@/components/shared/BackButton';
@@ -27,7 +28,9 @@ export default function KanbanPage() {
                         Manage your projects with simple, intuitive task columns.
                     </p>
                 </div>
-                <DynamicKanbanBoard />
+                <Suspense fallback={<div className="min-h-[500px] animate-pulse bg-slate-100 dark:bg-slate-800 rounded-3xl" />}>
+                    <DynamicKanbanBoard />
+                </Suspense>
             </div>
             <ToolContent slug="kanban-board" />
         </div>

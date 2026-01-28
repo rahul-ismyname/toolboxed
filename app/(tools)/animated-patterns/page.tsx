@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { DynamicAnimatedPatternMaster } from '@/components/tools/DynamicTools';
 import { TitleSection } from '@/components/shared/TitleSection';
 import { BackButton } from '@/components/shared/BackButton';
@@ -5,14 +6,28 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-    title: 'Animated Pattern Master | SVG Background Generator',
-    description: 'Generate and animate infinite SVG patterns for modern backgrounds. Customize scale, color, speed, and export high-quality CSS or SVG code.',
-    keywords: ['svg pattern generator', 'animated backgrounds', 'css patterns', 'svg backgrounds', 'design tools'],
-    alternates: {
-        canonical: '/animated-patterns',
-    },
-};
+import { toolContentData } from '@/config/tool-content';
+import { getCombinedTitle } from '@/lib/i18n';
+
+export async function generateMetadata({ searchParams }: { searchParams: { lang?: string } }): Promise<Metadata> {
+    const lang = searchParams.lang || 'en';
+    const slug = 'animated-patterns';
+    const title = getCombinedTitle(slug);
+    const description = toolContentData[slug]?.localizedMetadata?.[lang]?.description || toolContentData[slug]?.description;
+
+    return {
+        title,
+        description,
+        alternates: {
+            canonical: `/${slug}`,
+            languages: {
+                'es': `/${slug}?lang=es`,
+                'pt': `/${slug}?lang=pt`,
+                'hi': `/${slug}?lang=hi`,
+            },
+        },
+    };
+}
 
 export default function PatternPage() {
     return (
@@ -26,7 +41,9 @@ export default function PatternPage() {
                 />
 
                 <div className="rounded-3xl shadow-2xl overflow-hidden ring-1 ring-slate-200 dark:ring-slate-800">
-                    <DynamicAnimatedPatternMaster />
+                    <Suspense fallback={<div className="min-h-[600px] animate-pulse bg-slate-100 dark:bg-slate-800" />}>
+                        <DynamicAnimatedPatternMaster />
+                    </Suspense>
                 </div>
             </div>
 

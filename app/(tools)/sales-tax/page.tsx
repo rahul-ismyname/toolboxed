@@ -4,14 +4,21 @@ import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-    title: 'Sales Tax Calculator | Calculate GST, VAT & Taxes Online',
-    description: 'Quickly calculate sales tax or reverse-calculate taxes from a total amount. Support for custom tax rates, GST, and VAT scenarios.',
-    keywords: ['sales tax calculator', 'gst calculator', 'vat calculator', 'reverse tax calculator', 'calculate tax online', 'business tax tool'],
-    alternates: {
-        canonical: '/sales-tax',
-    },
-};
+import { getCombinedTitle } from '@/lib/i18n';
+
+export async function generateMetadata(): Promise<Metadata> {
+    const slug = 'sales-tax';
+    const combinedTitle = getCombinedTitle(slug);
+
+    return {
+        title: combinedTitle,
+        description: 'Quickly calculate sales tax or reverse-calculate taxes from a total amount. Support for custom tax rates, GST, and VAT scenarios.',
+        keywords: ['sales tax calculator', 'calculadora de impuestos', 'बिक्री कर कैलकुलेटर', 'gst calculator', 'vat calculator', 'reverse tax calculator', 'calculate tax online', 'business tax tool'],
+        alternates: {
+            canonical: '/sales-tax',
+        },
+    };
+}
 
 export default function SalesTaxPage() {
     return (

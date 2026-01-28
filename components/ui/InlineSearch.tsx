@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const POPULAR_TOOLS = ['bmi-calculator', 'unit-converter', 'json-formatter', 'password-generator', 'image-converter'];
+
 export function InlineSearch() {
     const [query, setQuery] = useState('');
     const [isOpen, setIsOpen] = useState(false);
@@ -19,6 +21,23 @@ export function InlineSearch() {
         tool.name.toLowerCase().includes(query.toLowerCase()) ||
         tool.description.toLowerCase().includes(query.toLowerCase())
     );
+
+    const popularTools = tools.filter(t => POPULAR_TOOLS.includes(t.slug));
+
+    // Highlight helper
+    const highlightMatch = (text: string, query: string) => {
+        if (!query) return text;
+        const parts = text.split(new RegExp(`(${query})`, 'gi'));
+        return (
+            <span>
+                {parts.map((part, i) =>
+                    part.toLowerCase() === query.toLowerCase()
+                        ? <span key={i} className="font-bold text-slate-900 dark:text-white underline decoration-emerald-500/30 decoration-2 underline-offset-2">{part}</span>
+                        : <span key={i}>{part}</span>
+                )}
+            </span>
+        );
+    };
 
     // Close on click outside
     useEffect(() => {
@@ -72,19 +91,55 @@ export function InlineSearch() {
             </div>
 
             <AnimatePresence>
-                {isOpen && query.length > 0 && (
+                {isOpen && (
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
                         className="absolute z-50 mt-2 w-full bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden"
                     >
-                        {filteredTools.length > 0 ? (
+                        {query.length > 0 ? (
+                            filteredTools.length > 0 ? (
+                                <div className="py-2">
+                                    <div className="px-3 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                        Search results
+                                    </div>
+                                    {filteredTools.slice(0, 6).map((tool) => (
+                                        <Link
+                                            key={tool.slug}
+                                            href={tool.path}
+                                            onClick={() => {
+                                                setIsOpen(false);
+                                                setQuery('');
+                                            }}
+                                            className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
+                                        >
+                                            <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg group-hover:bg-white dark:group-hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700">
+                                                <tool.icon className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+                                                    {highlightMatch(tool.name, query)}
+                                                </p>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                                    {tool.category}
+                                                </p>
+                                            </div>
+                                            <ChevronRight className="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </Link>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+                                    <p className="text-sm">No tools found for "{query}"</p>
+                                </div>
+                            )
+                        ) : (
                             <div className="py-2">
                                 <div className="px-3 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                                    Tools
+                                    Popular Tools
                                 </div>
-                                {filteredTools.map((tool) => (
+                                {popularTools.map((tool) => (
                                     <Link
                                         key={tool.slug}
                                         href={tool.path}
@@ -92,26 +147,19 @@ export function InlineSearch() {
                                             setIsOpen(false);
                                             setQuery('');
                                         }}
-                                        className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
+                                        className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
                                     >
-                                        <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg group-hover:bg-white dark:group-hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700">
-                                            <tool.icon className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                                        <div className="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg group-hover:bg-white dark:group-hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700">
+                                            <tool.icon className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
                                                 {tool.name}
                                             </p>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                                                {tool.category}
-                                            </p>
                                         </div>
                                         <ChevronRight className="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </Link>
                                 ))}
-                            </div>
-                        ) : (
-                            <div className="p-8 text-center text-slate-500 dark:text-slate-400">
-                                <p className="text-sm">No tools found.</p>
                             </div>
                         )}
                     </motion.div>

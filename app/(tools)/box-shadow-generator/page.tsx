@@ -1,16 +1,30 @@
+import { Suspense } from 'react';
 import { BoxShadowGenerator } from '@/components/tools/design/BoxShadowGenerator';
 import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
+import { toolContentData } from '@/config/tool-content';
+import { getCombinedTitle } from '@/lib/i18n';
 
-export const metadata: Metadata = {
-    title: 'Box Shadow Generator | CSS Layered Shadow Maker',
-    description: 'Create beautiful, layered CSS box-shadows visually. Add multiple shadows, control blur and spread, and copy the CSS code instantly.',
-    keywords: ['box shadow generator', 'css shadow maker', 'layered shadows', 'css generator', 'neumorphism generator'],
-    alternates: {
-        canonical: '/box-shadow-generator',
-    },
-};
+export async function generateMetadata({ searchParams }: { searchParams: { lang?: string } }): Promise<Metadata> {
+    const lang = searchParams.lang || 'en';
+    const slug = 'box-shadow-generator';
+    const title = getCombinedTitle(slug);
+    const description = toolContentData[slug]?.localizedMetadata?.[lang]?.description || toolContentData[slug]?.description;
+
+    return {
+        title,
+        description,
+        alternates: {
+            canonical: `/${slug}`,
+            languages: {
+                'es': `/${slug}?lang=es`,
+                'pt': `/${slug}?lang=pt`,
+                'hi': `/${slug}?lang=hi`,
+            },
+        },
+    };
+}
 
 export default function BoxShadowPage() {
     return (
@@ -26,7 +40,9 @@ export default function BoxShadowPage() {
                     </p>
                 </div>
 
-                <BoxShadowGenerator />
+                <Suspense fallback={<div className="min-h-[500px] animate-pulse bg-slate-100 dark:bg-slate-800 rounded-3xl" />}>
+                    <BoxShadowGenerator />
+                </Suspense>
             </div>
 
             <ToolContent slug="box-shadow-generator" />

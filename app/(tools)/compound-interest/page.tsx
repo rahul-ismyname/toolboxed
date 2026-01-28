@@ -4,14 +4,21 @@ import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-    title: 'Compound Interest Calculator | Predict Your Investment Growth',
-    description: 'Calculate how your money grows over time with compound interest. Plan your savings, retirement, or investment strategies with our free online tool.',
-    keywords: ['compound interest calculator', 'investment calculator', 'savings planner', 'future value calculator', 'retirement planning tool'],
-    alternates: {
-        canonical: '/compound-interest',
-    },
-};
+import { getCombinedTitle } from '@/lib/i18n';
+
+export async function generateMetadata(): Promise<Metadata> {
+    const slug = 'compound-interest';
+    const combinedTitle = getCombinedTitle(slug);
+
+    return {
+        title: combinedTitle,
+        description: 'Calculate how your money grows over time with compound interest. Plan your savings, retirement, or investment strategies with our free online tool.',
+        keywords: ['compound interest calculator', 'interés compuesto', 'चक्रवृद्धि ब्याज', 'investment calculator', 'savings planner', 'future value calculator', 'retirement planning tool'],
+        alternates: {
+            canonical: '/compound-interest',
+        },
+    };
+}
 
 export default function CompoundPage() {
     return (

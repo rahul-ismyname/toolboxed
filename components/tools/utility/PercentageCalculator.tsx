@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Percent, ArrowRight, RotateCcw } from 'lucide-react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { Percent, ArrowRight, RotateCcw, Copy, Check, Share2 } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 export function PercentageCalculator() {
     // Scenario 1: What is X% of Y?
@@ -15,6 +16,42 @@ export function PercentageCalculator() {
     // Scenario 3: Percentage increase/decrease from X to Y
     const [s3V1, setS3V1] = useState<number>(100);
     const [s3V2, setS3V2] = useState<number>(150);
+
+    const [shareCopied, setShareCopied] = useState(false);
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Initialize from URL
+    useEffect(() => {
+        const urlConfig = searchParams.get('config');
+        if (urlConfig) {
+            try {
+                const decoded = JSON.parse(atob(decodeURIComponent(urlConfig)));
+                if (decoded.s1P !== undefined) setS1P(decoded.s1P);
+                if (decoded.s1V !== undefined) setS1V(decoded.s1V);
+                if (decoded.s2V1 !== undefined) setS2V1(decoded.s2V1);
+                if (decoded.s2V2 !== undefined) setS2V2(decoded.s2V2);
+                if (decoded.s3V1 !== undefined) setS3V1(decoded.s3V1);
+                if (decoded.s3V2 !== undefined) setS3V2(decoded.s3V2);
+            } catch (e) {
+                console.error('Failed to decode config', e);
+            }
+        }
+    }, []); // Run once on mount
+
+    const handleShare = useCallback(() => {
+        const config = { s1P, s1V, s2V1, s2V2, s3V1, s3V2 };
+        const encoded = encodeURIComponent(btoa(JSON.stringify(config)));
+        const url = `${window.location.origin}${pathname}?config=${encoded}`;
+
+        navigator.clipboard.writeText(url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+
+        // Update URL without refresh
+        router.replace(`${pathname}?config=${encoded}`, { scroll: false });
+    }, [s1P, s1V, s2V1, s2V2, s3V1, s3V2, pathname, router]);
 
     const r1 = useMemo(() => (s1P / 100) * s1V, [s1P, s1V]);
     const r2 = useMemo(() => (s2V2 !== 0 ? (s2V1 / s2V2) * 100 : 0), [s2V1, s2V2]);
@@ -33,6 +70,13 @@ export function PercentageCalculator() {
                         <p className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider">Proportional Logic</p>
                     </div>
                 </div>
+                <button
+                    onClick={handleShare}
+                    className="flex items-center gap-3 px-6 py-3 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-bold uppercase text-[10px] tracking-widest rounded-2xl shadow-lg border border-slate-100 dark:border-slate-800 hover:text-emerald-500 hover:border-emerald-500/20 transition-all active:scale-95"
+                >
+                    {shareCopied ? <Check className="w-4 h-4 text-emerald-500" /> : <Share2 className="w-4 h-4" />}
+                    {shareCopied ? 'Link Copied' : 'Share State'}
+                </button>
             </div>
 
             <div className="grid gap-8">

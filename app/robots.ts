@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-    const baseUrl = 'https://www.toolboxed.online';
+    const baseUrl = 'https://toolboxed.online';
 
     return {
         rules: {

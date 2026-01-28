@@ -4,14 +4,21 @@ import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-    title: 'UUID Generator | Create V1, V3, V4, V5 UUIDs Instantly',
-    description: 'Free online UUID generator. Create specialized Universally Unique Identifiers (Version 1, 3, 4, 5) individually or in bulk. Secure client-side generation.',
-    keywords: ['uuid generator', 'guid generator', 'v4 uuid', 'random uuid', 'unique identifier', 'generate guid online'],
-    alternates: {
-        canonical: '/uuid-generator',
-    },
-};
+import { getCombinedTitle } from '@/lib/i18n';
+
+export async function generateMetadata(): Promise<Metadata> {
+    const slug = 'uuid-generator';
+    const combinedTitle = getCombinedTitle(slug);
+
+    return {
+        title: combinedTitle,
+        description: 'Free online UUID generator. Create specialized Universally Unique Identifiers (Version 1, 3, 4, 5) individually or in bulk. Secure client-side generation.',
+        keywords: ['uuid generator', 'generador de uuid', 'uuid जेनरेटर', 'guid generator', 'v4 uuid', 'random uuid', 'unique identifier', 'generate guid online'],
+        alternates: {
+            canonical: '/uuid-generator',
+        },
+    };
+}
 
 export default function UuidGeneratorPage() {
     return (

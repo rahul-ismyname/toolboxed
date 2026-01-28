@@ -1,17 +1,25 @@
+import { Suspense } from 'react';
 import { LoanCalculator } from '@/components/tools/business/LoanCalculator';
 import { TitleSection } from '@/components/shared/TitleSection';
 import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-    title: 'Loan & EMI Calculator | Calculate Monthly Payments Online',
-    description: 'Calculate your Equated Monthly Installment (EMI) for home, car, or personal loans. See a breakdown of principal vs interest over your loan tenure.',
-    keywords: ['loan calculator', 'emi calculator', 'mortgage calculator', 'personal loan tool', 'calculate monthly payment'],
-    alternates: {
-        canonical: '/loan-calculator',
-    },
-};
+import { getCombinedTitle } from '@/lib/i18n';
+
+export async function generateMetadata(): Promise<Metadata> {
+    const slug = 'loan-calculator';
+    const combinedTitle = getCombinedTitle(slug);
+
+    return {
+        title: combinedTitle,
+        description: 'Calculate your Equated Monthly Installment (EMI) for home, car, or personal loans. See a breakdown of principal vs interest over your loan tenure.',
+        keywords: ['loan calculator', 'calculadora de préstamos', 'ऋण कैलकुलेटर', 'emi calculator', 'mortgage calculator', 'personal loan tool', 'calculate monthly payment'],
+        alternates: {
+            canonical: '/loan-calculator',
+        },
+    };
+}
 
 export default function LoanPage() {
     return (
@@ -23,7 +31,9 @@ export default function LoanPage() {
                     description="Plan your finances with precision."
                 />
 
-                <LoanCalculator />
+                <Suspense fallback={<div className="min-h-[500px] animate-pulse bg-slate-100 dark:bg-slate-800 rounded-3xl" />}>
+                    <LoanCalculator />
+                </Suspense>
             </div>
 
             <ToolContent slug="loan-calculator" />

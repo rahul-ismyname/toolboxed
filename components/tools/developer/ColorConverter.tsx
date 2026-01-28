@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Copy, Check, Palette } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Copy, Check, Palette, Share2 } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { colord, extend } from 'colord';
 import cmykPlugin from 'colord/plugins/cmyk';
 import namesPlugin from 'colord/plugins/names';
@@ -26,6 +27,38 @@ export function ColorConverter() {
     // Track which input is being edited to avoid overwriting it with re-formatted values while typing
     const [activeInput, setActiveInput] = useState<keyof ColorState | null>(null);
     const [copied, setCopied] = useState<string | null>(null);
+    const [shareCopied, setShareCopied] = useState(false);
+
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Initialize from URL
+    useEffect(() => {
+        const config = searchParams.get('config');
+        if (config) {
+            try {
+                const hex = atob(decodeURIComponent(config));
+                if (colord(hex).isValid()) {
+                    updateColors(hex, 'picker');
+                }
+            } catch (e) {
+                console.error('Failed to decode config', e);
+            }
+        }
+    }, []); // Run once on mount
+
+    const handleShare = useCallback(() => {
+        const encoded = encodeURIComponent(btoa(colors.hex));
+        const url = `${window.location.origin}${pathname}?config=${encoded}`;
+
+        navigator.clipboard.writeText(url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+
+        // Update URL without refresh
+        router.replace(`${pathname}?config=${encoded}`, { scroll: false });
+    }, [colors.hex, pathname, router]);
 
     const updateColors = (value: string, source: keyof ColorState | 'picker') => {
         // Always update the input field immediately

@@ -6,7 +6,7 @@ import { GoogleAnalytics } from '@/components/providers/GoogleAnalytics';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
-const appUrl = 'https://www.toolboxed.online';
+const appUrl = 'https://toolboxed.online';
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),

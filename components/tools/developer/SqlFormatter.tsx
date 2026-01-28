@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { Database, Play, Copy, Check, Trash2, AlertCircle } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Database, Play, Copy, Check, Trash2, AlertCircle, Share2 } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { format } from 'sql-formatter';
 
 const DIALECTS = [
@@ -21,6 +22,38 @@ export function SqlFormatter() {
     const [error, setError] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
     const [activeTab, setActiveTab] = useState<'input' | 'output'>('input');
+    const [shareCopied, setShareCopied] = useState(false);
+
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Initialize from URL
+    useEffect(() => {
+        const urlConfig = searchParams.get('config');
+        if (urlConfig) {
+            try {
+                const decoded = JSON.parse(atob(decodeURIComponent(urlConfig)));
+                if (decoded.input) setInput(decoded.input);
+                if (decoded.dialect) setDialect(decoded.dialect);
+            } catch (e) {
+                console.error('Failed to decode config', e);
+            }
+        }
+    }, []); // Run once on mount
+
+    const handleShare = useCallback(() => {
+        const config = { input, dialect };
+        const encoded = encodeURIComponent(btoa(JSON.stringify(config)));
+        const url = `${window.location.origin}${pathname}?config=${encoded}`;
+
+        navigator.clipboard.writeText(url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+
+        // Update URL without refresh
+        router.replace(`${pathname}?config=${encoded}`, { scroll: false });
+    }, [input, dialect, pathname, router]);
 
     const handleFormat = () => {
         if (!input.trim()) return;
@@ -142,6 +175,13 @@ export function SqlFormatter() {
                                 className="text-[9px] font-black uppercase tracking-widest text-slate-300 hover:text-emerald-500 transition-colors"
                             >
                                 Minify
+                            </button>
+                            <button
+                                onClick={handleShare}
+                                disabled={!input}
+                                className="p-2 text-slate-300 hover:text-emerald-500 transition-all active:scale-90 disabled:opacity-30"
+                            >
+                                {shareCopied ? <Check className="w-5 h-5 text-emerald-500" /> : <Share2 className="w-5 h-5" />}
                             </button>
                             <button
                                 onClick={copyToClipboard}

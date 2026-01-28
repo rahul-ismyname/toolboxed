@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Plus, Minus, Trash2, Move, Network, RefreshCcw, Download } from 'lucide-react';
+import { Plus, Minus, Trash2, Move, Network, RefreshCcw, Download, Share2, Check } from 'lucide-react';
 import { toPng } from 'html-to-image';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 // --- TYPES ---
 interface Node {
@@ -38,11 +39,30 @@ export function MindMapBuilder() {
     const isPanning = useRef(false);
     const lastMouse = useRef({ x: 0, y: 0 });
 
-    // Initial Load
+    // Sharing State
+    const [shareCopied, setShareCopied] = useState(false);
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Initial Load & URL Sync
     useEffect(() => {
         setIsClient(true);
         if (typeof window !== 'undefined') {
             setView({ x: window.innerWidth / 2, y: window.innerHeight / 2, scale: 1 });
+        }
+
+        const urlConfig = searchParams.get('config');
+        if (urlConfig) {
+            try {
+                const decoded = JSON.parse(atob(decodeURIComponent(urlConfig)));
+                if (Array.isArray(decoded)) {
+                    setNodes(decoded);
+                    return;
+                }
+            } catch (e) {
+                console.error('Failed to decode config', e);
+            }
         }
 
         const saved = localStorage.getItem('mind-map-data');
@@ -64,7 +84,7 @@ export function MindMapBuilder() {
                 setNodes(INITIAL_NODES);
             }
         }
-    }, []);
+    }, [searchParams]);
 
     // Auto Save
     useEffect(() => {
@@ -277,9 +297,23 @@ export function MindMapBuilder() {
             {/* Toolbar */}
             <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl rounded-full px-4 py-2 flex items-center gap-2">
                 <div className="hidden md:flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-200 mr-4 border-r border-slate-200 dark:border-slate-800 pr-4">
-                    <Network className="w-4 h-4 text-emerald-500" />
                     MindMap
                 </div>
+
+                <button
+                    onClick={() => {
+                        const encoded = encodeURIComponent(btoa(JSON.stringify(nodes)));
+                        const url = `${window.location.origin}${pathname}?config=${encoded}`;
+                        navigator.clipboard.writeText(url);
+                        setShareCopied(true);
+                        setTimeout(() => setShareCopied(false), 2000);
+                        router.replace(`${pathname}?config=${encoded}`, { scroll: false });
+                    }}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg text-xs font-bold hover:bg-emerald-100 transition-colors mr-2"
+                >
+                    {shareCopied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+                    {shareCopied ? 'Copied' : 'Share'}
+                </button>
 
                 <button
                     onClick={() => addNode(selectedId || 'root')}

@@ -1,17 +1,31 @@
+import { Suspense } from 'react';
 import { ClipPathGenerator } from '@/components/tools/design/ClipPathGenerator';
 import { TitleSection } from '@/components/shared/TitleSection';
 import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
+import { toolContentData } from '@/config/tool-content';
+import { getCombinedTitle } from '@/lib/i18n';
 
-export const metadata: Metadata = {
-    title: 'CSS Clip Path Generator | Create Custom CSS Shapes Online',
-    description: 'Interactive CSS clip-path maker. Drag and drop points to create polygons, circles, and custom shapes. Copy ready-to-use CSS code instantly.',
-    keywords: ['css clip path generator', 'clip-path maker', 'css shapes generator', 'polygon generator', 'css masking tool'],
-    alternates: {
-        canonical: '/css-clip-path',
-    },
-};
+export async function generateMetadata({ searchParams }: { searchParams: { lang?: string } }): Promise<Metadata> {
+    const lang = searchParams.lang || 'en';
+    const slug = 'css-clip-path';
+    const title = getCombinedTitle(slug);
+    const description = toolContentData[slug]?.localizedMetadata?.[lang]?.description || toolContentData[slug]?.description;
+
+    return {
+        title,
+        description,
+        alternates: {
+            canonical: `/${slug}`,
+            languages: {
+                'es': `/${slug}?lang=es`,
+                'pt': `/${slug}?lang=pt`,
+                'hi': `/${slug}?lang=hi`,
+            },
+        },
+    };
+}
 
 export default function ClipPathPage() {
     return (
@@ -23,7 +37,9 @@ export default function ClipPathPage() {
                     description="Create complex shapes and masks with CSS."
                 />
 
-                <ClipPathGenerator />
+                <Suspense fallback={<div className="min-h-[500px] animate-pulse bg-slate-100 dark:bg-slate-800 rounded-3xl" />}>
+                    <ClipPathGenerator />
+                </Suspense>
             </div>
 
             <ToolContent slug="css-clip-path" />

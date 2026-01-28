@@ -1,11 +1,43 @@
 'use client';
 
-import { useState } from 'react';
-import { Type, Copy, Check, Trash2, ArrowUpDown } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Type, Copy, Check, Trash2, ArrowUpDown, Share2 } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 export function CaseConverter() {
     const [text, setText] = useState('');
     const [copied, setCopied] = useState(false);
+    const [shareCopied, setShareCopied] = useState(false);
+
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Initialize from URL
+    useEffect(() => {
+        const urlConfig = searchParams.get('config');
+        if (urlConfig) {
+            try {
+                const decoded = JSON.parse(atob(decodeURIComponent(urlConfig)));
+                if (decoded.text) setText(decoded.text);
+            } catch (e) {
+                console.error('Failed to decode config', e);
+            }
+        }
+    }, []); // Run once on mount
+
+    const handleShare = useCallback(() => {
+        const config = { text };
+        const encoded = encodeURIComponent(btoa(JSON.stringify(config)));
+        const url = `${window.location.origin}${pathname}?config=${encoded}`;
+
+        navigator.clipboard.writeText(url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+
+        // Update URL without refresh
+        router.replace(`${pathname}?config=${encoded}`, { scroll: false });
+    }, [text, pathname, router]);
 
     const transform = (type: string) => {
         let result = text;
@@ -61,6 +93,13 @@ export function CaseConverter() {
                         disabled={!text}
                     >
                         {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                    </button>
+                    <button
+                        onClick={handleShare}
+                        className="p-2 text-slate-400 hover:text-emerald-500 transition-colors"
+                        disabled={!text}
+                    >
+                        {shareCopied ? <Check className="w-5 h-5" /> : <Share2 className="w-5 h-5" />}
                     </button>
                     <button
                         onClick={() => setText('')}

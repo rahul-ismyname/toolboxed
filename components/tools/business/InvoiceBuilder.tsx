@@ -4,8 +4,9 @@ import { useState, useEffect, useMemo } from 'react';
 import {
     Plus, Trash2, Download, Receipt, Building2, User,
     Settings2, Palette, FileText, ChevronDown, ChevronUp,
-    CheckCircle2, AlertCircle, Save, Printer, Upload, Share2
+    CheckCircle2, AlertCircle, Save, Printer, Upload, Share2, Copy
 } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { saveInvoice } from '@/lib/actions';
 
 // --- TYPES ---
@@ -100,49 +101,35 @@ export function InvoiceBuilder({ initialData, readOnly = false }: InvoiceBuilder
     const [isClient, setIsClient] = useState(false);
 
     // Sharing State
-    const [isSharing, setIsSharing] = useState(false);
+    const [shareCopied, setShareCopied] = useState(false);
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
 
-    // Share Handler
-    const handleShare = async (title?: string, description?: string) => {
-        setIsSharing(true);
-        try {
-            if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-                alert("Sharing is not configured yet. Please set up Supabase keys in .env.local");
-                setIsSharing(false);
-                return;
+    // Initialize from URL
+    useEffect(() => {
+        const urlConfig = searchParams.get('config');
+        if (urlConfig) {
+            try {
+                const decoded = JSON.parse(atob(decodeURIComponent(urlConfig)));
+                // Merge with default data to ensure structure validity
+                setData(prev => ({ ...DEFAULT_DATA, ...decoded }));
+            } catch (e) {
+                console.error('Failed to decode config', e);
             }
-
-            // Simple validation
-            if (!data.items.length) {
-                alert("Please add at least one item before sharing.");
-                setIsSharing(false);
-                return;
-            }
-
-            // If title provided, it's a public publish
-            const isPublic = !!title;
-
-            const result = await saveInvoice(data, {
-                title,
-                description,
-                isPublic
-            });
-
-            const url = `https://toolboxed.online/share/invoice/${result.id}`;
-            navigator.clipboard.writeText(url);
-
-            if (isPublic) {
-                alert("Published to Community Gallery! Link copied.");
-            } else {
-                alert("Link copied to clipboard!");
-            }
-
-        } catch (error) {
-            console.error('Error sharing:', error);
-            alert("Failed to share invoice. Please try again.");
-        } finally {
-            setIsSharing(false);
         }
+    }, [searchParams]);
+
+    const handleShare = () => {
+        const encoded = encodeURIComponent(btoa(JSON.stringify(data)));
+        const url = `${window.location.origin}${pathname}?config=${encoded}`;
+
+        navigator.clipboard.writeText(url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+
+        // Update URL without refresh
+        router.replace(`${pathname}?config=${encoded}`, { scroll: false });
     };
 
 
@@ -284,29 +271,16 @@ export function InvoiceBuilder({ initialData, readOnly = false }: InvoiceBuilder
                     )}
 
                     {/* Share Configuration Modal / Popover could go here, but for now we'll keep it simple inline or add a step */}
-                    {isSharing ? (
-                        <div className="flex items-center gap-2 text-blue-600 font-medium">
-                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                            <span>Publishing...</span>
-                        </div>
-                    ) : (
-                        <div className="flex items-center gap-2">
-                            {/* Simple "Make Public" Toggle for Pilot */}
-                            <button
-                                onClick={() => {
-                                    const title = prompt("Name your template (e.g. 'Minimalist Startup Invoice')");
-                                    if (!title) return;
-                                    const desc = prompt("Describe it briefly");
-                                    // Hacky but fast way to pass metadata for the pilot
-                                    handleShare(title, desc || '');
-                                }}
-                                className="hidden md:flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-500/10 text-blue-600 rounded-xl font-bold hover:bg-blue-100 transition-all mr-2"
-                            >
-                                <Share2 className="w-4 h-4" />
-                                Publish to Gallery
-                            </button>
-                        </div>
-                    )}
+                    {/* Share Button using URL State Sync */}
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handleShare}
+                            className="hidden md:flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-500/10 text-blue-600 rounded-xl font-bold hover:bg-blue-100 transition-all mr-2"
+                        >
+                            {shareCopied ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Share2 className="w-4 h-4" />}
+                            {shareCopied ? 'Link Copied' : 'Share Invoice'}
+                        </button>
+                    </div>
 
                     <button
                         onClick={() => window.print()}

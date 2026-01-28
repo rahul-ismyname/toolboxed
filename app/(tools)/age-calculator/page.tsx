@@ -4,14 +4,29 @@ import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-    title: 'Age Calculator | Calculate Your Chronological Age Online',
-    description: 'Quickly calculate your age in years, months, and days. Find out how many days you have lived and see the countdown to your next birthday.',
-    keywords: ['age calculator', 'chronological age', 'how old am i', 'birthday calculator', 'age in days'],
-    alternates: {
-        canonical: '/age-calculator',
-    },
-};
+import { getCombinedTitle } from '@/lib/i18n';
+
+import { toolContentData } from '@/config/tool-content';
+
+export async function generateMetadata({ searchParams }: { searchParams: { lang?: string } }): Promise<Metadata> {
+    const lang = searchParams.lang || 'en';
+    const slug = 'age-calculator';
+    const title = getCombinedTitle(slug);
+    const description = toolContentData[slug]?.localizedMetadata?.[lang]?.description || toolContentData[slug]?.description;
+
+    return {
+        title,
+        description,
+        alternates: {
+            canonical: `/${slug}`,
+            languages: {
+                'es': `/${slug}?lang=es`,
+                'pt': `/${slug}?lang=pt`,
+                'hi': `/${slug}?lang=hi`,
+            },
+        },
+    };
+}
 
 export default function AgeCalcPage() {
     return (

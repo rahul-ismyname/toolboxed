@@ -3,12 +3,28 @@ import { TitleSection } from '@/components/shared/TitleSection';
 import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
+import { toolContentData } from '@/config/tool-content';
+import { getCombinedTitle } from '@/lib/i18n';
 
-export const metadata: Metadata = {
-    title: 'Keto Calculator | Scientific Ketogenic Macro & Calorie Counter',
-    description: 'Calculate your exact macros for the ketogenic diet. Accurate Keto Calculator for weight loss, maintenance, or muscle gain. Free and easy to use.',
-    keywords: ['keto calculator', 'ketogenic diet macros', 'carb calculator', 'keto weight loss', 'low carb calculator'],
-};
+export async function generateMetadata({ searchParams }: { searchParams: { lang?: string } }): Promise<Metadata> {
+    const lang = searchParams.lang || 'en';
+    const slug = 'keto-calc';
+    const title = getCombinedTitle(slug);
+    const description = toolContentData[slug]?.localizedMetadata?.[lang]?.description || toolContentData[slug]?.description;
+
+    return {
+        title,
+        description,
+        alternates: {
+            canonical: `/${slug}`,
+            languages: {
+                'es': `/${slug}?lang=es`,
+                'pt': `/${slug}?lang=pt`,
+                'hi': `/${slug}?lang=hi`,
+            },
+        },
+    };
+}
 
 export default function KetoCalcPage() {
     return (

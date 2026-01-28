@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { Activity, Ruler, Weight as WeightIcon, Info } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Activity, Ruler, Weight as WeightIcon, Info, Copy, Check, Share2 } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 type UnitSystem = 'metric' | 'imperial';
 
@@ -12,6 +13,42 @@ export function BmiCalculator() {
     const [weightLbs, setWeightLbs] = useState(154);
     const [heightFt, setHeightFt] = useState(5);
     const [heightIn, setHeightIn] = useState(9);
+
+    const [shareCopied, setShareCopied] = useState(false);
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Initialize from URL
+    useEffect(() => {
+        const urlConfig = searchParams.get('config');
+        if (urlConfig) {
+            try {
+                const decoded = JSON.parse(atob(decodeURIComponent(urlConfig)));
+                if (decoded.unit) setUnit(decoded.unit);
+                if (decoded.weight) setWeight(decoded.weight);
+                if (decoded.height) setHeight(decoded.height);
+                if (decoded.weightLbs) setWeightLbs(decoded.weightLbs);
+                if (decoded.heightFt) setHeightFt(decoded.heightFt);
+                if (decoded.heightIn) setHeightIn(decoded.heightIn);
+            } catch (e) {
+                console.error('Failed to decode config', e);
+            }
+        }
+    }, []); // Run once on mount
+
+    const handleShare = useCallback(() => {
+        const config = { unit, weight, height, weightLbs, heightFt, heightIn };
+        const encoded = encodeURIComponent(btoa(JSON.stringify(config)));
+        const url = `${window.location.origin}${pathname}?config=${encoded}`;
+
+        navigator.clipboard.writeText(url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+
+        // Update URL without refresh
+        router.replace(`${pathname}?config=${encoded}`, { scroll: false });
+    }, [unit, weight, height, weightLbs, heightFt, heightIn, pathname, router]);
 
     const calculateBMI = () => {
         let weightKg = weight;
@@ -51,6 +88,13 @@ export function BmiCalculator() {
                         <p className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider">BMI Architect</p>
                     </div>
                 </div>
+                <button
+                    onClick={handleShare}
+                    className="flex items-center gap-3 px-6 py-3 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-bold uppercase text-[10px] tracking-widest rounded-2xl shadow-lg border border-slate-100 dark:border-slate-800 hover:text-emerald-500 hover:border-emerald-500/20 transition-all active:scale-95"
+                >
+                    {shareCopied ? <Check className="w-4 h-4 text-emerald-500" /> : <Share2 className="w-4 h-4" />}
+                    {shareCopied ? 'Link Copied' : 'Share State'}
+                </button>
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl shadow-indigo-500/5 border border-slate-100 dark:border-slate-800 overflow-hidden">

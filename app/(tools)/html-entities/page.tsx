@@ -4,14 +4,29 @@ import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-    title: 'HTML Entity Encoder & Decoder | Convert Special Characters',
-    description: 'Safely encode special characters into HTML entities or decode entities back to plain text. Perfect for web developers and content managers needing to prevent XSS or display raw HTML.',
-    keywords: ['html entity encoder', 'html entity decoder', 'html character encoding', 'encode html entities', 'decode html special characters'],
-    alternates: {
-        canonical: '/html-entities',
-    },
-};
+import { getCombinedTitle } from '@/lib/i18n';
+
+import { toolContentData } from '@/config/tool-content';
+
+export async function generateMetadata({ searchParams }: { searchParams: { lang?: string } }): Promise<Metadata> {
+    const lang = searchParams.lang || 'en';
+    const slug = 'html-entities';
+    const title = getCombinedTitle(slug);
+    const description = toolContentData[slug]?.localizedMetadata?.[lang]?.description || toolContentData[slug]?.description;
+
+    return {
+        title,
+        description,
+        alternates: {
+            canonical: `/${slug}`,
+            languages: {
+                'es': `/${slug}?lang=es`,
+                'pt': `/${slug}?lang=pt`,
+                'hi': `/${slug}?lang=hi`,
+            },
+        },
+    };
+}
 
 export default function HtmlEntitiesPage() {
     return (

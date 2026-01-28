@@ -4,14 +4,29 @@ import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-    title: 'Aspect Ratio Calculator | Resize Images & Video Dimensions',
-    description: 'Free online aspect ratio calculator. Calculate dimensions (width/height) while maintaining ratio. Find common ratios like 16:9, 4:3, 1:1, and 9:16.',
-    keywords: ['aspect ratio calculator', 'screen resolution calculator', 'resize image calculator', '16:9 calculator', '4:3 calculator'],
-    alternates: {
-        canonical: '/aspect-ratio-calculator',
-    },
-};
+import { getCombinedTitle } from '@/lib/i18n';
+
+import { toolContentData } from '@/config/tool-content';
+
+export async function generateMetadata({ searchParams }: { searchParams: { lang?: string } }): Promise<Metadata> {
+    const lang = searchParams.lang || 'en';
+    const slug = 'aspect-ratio-calculator';
+    const title = getCombinedTitle(slug);
+    const description = toolContentData[slug]?.localizedMetadata?.[lang]?.description || toolContentData[slug]?.description;
+
+    return {
+        title,
+        description,
+        alternates: {
+            canonical: `/${slug}`,
+            languages: {
+                'es': `/${slug}?lang=es`,
+                'pt': `/${slug}?lang=pt`,
+                'hi': `/${slug}?lang=hi`,
+            },
+        },
+    };
+}
 
 export default function AspectRatioPage() {
     return (

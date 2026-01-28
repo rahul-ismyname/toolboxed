@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Palette, Copy, Check, Layout, Wand2 } from 'lucide-react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { Palette, Copy, Check, Layout, Wand2, Share2 } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 export function GlassGenerator() {
     const [blur, setBlur] = useState(10);
@@ -9,6 +10,40 @@ export function GlassGenerator() {
     const [color, setColor] = useState('#ffffff');
     const [outline, setOutline] = useState(0.1);
     const [copied, setCopied] = useState(false);
+    const [shareCopied, setShareCopied] = useState(false);
+
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Initialize from URL
+    useEffect(() => {
+        const config = searchParams.get('config');
+        if (config) {
+            try {
+                const decoded = JSON.parse(atob(decodeURIComponent(config)));
+                if (decoded.blur !== undefined) setBlur(decoded.blur);
+                if (decoded.transparency !== undefined) setTransparency(decoded.transparency);
+                if (decoded.color) setColor(decoded.color);
+                if (decoded.outline !== undefined) setOutline(decoded.outline);
+            } catch (e) {
+                console.error('Failed to decode config', e);
+            }
+        }
+    }, []); // Run once on mount
+
+    const handleShare = useCallback(() => {
+        const config = { blur, transparency, color, outline };
+        const encoded = encodeURIComponent(btoa(JSON.stringify(config)));
+        const url = `${window.location.origin}${pathname}?config=${encoded}`;
+
+        navigator.clipboard.writeText(url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+
+        // Update URL without refresh
+        router.replace(`${pathname}?config=${encoded}`, { scroll: false });
+    }, [blur, transparency, color, outline, pathname, router]);
 
     const cssCode = useMemo(() => {
         const rgba = color.startsWith('#')
@@ -147,6 +182,13 @@ box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);`;
                             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Material CSS Schema</span>
                         </div>
+                        <button
+                            onClick={handleShare}
+                            className="w-full sm:w-auto px-8 py-4 bg-emerald-500 text-white rounded-[1.2rem] shadow-xl border border-emerald-400 flex items-center justify-center gap-4 transition-all hover:bg-emerald-400 active:scale-95 group/share"
+                        >
+                            {shareCopied ? <Check className="w-5 h-5" /> : <Share2 className="w-5 h-5 transition-colors" />}
+                            <span className="text-[10px] font-black uppercase tracking-widest">{shareCopied ? 'Link Copied' : 'Share Design'}</span>
+                        </button>
                         <button
                             onClick={copyCode}
                             className="w-full sm:w-auto px-8 py-4 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-[1.2rem] shadow-xl border border-slate-50 dark:border-slate-800 flex items-center justify-center gap-4 transition-all hover:shadow-2xl active:scale-95 group/copy"

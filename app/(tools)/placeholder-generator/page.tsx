@@ -1,17 +1,32 @@
+import { Suspense } from 'react';
 import { PlaceholderGenerator } from '@/components/tools/utility/PlaceholderGenerator';
 import { TitleSection } from '@/components/shared/TitleSection';
 import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-    title: 'Image Placeholder Generator | Custom Dummy Images for Developers',
-    description: 'Generate custom placeholder image URLs for your web projects. Customize width, height, colors, and text instantly with our free online dummy image tool.',
-    keywords: ['image placeholder generator', 'dummy image tool', 'placeholder url creator', 'developer utility', 'mockup image generator'],
-    alternates: {
-        canonical: '/placeholder-generator',
-    },
-};
+import { toolContentData } from '@/config/tool-content';
+import { getCombinedTitle } from '@/lib/i18n';
+
+export async function generateMetadata({ searchParams }: { searchParams: { lang?: string } }): Promise<Metadata> {
+    const lang = searchParams.lang || 'en';
+    const slug = 'placeholder-generator';
+    const title = getCombinedTitle(slug);
+    const description = toolContentData[slug]?.localizedMetadata?.[lang]?.description || toolContentData[slug]?.description;
+
+    return {
+        title,
+        description,
+        alternates: {
+            canonical: `/${slug}`,
+            languages: {
+                'es': `/${slug}?lang=es`,
+                'pt': `/${slug}?lang=pt`,
+                'hi': `/${slug}?lang=hi`,
+            },
+        },
+    };
+}
 
 export default function PlaceholderPage() {
     return (
@@ -23,7 +38,9 @@ export default function PlaceholderPage() {
                     description="Create custom mock images for your web prototypes."
                 />
 
-                <PlaceholderGenerator />
+                <Suspense fallback={<div className="min-h-[500px] animate-pulse bg-slate-100 dark:bg-slate-800 rounded-3xl" />}>
+                    <PlaceholderGenerator />
+                </Suspense>
             </div>
 
             <ToolContent slug="placeholder-generator" />

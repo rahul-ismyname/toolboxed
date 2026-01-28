@@ -3,15 +3,28 @@ import { TitleSection } from '@/components/shared/TitleSection';
 import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
+import { toolContentData } from '@/config/tool-content';
+import { getCombinedTitle } from '@/lib/i18n';
 
-export const metadata: Metadata = {
-    title: 'Meta Tag Generator | SEO & Social Media Preview Tool',
-    description: 'Create optimized meta tags for SEO, Open Graph (Facebook), and Twitter Cards. Preview exactly how your website will look in search results and social shares.',
-    keywords: ['meta tag generator', 'seo tool', 'open graph generator', 'twitter card generator', 'social media preview', 'website previewer'],
-    alternates: {
-        canonical: '/meta-tag-generator',
-    },
-};
+export async function generateMetadata({ searchParams }: { searchParams: { lang?: string } }): Promise<Metadata> {
+    const lang = searchParams.lang || 'en';
+    const slug = 'meta-tag-generator';
+    const title = getCombinedTitle(slug);
+    const description = toolContentData[slug]?.localizedMetadata?.[lang]?.description || toolContentData[slug]?.description;
+
+    return {
+        title,
+        description,
+        alternates: {
+            canonical: `/${slug}`,
+            languages: {
+                'es': `/${slug}?lang=es`,
+                'pt': `/${slug}?lang=pt`,
+                'hi': `/${slug}?lang=hi`,
+            },
+        },
+    };
+}
 
 export default function MetaTagPage() {
     return (

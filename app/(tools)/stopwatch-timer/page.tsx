@@ -3,15 +3,28 @@ import { TitleSection } from '@/components/shared/TitleSection';
 import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
+import { toolContentData } from '@/config/tool-content';
+import { getCombinedTitle } from '@/lib/i18n';
 
-export const metadata: Metadata = {
-    title: 'Stopwatch & Timer | Free Online Time Tracking Tool',
-    description: 'A high-precision online stopwatch and countdown timer. Track laps with the stopwatch or set focus alerts with the timer. Perfect for work, study, and workouts.',
-    keywords: ['online stopwatch', 'countdown timer', 'lap timer', 'time tracking tool', 'pomodoro timer', 'precise stopwatch'],
-    alternates: {
-        canonical: '/stopwatch-timer',
-    },
-};
+export async function generateMetadata({ searchParams }: { searchParams: { lang?: string } }): Promise<Metadata> {
+    const lang = searchParams.lang || 'en';
+    const slug = 'stopwatch-timer';
+    const title = getCombinedTitle(slug);
+    const description = toolContentData[slug]?.localizedMetadata?.[lang]?.description || toolContentData[slug]?.description;
+
+    return {
+        title,
+        description,
+        alternates: {
+            canonical: `/${slug}`,
+            languages: {
+                'es': `/${slug}?lang=es`,
+                'pt': `/${slug}?lang=pt`,
+                'hi': `/${slug}?lang=hi`,
+            },
+        },
+    };
+}
 
 export default function StopwatchPage() {
     return (

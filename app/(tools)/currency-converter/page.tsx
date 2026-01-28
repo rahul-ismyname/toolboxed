@@ -4,11 +4,21 @@ import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-    title: 'Currency Converter | Live Exchange Rates',
-    description: 'Free online currency converter with live exchange rates. Convert USD, EUR, GBP, INR and over 150+ world currencies instantly.',
-    keywords: ['currency converter', 'exchange rates', 'money converter', 'usd to eur', 'foreign exchange'],
-};
+import { getCombinedTitle } from '@/lib/i18n';
+
+export async function generateMetadata(): Promise<Metadata> {
+    const slug = 'currency-converter';
+    const combinedTitle = getCombinedTitle(slug);
+
+    return {
+        title: combinedTitle,
+        description: 'Free online currency converter with live exchange rates. Convert USD, EUR, GBP, INR and over 150+ world currencies instantly.',
+        keywords: ['currency converter', 'conversor de divisas', 'मुद्रा परिवर्तक', 'exchange rates', 'money converter', 'usd to eur', 'foreign exchange'],
+        alternates: {
+            canonical: '/currency-converter',
+        },
+    };
+}
 
 export default function CurrencyPage() {
     return (

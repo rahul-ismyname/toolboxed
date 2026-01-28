@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { Layers, Copy, Check, Plus, Trash2 } from 'lucide-react';
+import { useState, useCallback, useEffect } from 'react';
+import { Layers, Copy, Check, Plus, Trash2, Share2 } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 interface ShadowLayer {
     id: string;
@@ -21,6 +22,26 @@ export function BoxShadowGenerator() {
     const [bgColor, setBgColor] = useState('#f8fafc');
     const [boxColor, setBoxColor] = useState('#ffffff');
     const [copied, setCopied] = useState(false);
+    const [shareCopied, setShareCopied] = useState(false);
+
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Initialize from URL
+    useEffect(() => {
+        const config = searchParams.get('config');
+        if (config) {
+            try {
+                const decoded = JSON.parse(atob(decodeURIComponent(config)));
+                if (decoded.layers) setLayers(decoded.layers);
+                if (decoded.bgColor) setBgColor(decoded.bgColor);
+                if (decoded.boxColor) setBoxColor(decoded.boxColor);
+            } catch (e) {
+                console.error('Failed to decode config', e);
+            }
+        }
+    }, []); // Run once on mount
 
     const getShadowValue = useCallback(() => {
         return layers.map(l =>
@@ -53,6 +74,19 @@ export function BoxShadowGenerator() {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     }, [getShadowValue]);
+
+    const handleShare = useCallback(() => {
+        const config = { layers, bgColor, boxColor };
+        const encoded = encodeURIComponent(btoa(JSON.stringify(config)));
+        const url = `${window.location.origin}${pathname}?config=${encoded}`;
+
+        navigator.clipboard.writeText(url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2000);
+
+        // Update URL without refresh
+        router.replace(`${pathname}?config=${encoded}`, { scroll: false });
+    }, [layers, bgColor, boxColor, pathname, router]);
 
     return (
         <div className="w-full max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
@@ -206,6 +240,26 @@ export function BoxShadowGenerator() {
                         <div className="p-6 text-sm leading-relaxed overflow-x-auto">
                             <span className="text-purple-400">box-shadow</span>: <span className="text-orange-300">{getShadowValue()}</span>;
                         </div>
+                    </div>
+
+                    {/* Share Action */}
+                    <div className="flex gap-4">
+                        <button
+                            onClick={handleShare}
+                            className="flex-1 flex items-center justify-center gap-3 bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-4 rounded-3xl shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98]"
+                        >
+                            {shareCopied ? (
+                                <>
+                                    <Check className="w-5 h-5" />
+                                    Link Copied!
+                                </>
+                            ) : (
+                                <>
+                                    <Share2 className="w-5 h-5" />
+                                    Share Design Link
+                                </>
+                            )}
+                        </button>
                     </div>
 
                 </div>
