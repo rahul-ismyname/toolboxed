@@ -617,6 +617,66 @@ export function ResumeBuilder() {
                 </div>
 
             </div>
+
+            <style jsx global>{`
+                @media print {
+                    @page {
+                        margin: 0;
+                        size: auto;
+                    }
+                    html, body {
+                        height: auto !important;
+                        overflow: visible !important;
+                        position: relative !important;
+                    }
+                    /* Turn off visibility for everything... */
+                    body * {
+                        visibility: hidden;
+                    }
+                    /* ...except our resume container and its children */
+                    #resume-preview-container,
+                    #resume-preview-container * {
+                        visibility: visible;
+                    }
+                    
+                    /* Override the main app container's overflow/height */
+                    .overflow-hidden {
+                        overflow: visible !important;
+                    }
+                    .h-\\[calc\\(100vh-4rem\\)\\] {
+                        height: auto !important;
+                    }
+
+                    #resume-preview-container {
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                        height: auto !important;
+                        min-height: 100%;
+                        margin: 0;
+                        padding: 0;
+                        background: white;
+                        display: flex;
+                        justify-content: center;
+                        align-items: flex-start;
+                        overflow: visible !important;
+                        z-index: 9999;
+                    }
+                    #resume-preview {
+                        transform: scale(1) !important;
+                        margin: 0;
+                        box-shadow: none;
+                        border: none;
+                        width: 100%;
+                        max-width: 210mm; /* Industry standard A4 width */
+                    }
+                    /* Hide the action buttons explicitly */
+                    .print\\:hidden {
+                        display: none !important;
+                    }
+                }
+            `}</style>
         </div>
     );
 }
