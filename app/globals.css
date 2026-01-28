@@ -25,6 +25,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  transition: background-color 0.5s ease-in-out, color 0.5s ease-in-out;
 }
 
 /* Scrollbar Hide Utility */
@@ -33,7 +34,42 @@ body {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+}
+
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0) scale(1.1);
+  }
+
+  25% {
+    transform: translateX(-4px) scale(1.1);
+  }
+
+  75% {
+    transform: translateX(4px) scale(1.1);
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.15s ease-in-out 0s 2;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
 }

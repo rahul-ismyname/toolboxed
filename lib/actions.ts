@@ -109,3 +109,38 @@ export async function getPublicTemplates() {
         return [];
     }
 }
+
+export interface LeaderboardEntry {
+    username: string;
+    wpm: number;
+    accuracy: number;
+    difficulty: string;
+    created_at?: string;
+}
+
+export async function submitScore(score: LeaderboardEntry) {
+    const id = generateId();
+    try {
+        await turso.execute({
+            sql: "INSERT INTO type_racer_leaderboard (id, username, wpm, accuracy, difficulty) VALUES (?, ?, ?, ?, ?)",
+            args: [id, score.username, score.wpm, score.accuracy, score.difficulty]
+        });
+        return { success: true };
+    } catch (error) {
+        console.error('Turso submitScore error:', error);
+        return { success: false, error };
+    }
+}
+
+export async function getLeaderboard(limit = 100) {
+    try {
+        const rs = await turso.execute({
+            sql: "SELECT username, wpm, accuracy, difficulty, created_at FROM type_racer_leaderboard ORDER BY wpm DESC, accuracy DESC LIMIT ?",
+            args: [limit]
+        });
+        return rs.rows as unknown as LeaderboardEntry[];
+    } catch (error) {
+        console.error('Turso getLeaderboard error:', error);
+        return [];
+    }
+}
