@@ -15,11 +15,11 @@ export function Navbar() {
                 <div className="flex justify-between h-16">
                     <div className="flex items-center gap-8">
                         <Link href="/" className="flex items-center gap-2.5 font-bold text-lg text-slate-900 group">
-                            <div className="relative w-9 h-9 flex items-center justify-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl group-hover:border-emerald-500/50 transition-colors duration-300">
+                            <div className="relative w-9 h-9 flex items-center justify-center bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl group-hover:border-slate-900 dark:group-hover:border-white transition-colors duration-300">
                                 <img
                                     src="/logo.svg"
                                     alt="Toolboxed Logo"
-                                    className="w-7 h-7 transform group-hover:scale-110 transition-transform duration-300"
+                                    className="w-7 h-7 transform group-hover:-translate-y-1 transition-transform duration-300"
                                 />
                             </div>
                             <span className="tracking-tight text-slate-900 dark:text-white">Toolboxed</span>

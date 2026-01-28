@@ -8,7 +8,7 @@ export function Footer() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mb-12">
                     <div className="col-span-2">
                         <div className="flex items-center gap-2.5 font-bold text-lg text-slate-900 dark:text-white mb-4">
-                            <div className="relative w-9 h-9 flex items-center justify-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl">
+                            <div className="relative w-9 h-9 flex items-center justify-center bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl">
                                 <img
                                     src="/logo.svg"
                                     alt="Toolboxed Logo"
