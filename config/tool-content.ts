@@ -274,30 +274,30 @@ export const toolContentData: Record<string, ToolData> = {
             hi: { title: 'CSS बॉक्स शैडो जेनरेटर', description: 'सुंदर, स्तरित और चिकनी CSS बॉक्स-शैडो विस्तृत रूप से बनाएं। तुरंत CSS कोड कॉपी करें।' }
         }
     },
-    'image-converter': {
-        title: 'Bulk Image Converter & Compressor',
-        description: 'Convert images to WebP, PNG, or JPG formats and compress them for the web. Process unlimited files locally.',
+    'image-pdf-compressor': {
+        title: 'Image & PDF Compressor',
+        description: 'Convert and compress images and PDFs. Set target file sizes (e.g., 100KB) and process unlimited files locally.',
         features: [
             '**Bulk Processing**: Convert hundreds of images at once.',
-            '**Local Privacy**: Images are processed in your browser, not uploaded.',
-            '**Format Support**: Convert between JPG, PNG, and WebP.',
-            '**Compression**: Reduce file size without visible quality loss.',
-            '**Zip Download**: Download all converted images as a single archive.'
+            '**Target Size**: Compress files to a specific size (KB/MB).',
+            '**PDF Support**: Import and compress PDF documents.',
+            '**Local Privacy**: Files are processed in your browser, not uploaded.',
+            '**Format Support**: Convert between JPG, PNG, WebP, and PDF.'
         ],
         howToUse: [
-            { title: 'Select Images', description: 'Drag and drop your images onto the dropzone.' },
-            { title: 'Choose Format', description: 'Select your desired output format (e.g., WebP).' },
-            { title: 'Convert', description: 'Click "Convert All" to start processing.' },
-            { title: 'Download', description: 'Download individual files or a ZIP of everything.' }
+            { title: 'Select Files', description: 'Drag and drop images or PDFs.' },
+            { title: 'Choose Mode', description: 'Select "Target Size" to set a limit (e.g., 200KB).' },
+            { title: 'Compress', description: 'Click "Compress & Download" to process.' },
+            { title: 'Download', description: 'Save your optimized files.' }
         ],
         faqs: [
             { question: 'Is there a file limit?', answer: 'No hard limit, but performance depends on your computer\'s RAM.' },
-            { question: 'Do you save my photos?', answer: 'No, everything is processed offline in your browser.' }
+            { question: 'Do you save my files?', answer: 'No, everything is processed offline in your browser.' }
         ],
         localizedMetadata: {
-            es: { title: 'Conversor y Compresor de Imágenes', description: 'Convierte imágenes a formatos WebP, PNG o JPG y comprímelas para la web. Procesa archivos ilimitados localmente.' },
-            pt: { title: 'Conversor e Compressor de Imagens', description: 'Converta imagens para os formatos WebP, PNG ou JPG e comprima-as para a web. Processe arquivos ilimitados localmente.' },
-            hi: { title: 'इमेज कनवर्टर और कंप्रेसर', description: 'छवियों को WebP, PNG, या JPG स्वरूपों में बदलें और उन्हें वेब के लिए कंप्रेस करें। स्थानीय स्तर पर असीमित फाइलों को प्रोसेस करें।' }
+            es: { title: 'Compresor de Imágenes y PDF', description: 'Convierte y comprime imágenes y PDF. Establece tamaños de archivo objetivo.' },
+            pt: { title: 'Compressor de Imagem e PDF', description: 'Converta e comprima imagens e PDFs. Defina tamanhos de arquivo alvo.' },
+            hi: { title: 'इमेज और पीडीएफ कंप्रेसर', description: 'छवियों और पीडीएफ को बदलें और संकुचित करें। लक्ष्य फ़ाइल आकार सेट करें।' }
         }
     },
     'pomodoro-timer': {

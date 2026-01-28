@@ -1,15 +1,22 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { Upload, Download, Settings, X, AlertCircle, Lock, Unlock, FileText, Trash2 } from 'lucide-react';
+import { Upload, Download, Settings, X, AlertCircle, Lock, Unlock, FileText, Trash2, ArrowRight } from 'lucide-react';
 
 type Format = 'image/png' | 'image/jpeg' | 'image/webp' | 'application/pdf';
 
-export function ImageConverter() {
+export function ImagePdfCompressor() {
     const [files, setFiles] = useState<File[]>([]);
     const [previewUrls, setPreviewUrls] = useState<string[]>([]);
     const [format, setFormat] = useState<Format>('image/webp');
     const [quality, setQuality] = useState(0.8);
+
+    // Target Size State
+    const [useTargetSize, setUseTargetSize] = useState(true);
+    const [targetSizeKB, setTargetSizeKB] = useState<number | string>(100);
+
+
+
     const [isProcessing, setIsProcessing] = useState(false);
     const [loadingPdf, setLoadingPdf] = useState(false);
 
@@ -39,13 +46,14 @@ export function ImageConverter() {
 
     const handleFileProcess = async (selectedFile: File) => {
         if (selectedFile.type === 'application/pdf') {
+            setFormat('application/pdf'); // Auto-select PDF format
             setLoadingPdf(true);
             try {
                 // Dynamic import for client-side only to fix DOMMatrix error
                 // Force load the browser build to ensure DOMMatrix and Canvas are available
                 // @ts-ignore
                 const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs');
-                pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+                pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
                 const arrayBuffer = await selectedFile.arrayBuffer();
                 const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
@@ -101,6 +109,11 @@ export function ImageConverter() {
         }
     };
 
+    // Helper to get blob size
+    const getBlob = (canvas: HTMLCanvasElement, quality: number, type: string): Promise<Blob | null> => {
+        return new Promise(r => canvas.toBlob(r, type, quality));
+    };
+
     const processAndDownload = async () => {
         setIsProcessing(true);
         try {
@@ -111,7 +124,7 @@ export function ImageConverter() {
                 jsPDFObj = new mod.jsPDF({
                     orientation: width > height ? 'l' : 'p',
                     unit: 'px',
-                    format: [width, height]
+                    format: [width, height] // Initial page size
                 });
             }
 
@@ -122,43 +135,150 @@ export function ImageConverter() {
                 img.src = src;
                 await new Promise(r => img.onload = r);
 
-                const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                if (!ctx) continue;
+                // Start with requested dimensions
+                let currentWidth = width;
+                let currentHeight = height;
 
-                // White background for non-transparent formats
-                if (format === 'image/jpeg' || format === 'application/pdf') {
-                    ctx.fillStyle = '#FFFFFF';
-                    ctx.fillRect(0, 0, width, height);
+                // Working canvas
+                const canvas = document.createElement('canvas');
+                let ctx = canvas.getContext('2d');
+
+                // Draw function for iterative resizing
+                const draw = (w: number, h: number) => {
+                    canvas.width = w;
+                    canvas.height = h;
+                    ctx = canvas.getContext('2d');
+                    if (!ctx) return;
+                    if (format === 'image/jpeg' || format === 'application/pdf') {
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillRect(0, 0, w, h);
+                    }
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    ctx.drawImage(img, 0, 0, w, h);
+                };
+
+                // Initial draw
+                draw(currentWidth, currentHeight);
+
+                let finalQuality = quality;
+                let finalBlob: Blob | null = null;
+                const fmt = format === 'application/pdf' ? 'image/jpeg' : format;
+
+                // --- COMPRESSION LOGIC ---
+                if (useTargetSize && format !== 'image/png') {
+                    // If capturing to PDF, the target size applies to the WHOLE document.
+                    // We distribute the budget roughly equally across pages.
+                    // We also reserve ~5-10% or a fixed amount for PDF structure overhead if possible, 
+                    // but for now simple division is a standard approximation.
+                    const totalTargetBytes = (Number(targetSizeKB) || 100) * 1024;
+                    const isPdfOutput = format === 'application/pdf';
+
+                    // IF PDF: Divide by page count. IF Image: Target is per file.
+                    const targetBytes = isPdfOutput ? Math.floor(totalTargetBytes / previewUrls.length) : totalTargetBytes;
+
+                    let bestBlob: Blob | null = null;
+                    let minQ = 0.1;
+                    let maxQ = 1.0;
+
+                    // Iterative Resize Loop (max 5 resize steps)
+                    for (let step = 0; step < 5; step++) {
+                        // Check lowest quality at this resolution first
+                        const lowBlob = await getBlob(canvas, 0.1, fmt);
+
+                        if (lowBlob && lowBlob.size > targetBytes) {
+                            // Even lowest quality is too big -> FORCE RESIZE
+                            currentWidth = Math.floor(currentWidth * 0.75);
+                            currentHeight = Math.floor(currentHeight * 0.75);
+                            draw(currentWidth, currentHeight);
+                            continue; // Restart search at new resolution
+                        }
+
+                        // Quality Binary Search
+                        let l = minQ, r = maxQ;
+                        let validBlobForThisRes: Blob | null = null;
+
+                        for (let j = 0; j < 6; j++) {
+                            const mid = (l + r) / 2;
+                            const blob = await getBlob(canvas, mid, fmt);
+                            if (!blob) break;
+
+                            if (blob.size <= targetBytes) {
+                                validBlobForThisRes = blob;
+                                finalQuality = mid;
+                                l = mid; // Try better quality
+                            } else {
+                                r = mid; // Too big
+                            }
+                        }
+
+                        if (validBlobForThisRes) {
+                            bestBlob = validBlobForThisRes;
+                            break; // Found a fit!
+                        } else {
+                            // If binary search failed (shouldn't happen if lowBlob check passed), force resize anyway as fallback
+                            currentWidth = Math.floor(currentWidth * 0.8);
+                            currentHeight = Math.floor(currentHeight * 0.8);
+                            draw(currentWidth, currentHeight);
+                        }
+                    }
+
+                    finalBlob = bestBlob || await getBlob(canvas, 0.5, fmt); // Fallback
+
+                } else {
+                    // Manual Quality
+                    finalBlob = await getBlob(canvas, quality, fmt);
                 }
 
-                // High quality scaling
-                ctx.imageSmoothingEnabled = true;
-                ctx.imageSmoothingQuality = 'high';
-                ctx.drawImage(img, 0, 0, width, height);
-
-                // Output Generation
+                // --- OUTPUT GENERATION ---
                 if (format === 'application/pdf') {
-                    if (i > 0) jsPDFObj.addPage([width, height]);
-                    const imgData = canvas.toDataURL('image/jpeg', quality);
-                    jsPDFObj.addImage(imgData, 'JPEG', 0, 0, width, height);
+                    // Update Page Size to match the final resized image
+                    if (i > 0) jsPDFObj.addPage([currentWidth, currentHeight]);
+                    else {
+                        // Fix first page size
+                        jsPDFObj.deletePage(1);
+                        jsPDFObj.addPage([currentWidth, currentHeight]);
+                    }
+
+                    const r = new FileReader();
+                    r.readAsDataURL(finalBlob!);
+                    await new Promise(res => r.onloadend = res);
+                    jsPDFObj.addImage(r.result as string, 'JPEG', 0, 0, currentWidth, currentHeight);
                 } else {
-                    // Download Individual Image
-                    const blob = await new Promise<Blob | null>(r => canvas.toBlob(r, format, quality));
-                    if (blob) {
+                    if (finalBlob) {
                         const link = document.createElement('a');
-                        link.href = URL.createObjectURL(blob);
-                        link.download = `converted_${i + 1}.${format.split('/')[1]}`;
+                        link.href = URL.createObjectURL(finalBlob);
+
+                        // Determine Filename
+                        let name = `compressed_${i + 1}`;
+
+                        // If 1:1 mapping (Images uploaded directly)
+                        if (files.length === previewUrls.length) {
+                            const originalName = files[i].name;
+                            const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.')) || originalName;
+                            name = `${nameWithoutExt}_compressed`;
+                        }
+                        // If PDF Pages (1 PDF -> Multiple Images)
+                        else if (files.length === 1 && files[0].type === 'application/pdf') {
+                            const originalName = files[0].name;
+                            const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.')) || originalName;
+                            name = `${nameWithoutExt}_page_${i + 1}_compressed`;
+                        }
+
+                        link.download = `${name}.${format.split('/')[1]}`;
                         link.click();
                     }
                 }
             }
 
-            // Save PDF at end
             if (format === 'application/pdf') {
-                jsPDFObj.save("converted_compressed.pdf");
+                let pdfName = "compressed_document.pdf";
+                if (files.length > 0) {
+                    const firstFile = files[0].name;
+                    const nameWithoutExt = firstFile.substring(0, firstFile.lastIndexOf('.')) || firstFile;
+                    pdfName = `${nameWithoutExt}_compressed.pdf`;
+                }
+                jsPDFObj.save(pdfName);
             }
 
         } catch (e) {
@@ -257,6 +377,19 @@ export function ImageConverter() {
                                 <button onClick={() => setLockRatio(!lockRatio)} className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-all ${lockRatio ? 'text-emerald-500' : 'text-slate-300'}`}>
                                     {lockRatio ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />} Locked
                                 </button>
+                                <button onClick={() => {
+                                    if (previewUrls.length > 0) {
+                                        const img = new Image();
+                                        img.onload = () => {
+                                            setWidth(img.naturalWidth);
+                                            setHeight(img.naturalHeight);
+                                            setOriginalAspectRatio(img.naturalWidth / img.naturalHeight);
+                                        };
+                                        img.src = previewUrls[0];
+                                    }
+                                }} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-emerald-500 transition-colors">
+                                    Reset
+                                </button>
                             </div>
                             <div className="flex items-center gap-3">
                                 <div className="relative flex-1">
@@ -269,23 +402,64 @@ export function ImageConverter() {
                             </div>
                         </div>
 
-                        {/* Quality */}
+                        {/* Compression Mode Selector */}
                         {format !== 'image/png' && (
                             <div className="space-y-4 pt-2">
-                                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                                    <span className="text-slate-400">Compression Precision</span>
-                                    <span className="text-emerald-500">{Math.round(quality * 100)}%</span>
+                                <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                                    <button
+                                        onClick={() => setUseTargetSize(true)}
+                                        className={`flex-1 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${useTargetSize ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}
+                                    >
+                                        Target Size
+                                    </button>
+                                    <button
+                                        onClick={() => setUseTargetSize(false)}
+                                        className={`flex-1 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${!useTargetSize ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}
+                                    >
+                                        Manual Quality
+                                    </button>
                                 </div>
-                                <div className="relative h-6 flex items-center">
-                                    <input
-                                        type="range" min="0.1" max="1.0" step="0.05"
-                                        value={quality} onChange={e => setQuality(Number(e.target.value))}
-                                        className="w-full accent-emerald-500 h-2 bg-slate-100 dark:bg-slate-800 rounded-lg cursor-pointer appearance-none"
-                                    />
-                                </div>
-                                <p className="text-[9px] text-slate-400 font-bold leading-normal uppercase tracking-widest">
-                                    Lower % = Smaller size. Higher % = Better clarity.
-                                </p>
+
+                                {useTargetSize ? (
+                                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
+                                            <span className="text-slate-400">Max File Size (KB)</span>
+                                            <span className="text-emerald-500">{targetSizeKB} KB</span>
+                                        </div>
+                                        <div className="relative">
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max="10000"
+                                                value={targetSizeKB}
+                                                onChange={e => {
+                                                    const val = e.target.value;
+                                                    if (val === '') setTargetSizeKB('');
+                                                    else setTargetSizeKB(Number(val));
+                                                }}
+                                                className="w-full p-4 bg-emerald-50 dark:bg-emerald-500/10 border-2 border-emerald-500/20 rounded-2xl text-center font-mono font-black text-lg outline-none focus:border-emerald-500 text-emerald-600 dark:text-emerald-400 transition-all"
+                                            />
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-emerald-500/50 pointer-events-none">KB</div>
+                                        </div>
+                                        <p className="text-[9px] text-slate-400 font-bold leading-normal uppercase tracking-widest mt-2">
+                                            System will adjust quality to fit under {targetSizeKB}KB.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="animate-in fade-in slide-in-from-top-1 duration-300">
+                                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
+                                            <span className="text-slate-400">Compression Precision</span>
+                                            <span className="text-emerald-500">{Math.round(quality * 100)}%</span>
+                                        </div>
+                                        <div className="relative h-6 flex items-center">
+                                            <input
+                                                type="range" min="0.1" max="1.0" step="0.05"
+                                                value={quality} onChange={e => setQuality(Number(e.target.value))}
+                                                className="w-full accent-emerald-500 h-2 bg-slate-100 dark:bg-slate-800 rounded-lg cursor-pointer appearance-none"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -302,7 +476,7 @@ export function ImageConverter() {
                             ) : (
                                 <>
                                     <Download className="w-5 h-5" />
-                                    <span>{format === 'application/pdf' ? 'Generate PDF' : 'Download Bundle'}</span>
+                                    <span>{format === 'application/pdf' ? 'Compress & Generate PDF' : 'Compress & Download'}</span>
                                 </>
                             )}
                         </button>

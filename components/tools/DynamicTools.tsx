@@ -41,9 +41,9 @@ export const DynamicPaintApp = dynamic(
     { ssr: false, loading: () => <Loading name="Design Canvas" color="#10b981" /> }
 );
 
-export const DynamicImageConverter = dynamic(
-    () => import('./media/ImageConverter').then(mod => mod.ImageConverter),
-    { ssr: false, loading: () => <Loading name="Local Image Processor" color="#3b82f6" /> }
+export const DynamicImagePdfCompressor = dynamic(
+    () => import('./media/ImagePdfCompressor').then(mod => mod.ImagePdfCompressor),
+    { ssr: false, loading: () => <Loading name="Image & PDF Compressor" color="#3b82f6" /> }
 );
 
 export const DynamicInvoiceBuilder = dynamic(

@@ -17,6 +17,16 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
+
+  },
+  async redirects() {
+    return [
+      {
+        source: '/image-converter',
+        destination: '/image-pdf-compressor',
+        permanent: true,
+      },
+    ];
   },
 };
 

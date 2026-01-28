@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { saveInvoice } from '@/lib/actions';
+import { toJpeg } from 'html-to-image';
+import { jsPDF } from 'jspdf';
 
 // --- TYPES ---
 
@@ -58,33 +60,32 @@ const DEFAULT_DATA: InvoiceData = {
         invoiceNumber: 'INV-001',
         date: new Date().toISOString().split('T')[0],
         dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        currency: '$',
+        currency: '$', // Will be overridden by preference
         docType: 'Invoice',
         template: 'modern',
         primaryColor: '#3b82f6',
         font: 'sans',
         logoUrl: '',
-        headerNote: 'Thank you for your business!',
-        footerNote: 'Payment is due within 30 days. Late payments may be subject to a 1.5% monthly fee.'
+        headerNote: '',
+        footerNote: ''
     },
     sender: {
-        name: 'Your Company Name',
-        email: 'billing@yourcompany.com',
-        address: '123 Business Way\nCity, State 12345',
-        phone: '+1 (555) 000-0000',
-        taxId: 'TAX-12345678',
-        website: 'www.yourcompany.com'
+        name: '',
+        email: '',
+        address: '',
+        phone: '',
+        taxId: '',
+        website: ''
     },
     receiver: {
-        name: 'Client Name',
-        email: 'client@example.com',
-        address: '456 Client Avenue\nSuite 100\nCity, State 67890',
-        phone: '+1 (555) 111-2222',
-        taxId: 'CLIENT-98765432'
+        name: '',
+        email: '',
+        address: '',
+        phone: '',
+        taxId: ''
     },
     items: [
-        { id: '1', description: 'Consulting Services (Product Strategy)', quantity: 20, rate: 150, tax: 0 },
-        { id: '2', description: 'Web Development (Next.js Implementation)', quantity: 40, rate: 120, tax: 10 },
+        { id: '1', description: '', quantity: 1, rate: 0, tax: 0 },
     ]
 };
 
@@ -99,6 +100,7 @@ export function InvoiceBuilder({ initialData, readOnly = false }: InvoiceBuilder
     const [data, setData] = useState<InvoiceData>(initialData || DEFAULT_DATA);
     const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
     const [isClient, setIsClient] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     // Sharing State
     const [shareCopied, setShareCopied] = useState(false);
@@ -152,8 +154,36 @@ export function InvoiceBuilder({ initialData, readOnly = false }: InvoiceBuilder
     useEffect(() => {
         if (isClient) {
             localStorage.setItem('invoice-data-v1', JSON.stringify(data));
+            // Save currency preference specifically
+            localStorage.setItem('invoice-currency-pref', data.meta.currency);
         }
     }, [data, isClient]);
+
+    // Load Currency Preference on Mount OR Detect from Locale
+    useEffect(() => {
+        if (isClient) {
+            const savedCurrency = localStorage.getItem('invoice-currency-pref');
+            if (savedCurrency) {
+                if (savedCurrency !== data.meta.currency) {
+                    setData(prev => ({ ...prev, meta: { ...prev.meta, currency: savedCurrency } }));
+                }
+            } else {
+                // Auto-detect based on browser locale
+                const locale = navigator.language || 'en-US';
+                let detectedCurrency = '$';
+
+                if (locale.includes('IN')) detectedCurrency = '₹';
+                else if (locale.includes('GB') || locale.includes('UK')) detectedCurrency = '£';
+                else if (locale.includes('JP')) detectedCurrency = '¥';
+                else if (locale.includes('AU')) detectedCurrency = 'A$';
+                else if (['DE', 'FR', 'IT', 'ES', 'NL', 'PT', 'IE', 'BE', 'AT', 'FI'].some(c => locale.includes(c))) detectedCurrency = '€';
+
+                if (detectedCurrency !== data.meta.currency) {
+                    setData(prev => ({ ...prev, meta: { ...prev.meta, currency: detectedCurrency } }));
+                }
+            }
+        }
+    }, [isClient]);
 
     // CALCULATIONS
     const stats = useMemo(() => {
@@ -214,25 +244,83 @@ export function InvoiceBuilder({ initialData, readOnly = false }: InvoiceBuilder
 
     useEffect(() => {
         const handleResize = () => {
-            const container = document.getElementById('invoice-preview-container');
+            // Target the wrapper logic
+            const container = document.getElementById('invoice-preview-wrapper');
             if (container) {
                 const containerWidth = container.clientWidth;
                 const baseWidth = 850; // Approx A4 + padding
-                // Only scale down if container is smaller than base, otherwise 1
                 const newScale = Math.min(1, (containerWidth - 32) / baseWidth);
                 setScale(newScale);
             }
         };
 
         window.addEventListener('resize', handleResize);
-
-        // Trigger resize when switching tabs
-        if (activeTab === 'preview') {
-            setTimeout(handleResize, 100);
-        }
-
+        if (activeTab === 'preview') setTimeout(handleResize, 100);
         return () => window.removeEventListener('resize', handleResize);
     }, [activeTab]);
+
+    const handleClear = () => {
+        if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+            const currentCurrency = data.meta.currency; // Keep current currency
+            const emptyData: InvoiceData = {
+                ...DEFAULT_DATA,
+                meta: {
+                    ...DEFAULT_DATA.meta,
+                    date: new Date().toISOString().split('T')[0],
+                    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    invoiceNumber: 'INV-001',
+                    currency: currentCurrency // Restore it
+                }
+            };
+            setData(emptyData);
+        }
+    };
+
+    const handleDownload = async () => {
+        setIsDownloading(true);
+        // Ensure preview is visible (needed for Mobile/Edit tab)
+        if (activeTab !== 'preview') {
+            setActiveTab('preview');
+            await new Promise(r => setTimeout(r, 500)); // Wait for render/layout
+        }
+
+        try {
+            const element = document.getElementById('invoice-paper');
+            if (!element) throw new Error('Preview element not found');
+
+            // Use JPEG for better compression than PNG
+            const dataUrl = await toJpeg(element, {
+                quality: 0.95,
+                pixelRatio: 2, // Keep high res for text sharpness, but JPEG compresses it well
+                backgroundColor: '#ffffff', // Ensure white background for JPEG
+                style: {
+                    transform: 'none',
+                    margin: '0',
+                    boxShadow: 'none'
+                }
+            });
+
+            const pdf = new jsPDF({
+                orientation: 'p',
+                unit: 'pt',
+                format: 'a4'
+            });
+
+            // Calculate dimensions to fit A4
+            const imgProps = pdf.getImageProperties(dataUrl);
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+            pdf.addImage(dataUrl, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`Invoice-${data.meta.invoiceNumber}.pdf`);
+
+        } catch (err) {
+            console.error('Download failed', err);
+            alert('Failed to generate PDF. Please try again.');
+        } finally {
+            setIsDownloading(false);
+        }
+    };
 
     if (!isClient) return null;
 
@@ -248,6 +336,21 @@ export function InvoiceBuilder({ initialData, readOnly = false }: InvoiceBuilder
                         <h1 className="text-lg font-black text-slate-900 dark:text-white">Studio</h1>
                         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Invoice</p>
                     </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                    <select
+                        value={data.meta.currency}
+                        onChange={(e) => setData(prev => ({ ...prev, meta: { ...prev.meta, currency: e.target.value } }))}
+                        className="bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm font-bold py-1 px-2 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="$">USD ($)</option>
+                        <option value="€">EUR (€)</option>
+                        <option value="£">GBP (£)</option>
+                        <option value="₹">INR (₹)</option>
+                        <option value="¥">JPY (¥)</option>
+                        <option value="A$">AUD (A$)</option>
+                    </select>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -267,6 +370,13 @@ export function InvoiceBuilder({ initialData, readOnly = false }: InvoiceBuilder
                                 <FileText className="w-4 h-4 inline-block md:mr-2" />
                                 <span className="hidden md:inline">Preview</span>
                             </button>
+                            <button
+                                onClick={handleClear}
+                                className="px-3 md:px-4 py-2 rounded-lg text-sm font-bold text-red-500 hover:text-red-700 transition-all border-l border-slate-200 dark:border-slate-700 ml-1 pl-4"
+                                title="Clear all data"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
                         </div>
                     )}
 
@@ -283,11 +393,16 @@ export function InvoiceBuilder({ initialData, readOnly = false }: InvoiceBuilder
                     </div>
 
                     <button
-                        onClick={() => window.print()}
-                        className="px-4 md:px-6 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold hover:scale-105 transition-all flex items-center gap-2 shadow-lg shadow-black/10"
+                        onClick={handleDownload}
+                        disabled={isDownloading}
+                        className="px-4 md:px-6 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold hover:scale-105 transition-all flex items-center gap-2 shadow-lg shadow-black/10 disabled:opacity-50 disabled:scale-100"
                     >
-                        <Download className="w-4 h-4" />
-                        <span className="hidden md:inline">Download</span>
+                        {isDownloading ? (
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                            <Download className="w-4 h-4" />
+                        )}
+                        <span className="hidden md:inline">{isDownloading ? 'Generating...' : 'Download'}</span>
                     </button>
                 </div>
             </div>
@@ -296,7 +411,7 @@ export function InvoiceBuilder({ initialData, readOnly = false }: InvoiceBuilder
                 <div className={`grid grid-cols-1 lg:grid-cols-2 gap-12 ${activeTab === 'preview' ? 'lg:block print:block' : ''}`}>
 
                     {/* LEFT: EDITOR */}
-                    <div className={`space-y-8 print:hidden ${activeTab === 'preview' ? 'hidden lg:block' : ''}`}>
+                    <div className={`space-y-8 print:hidden ${activeTab === 'preview' ? 'hidden' : ''}`}>
 
                         {/* Section: Sender Info */}
                         <div className="p-6 md:p-8 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
@@ -472,21 +587,7 @@ export function InvoiceBuilder({ initialData, readOnly = false }: InvoiceBuilder
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Currency</label>
-                                    <select
-                                        value={data.meta.currency}
-                                        onChange={(e) => setData(prev => ({ ...prev, meta: { ...prev.meta, currency: e.target.value } }))}
-                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl focus:border-blue-500 outline-none transition-all font-medium"
-                                    >
-                                        <option value="$">USD ($)</option>
-                                        <option value="€">EUR (€)</option>
-                                        <option value="£">GBP (£)</option>
-                                        <option value="₹">INR (₹)</option>
-                                        <option value="¥">JPY (¥)</option>
-                                        <option value="A$">AUD (A$)</option>
-                                    </select>
-                                </div>
+
 
                                 <div>
                                     <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Brand Color</label>
@@ -504,7 +605,7 @@ export function InvoiceBuilder({ initialData, readOnly = false }: InvoiceBuilder
                                         <input
                                             type="text"
                                             placeholder="https://example.com/logo.png"
-                                            value={data.meta.logoUrl.startsWith('data:') ? 'Local Image Active' : data.meta.logoUrl}
+                                            value={(data.meta.logoUrl || '').startsWith('data:') ? 'Local Image Active' : (data.meta.logoUrl || '')}
                                             onChange={(e) => setData(prev => ({ ...prev, meta: { ...prev.meta, logoUrl: e.target.value } }))}
                                             className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl focus:border-blue-500 outline-none transition-all"
                                         />
@@ -575,8 +676,9 @@ export function InvoiceBuilder({ initialData, readOnly = false }: InvoiceBuilder
                     </div>
 
                     {/* RIGHT: PREVIEW (Traditional A4 Aspect Ratio) */}
-                    <div id="invoice-preview-container" className={`sticky top-32 ${activeTab === 'edit' ? 'hidden lg:block' : 'block'}`}>
+                    <div id="invoice-preview-wrapper" className={`sticky top-32 ${activeTab === 'edit' ? 'hidden lg:block' : 'block'}`}>
                         <div
+                            id="invoice-paper"
                             className={`bg-white text-slate-900 shadow-2xl rounded-sm min-h-[1100px] w-full max-w-[800px] mx-auto overflow-hidden border border-slate-200 origin-top transform transition-all print:shadow-none print:border-none print:scale-100 print:m-0 print:p-0 ${data.meta.font === 'serif' ? 'font-serif' : data.meta.font === 'mono' ? 'font-mono' : 'font-sans'}`}
                             style={{ transform: `scale(${scale})` }}
                         >
@@ -587,7 +689,7 @@ export function InvoiceBuilder({ initialData, readOnly = false }: InvoiceBuilder
                                     {/* Header */}
                                     <div className="flex justify-between items-start mb-20">
                                         <div>
-                                            <h1 className="text-4xl font-black mb-2 tracking-tighter" style={{ color: data.meta.primaryColor }}>{data.meta.docType.toUpperCase()}</h1>
+                                            <h1 className="text-4xl font-black mb-2 tracking-tighter" style={{ color: data.meta.primaryColor }}>{(data.meta.docType || 'Invoice').toUpperCase()}</h1>
                                             <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">{data.meta.invoiceNumber}</p>
                                         </div>
                                         <div className="text-right">

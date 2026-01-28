@@ -150,12 +150,12 @@ export const tools: Tool[] = [
         path: '/box-shadow-generator'
     },
     {
-        slug: 'image-converter',
-        name: 'Image Converter & Compressor',
-        description: 'Convert and compress images (WebP, PNG, JPG) to reduce file size.',
+        slug: 'image-pdf-compressor',
+        name: 'Image & PDF Compressor',
+        description: 'Convert and compress images and PDFs. Set target file sizes (e.g., 100KB) and process unlimited files locally.',
         category: 'Utility',
         icon: ImagePlus,
-        path: '/image-converter'
+        path: '/image-pdf-compressor'
     },
     {
         slug: 'pomodoro-timer',

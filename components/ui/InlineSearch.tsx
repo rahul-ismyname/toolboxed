@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const POPULAR_TOOLS = ['bmi-calculator', 'unit-converter', 'json-formatter', 'password-generator', 'image-converter'];
+const POPULAR_TOOLS = ['bmi-calculator', 'unit-converter', 'json-formatter', 'password-generator', 'image-pdf-compressor'];
 
 export function InlineSearch() {
     const [query, setQuery] = useState('');
