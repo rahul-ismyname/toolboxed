@@ -38,10 +38,27 @@ export function Footer() {
                     <div>
                         <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">Company</h3>
                         <ul className="space-y-3 text-sm text-slate-500 dark:text-slate-400">
+                            <li><Link href="/about" className="hover:text-emerald-500 transition-colors">About Us</Link></li>
                             <li><Link href="/privacy" className="hover:text-emerald-500 transition-colors">Privacy Policy</Link></li>
                             <li><Link href="/terms" className="hover:text-emerald-500 transition-colors">Terms of Service</Link></li>
                             <li><a href="mailto:r43381812@gmail.com" className="hover:text-emerald-500 transition-colors">Contact Us</a></li>
                         </ul>
+                    </div>
+                    <div className="col-span-2 md:col-span-1">
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">Newsletter</h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
+                            Get notified when we release new tools.
+                        </p>
+                        <form className="space-y-2">
+                            <input
+                                type="email"
+                                placeholder="name@example.com"
+                                className="w-full px-4 py-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                            />
+                            <button className="w-full px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-bold rounded-lg hover:bg-slate-800 dark:hover:bg-slate-100 transition-all">
+                                Subscribe
+                            </button>
+                        </form>
                     </div>
                 </div>
                 <div className="pt-8 border-t border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-6">

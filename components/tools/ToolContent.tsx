@@ -7,6 +7,8 @@ import { toolContentData } from '@/config/tool-content';
 import { JsonLd } from '../shared/JsonLd';
 import { getToolSchema } from '@/lib/seo';
 import { ShareButtons } from '../shared/ShareButtons';
+import { FavoriteButton } from '../shared/FavoriteButton';
+import { ToolTracker } from '../shared/ToolTracker';
 
 interface ToolContentProps {
     slug: string;
@@ -32,6 +34,8 @@ export function ToolContent({ slug }: ToolContentProps) {
                 <JsonLd key={i} data={schema} />
             ))}
 
+            <ToolTracker slug={slug} />
+
             {/* Description Section */}
             <section className="text-center max-w-2xl mx-auto space-y-6">
                 <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-700">
@@ -51,6 +55,10 @@ export function ToolContent({ slug }: ToolContentProps) {
                     title={`${data.title} - Toolboxed`}
                     description={data.description}
                 />
+
+                <div className="flex justify-center pt-4">
+                    <FavoriteButton toolId={slug} showLabel className="px-6 py-2.5 shadow-sm" />
+                </div>
             </section>
 
             {/* Table of Contents - Jump Links for SEO */}

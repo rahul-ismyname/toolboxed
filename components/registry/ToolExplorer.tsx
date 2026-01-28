@@ -3,23 +3,44 @@
 import { useState, useMemo } from 'react';
 import { tools, ToolCategory } from '@/config/tools';
 import { ToolCard } from './ToolCard';
-import { Search, X, PackageOpen, ChevronRight, LayoutGrid, Layers } from 'lucide-react';
+import { Search, X, PackageOpen, ChevronRight, LayoutGrid, Layers, Star, Clock } from 'lucide-react';
+import { useUserPersistence } from '@/hooks/use-user-persistence';
 
 export function ToolExplorer() {
     const [searchQuery, setSearchQuery] = useState('');
-    const [activeCategory, setActiveCategory] = useState<ToolCategory | 'All'>('All');
+    const [activeCategory, setActiveCategory] = useState<ToolCategory | 'All' | 'My Toolkit'>('All');
+    const { favorites, recentTools } = useUserPersistence();
 
     // Get unique categories dynamically
-    const categories: (ToolCategory | 'All')[] = useMemo(() => {
+    const categories: (ToolCategory | 'All' | 'My Toolkit')[] = useMemo(() => {
         const cats = new Set(tools.map(t => t.category));
-        return ['All', ...Array.from(cats)].sort((a, b) => {
+        const baseCats = ['All', ...Array.from(cats)].sort((a, b) => {
             if (a === 'All') return -1;
-            return 0; // Keep order of discovery or sort alphabetically if preferred
-        }) as (ToolCategory | 'All')[];
-    }, []);
+            return 0;
+        }) as (ToolCategory | 'All' | 'My Toolkit')[];
+
+        if (favorites.length > 0 || recentTools.length > 0) {
+            return ['My Toolkit', ...baseCats];
+        }
+        return baseCats;
+    }, [favorites, recentTools]);
 
     // Filter tools based on search and category
     const filteredTools = useMemo(() => {
+        if (activeCategory === 'My Toolkit') {
+            const favTools = tools.filter(t => favorites.includes(t.slug));
+            const recTools = tools.filter(t => recentTools.includes(t.slug) && !favorites.includes(t.slug));
+
+            const results = [...favTools, ...recTools];
+            if (searchQuery) {
+                return results.filter(tool =>
+                    tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    tool.description.toLowerCase().includes(searchQuery.toLowerCase())
+                );
+            }
+            return results;
+        }
+
         return tools.filter(tool => {
             const matchesSearch =
                 tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -29,8 +50,9 @@ export function ToolExplorer() {
 
             return matchesSearch && matchesCategory;
         });
-    }, [searchQuery, activeCategory]);
+    }, [searchQuery, activeCategory, favorites, recentTools]);
 
+    const isToolkitView = activeCategory === 'My Toolkit';
     const isCategorizedView = searchQuery === '' && activeCategory === 'All';
 
     // Group tools by category for the main view
@@ -47,7 +69,7 @@ export function ToolExplorer() {
         <div className="space-y-12">
 
             {/* Search and Filters Header */}
-            <div className="flex flex-col md:flex-row gap-6 items-center justify-between sticky top-4 z-30 p-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm transition-all duration-300">
+            <div className="flex flex-col md:flex-row gap-6 items-center justify-between sticky top-[64px] z-30 p-4 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-md transition-all duration-300">
 
                 {/* Search Bar */}
                 <div className="relative w-full md:max-w-md group">
@@ -72,7 +94,7 @@ export function ToolExplorer() {
                 </div>
 
                 {/* Categories */}
-                <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-hide mask-fade">
+                <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-hide">
                     {categories.map((category) => (
                         <button
                             key={category}
@@ -83,6 +105,7 @@ export function ToolExplorer() {
                                 }`}
                         >
                             {category === 'All' ? <LayoutGrid className="w-3.5 h-3.5" /> : null}
+                            {category === 'My Toolkit' ? <Layers className="w-3.5 h-3.5" /> : null}
                             {category}
                         </button>
                     ))}
@@ -93,8 +116,31 @@ export function ToolExplorer() {
             <div className="min-h-[400px]">
 
                 {isCategorizedView ? (
-                    /* Categorized Sections View */
                     <div className="space-y-16 animate-in fade-in duration-500">
+                        {/* Favorites / Recent Preview if in All View */}
+                        {favorites.length > 0 && searchQuery === '' && (
+                            <section className="space-y-6">
+                                <div className="flex items-center gap-3 pb-2 border-b border-amber-100 dark:border-amber-900/30">
+                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                                        <Star className="w-6 h-6 text-amber-500 fill-amber-500" />
+                                        Your Favorites
+                                    </h2>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {tools.filter(t => favorites.includes(t.slug)).map((tool) => {
+                                        const { icon: _icon, ...safeTool } = tool;
+                                        return (
+                                            <ToolCard
+                                                key={tool.slug}
+                                                tool={safeTool}
+                                                icon={<tool.icon className="w-6 h-6" />}
+                                            />
+                                        );
+                                    })}
+                                </div>
+                            </section>
+                        )}
+
                         {Object.entries(statsByCategory).map(([category, categoryTools]) => (
                             <section key={category} className="space-y-6">
                                 <div className="flex items-center gap-3 pb-2 border-b border-slate-100 dark:border-slate-800">
@@ -106,7 +152,7 @@ export function ToolExplorer() {
                                     </h2>
                                     <button
                                         onClick={() => setActiveCategory(category as ToolCategory)}
-                                        className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center hover:underline opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center hover:underline opacity-100 group-hover:opacity-100 transition-opacity"
                                     >
                                         View All
                                         <ChevronRight className="w-3 h-3" />
@@ -129,18 +175,21 @@ export function ToolExplorer() {
                     </div>
                 ) : (
                     /* Search/Filtered Results View */
-                    <div>
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                         {filteredTools.length > 0 ? (
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between text-sm text-slate-500">
-                                    <p>Showing {filteredTools.length} results</p>
-                                    {activeCategory !== 'All' && (
-                                        <button onClick={() => setActiveCategory('All')} className="text-emerald-500 hover:underline">
-                                            Clear category
+                                    <p>
+                                        {isToolkitView ? 'Your Toolkit' : `Showing ${filteredTools.length} results`}
+                                    </p>
+                                    {(activeCategory !== 'All' || searchQuery !== '') && (
+                                        <button onClick={() => { setActiveCategory('All'); setSearchQuery(''); }} className="text-emerald-500 hover:underline">
+                                            Clear filters
                                         </button>
                                     )}
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {filteredTools.map((tool) => {
                                         const { icon: _icon, ...safeTool } = tool;
                                         return (
@@ -154,19 +203,23 @@ export function ToolExplorer() {
                                 </div>
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center py-20 text-center animate-in zoom-in-95 duration-300">
+                            <div className="flex flex-col items-center justify-center py-20 text-center">
                                 <div className="w-24 h-24 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mb-6">
                                     <PackageOpen className="w-10 h-10 text-slate-300" />
                                 </div>
-                                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No tools found</h3>
+                                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                                    {isToolkitView ? 'Your toolkit is empty' : 'No tools found'}
+                                </h3>
                                 <p className="text-slate-500 max-w-sm mx-auto">
-                                    We couldn't find any tools matching "{searchQuery}" in the {activeCategory} category.
+                                    {isToolkitView
+                                        ? 'Star tools to add them here for quick access.'
+                                        : `We couldn't find any tools matching "${searchQuery}" in this category.`}
                                 </p>
                                 <button
                                     onClick={() => { setSearchQuery(''); setActiveCategory('All'); }}
                                     className="mt-6 text-emerald-500 font-bold hover:underline"
                                 >
-                                    Clear filters
+                                    {isToolkitView ? 'Browse all tools' : 'Clear filters'}
                                 </button>
                             </div>
                         )}

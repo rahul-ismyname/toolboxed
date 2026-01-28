@@ -21,6 +21,14 @@ export function Navbar() {
                             <span className="tracking-tight text-slate-900 dark:text-white">Toolboxed</span>
                         </Link>
 
+                        <div className="hidden md:flex items-center gap-6">
+                            <Link href="/about" className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">
+                                About
+                            </Link>
+                            <Link href="/category/developer" className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">
+                                Tools
+                            </Link>
+                        </div>
                     </div>
 
                     {/* Desktop Menu - Simplified */}

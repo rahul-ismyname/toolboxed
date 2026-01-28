@@ -8,6 +8,27 @@ export type ToolData = {
 };
 
 export const toolContentData: Record<string, ToolData> = {
+    'svg-editor': {
+        title: 'Live SVG Editor - Professional Design Tool',
+        description: 'Edit, preview, and optimize SVG graphics in real-time. Tweak colors, stroke widths, and code simultaneously with our visual workspace.',
+        features: [
+            '**Live Multi-Sync**: Code changes reflect in the preview, and visual adjustments update the code instantly.',
+            '**Visual Property Controls**: Easily change fill colors, stroke widths, and workspace scale.',
+            '**Instant Code Export**: Copy clean, production-ready SVG code with one click.',
+            '**High Performance**: Smooth real-time rendering even for complex SVG paths.',
+            '**Privacy First**: All editing and processing happens locally in your browser.'
+        ],
+        howToUse: [
+            { title: 'Import SVG', description: 'Paste your SVG code into the source editor on the left.' },
+            { title: 'Visual Tweak', description: 'Use the properties panel on the right to adjust colors and stroke widths.' },
+            { title: 'Live Preview', description: 'Observe the changes instantly on the workspace canvas.' },
+            { title: 'Export', description: 'Once satisfied, copy the updated code or download the file.' }
+        ],
+        faqs: [
+            { question: 'Does it support complex paths?', answer: 'Yes, it can handle any valid SVG code including complex paths and groups.' },
+            { question: 'Are my SVGs uploaded?', answer: 'No, all processing is client-side for maximum privacy.' }
+        ]
+    },
     'stickman-animator': {
         title: 'Stickman Animator - Free Online Animation Tool',
         description: 'The ultimate browser-based stickman animation studio. Create, edit, and export fluid stick figure animations without installing any software. Perfect for beginners and pros alike.',
@@ -1102,6 +1123,28 @@ export const toolContentData: Record<string, ToolData> = {
             { question: 'What is time blocking?', answer: 'A method of scheduling your day into specific chunks of time for focused work.' }
         ]
     },
+    'api-playground': {
+        title: 'API Playground',
+        description: 'Professional browser-based HTTP client for testing and debugging REST APIs.',
+        features: [
+            '**Multiple Methods**: Support for GET, POST, PUT, DELETE, and PATCH.',
+            '**Custom Headers**: Add, enable/disable, and manage custom request headers.',
+            '**JSON Body Editor**: Built-in editor for sending JSON payloads with beautification.',
+            '**Detailed Responses**: View status codes, response time, and payload size.',
+            '**Local History**: Automatically save your request history for quick access.',
+            '**CORS Friendly**: Provides clear feedback on CORS-related execution failures.'
+        ],
+        howToUse: [
+            { title: 'Select Method', description: 'Choose the HTTP method (GET, POST, etc.) for your request.' },
+            { title: 'Enter URL', description: 'Input the endpoint URL you want to test.' },
+            { title: 'Configure Request', description: 'Add headers or a JSON body if required for the request.' },
+            { title: 'Send & Inspect', description: 'Click Send and view the status, timing, and response data.' }
+        ],
+        faqs: [
+            { question: 'What is CORS?', answer: 'CORS is a security feature that prevents browsers from making requests to different domains unless the server allows it.' },
+            { question: 'Does it save my data?', answer: 'Only request history is saved locally in your browser. No data is sent to our servers.' }
+        ]
+    },
     'json-formatter': {
         title: 'JSON Formatter & Validator',
         description: 'Format, validate, and minify JSON data instantly. Clean up messy JSON and find syntax errors.',
@@ -1399,6 +1442,57 @@ export const toolContentData: Record<string, ToolData> = {
             es: { title: 'Calculadora de IMC - Índice de Masa Corporal', description: 'Calcula tu Índice de Masa Corporal (IMC) al instante. Comprende tu estado de salud con nuestra herramienta fácil de usar.' },
             pt: { title: 'Calculadora de IMC - Índice de Massa Corporal', description: 'Calcule seu Índice de Massa Corporal (IMC) instantaneamente. Entenda seu estado de saúde com nossa ferramenta fácil de usar.' },
             hi: { title: 'BMI कैलकुलेटर - बॉडी मास इंडेक्स', description: 'तुरंत अपने बॉडी मास इंडेक्स (BMI) की गणना करें। हमारे उपयोग में आसान टूल से अपनी स्वास्थ्य स्थिति को समझें।' }
+        }
+    },
+    'code-playground': {
+        title: 'Code Playground - Online HTML/CSS/JS Editor',
+        description: 'A lightweight, instant sandbox for web development. Write HTML, CSS, and JavaScript and see your changes in real-time.',
+        features: [
+            '**Live Preview**: Instant results in a secure sandboxed iframe.',
+            '**Multi-Pane Layout**: Split view for HTML, CSS, and JavaScript.',
+            '**Auto-Run**: Code executes automatically as you type (can be toggled).',
+            '**No Setup**: Start coding immediately without installing anything.',
+            '**Privacy First**: All your code stays in your browser.'
+        ],
+        howToUse: [
+            { title: 'Write Code', description: 'Enter HTML, CSS, and JS in the respective editors.' },
+            { title: 'View Result', description: 'See the output instantly in the preview pane.' },
+            { title: 'Change Layout', description: 'Toggle between Split and Stacked views for your preference.' },
+            { title: 'Run Manually', description: 'Disable auto-run if you want to trigger execution manually.' }
+        ],
+        faqs: [
+            { question: 'Can I use external libraries?', answer: 'Yes, you can include them via <script> tags in the HTML editor.' },
+            { question: 'Is my code saved?', answer: 'Currently, it is not persisted after page reload (coming soon).' }
+        ],
+        localizedMetadata: {
+            es: { title: 'Patio de Código (Playground) Online', description: 'Un sandbox instantáneo para desarrollo web. Escribe HTML, CSS y JS y ve los cambios en tiempo real.' },
+            pt: { title: 'Playground de Código Online', description: 'Um sandbox instantâneo para desenvolvimento web. Escreva HTML, CSS e JS e veja as mudanças em tempo real.' },
+            hi: { title: 'कोड प्लेग्राउंड - ऑनलाइन HTML/CSS/JS एडिटर', description: 'वेब विकास के लिए एक हल्का, तत्काल सैंडबॉक्स। HTML, CSS और JS लिखें और अपने परिवर्तनों को रीयल-टाइम में देखें।' }
+        }
+    },
+    'type-racer': {
+        title: 'Type Racer Speed Test',
+        description: 'A competitive typing test where you race against intelligent bots. Use real programming quotes to boost your coding speed.',
+        features: [
+            '**Race Mode**: Compete against bots in real-time.',
+            '**Live WPM**: See your Words Per Minute update instantly.',
+            '**Real Quotes**: Type actual code snippets and developer wisdom.',
+            '**Bot Difficulty**: Intelligent opponents that simulate human typing speeds.',
+            '**Accuracy Tracking**: Monitor your improved precision over time.'
+        ],
+        howToUse: [
+            { title: 'Start Typing', description: 'Begin typing the highlighted text immediately.' },
+            { title: 'Beat the Bot', description: 'Type faster than the computer opponent to win.' },
+            { title: 'Check Stats', description: 'Review your WPM and Accuracy at the finish line.' }
+        ],
+        faqs: [
+            { question: 'How is WPM calculated?', answer: 'WPM is (characters typed / 5) / minutes elapsed.' },
+            { question: 'Is it real multiplayer?', answer: 'Currently, you race against simulated bots for instant matchmaking.' }
+        ],
+        localizedMetadata: {
+            es: { title: 'Type Racer Test de Velocidad', description: 'Un test de mecanografía competitivo donde corres contra bots inteligentes.' },
+            pt: { title: 'Type Racer Teste de Velocidade', description: 'Um teste de digitação competitivo onde você corre contra bots inteligentes.' },
+            hi: { title: 'टाइप रेसर स्पीड टेस्ट', description: 'एक प्रतिस्पर्धी टाइपिंग टेस्ट जहां आप बुद्धिमान बॉट्स के खिलाफ दौड़ते हैं।' }
         }
     }
 };

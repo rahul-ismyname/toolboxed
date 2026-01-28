@@ -26,3 +26,14 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
+
+/* Scrollbar Hide Utility */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

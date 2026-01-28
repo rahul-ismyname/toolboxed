@@ -53,7 +53,8 @@ import {
     Columns,
     Sparkles,
     Accessibility,
-    Monitor
+    Monitor,
+    Zap
 } from 'lucide-react';
 
 export type ToolCategory = 'Health' | 'Developer' | 'Business' | 'Utility' | 'Design';
@@ -548,5 +549,37 @@ export const tools: Tool[] = [
         category: 'Utility',
         icon: Link2,
         path: '/link-shortener'
+    },
+    {
+        slug: 'svg-editor',
+        name: 'Live SVG Editor',
+        description: 'Edit, preview, and optimize SVG graphics in real-time with visual controls.',
+        category: 'Design',
+        icon: PenTool,
+        path: '/svg-editor'
+    },
+    {
+        slug: 'api-playground',
+        name: 'API Playground',
+        description: 'Professional HTTP client for testing and debugging REST APIs online.',
+        category: 'Developer',
+        icon: Zap,
+        path: '/api-playground'
+    },
+    {
+        slug: 'code-playground',
+        name: 'Code Playground',
+        description: 'Instant HTML, CSS, and JavaScript sandbox with live preview.',
+        category: 'Developer',
+        icon: Codesandbox,
+        path: '/code-playground'
+    },
+    {
+        slug: 'type-racer',
+        name: 'Type Racer',
+        description: 'Test your typing speed in a high-octane race against bots.',
+        category: 'Developer',
+        icon: Zap,
+        path: '/type-racer'
     }
 ];
