@@ -60,6 +60,10 @@ export const metadata: Metadata = {
   verification: {
     google: 'google8bf7740618fe603b',
   },
+  icons: {
+    icon: '/logo.svg',
+    apple: '/logo.svg',
+  },
 };
 
 export default function RootLayout({
@@ -103,7 +107,7 @@ export default function RootLayout({
       '@type': 'Organization',
       'name': 'Toolboxed',
       'url': appUrl,
-      'logo': `${appUrl}/og-image.png`,
+      'logo': `${appUrl}/logo.svg`,
       'sameAs': [
         'https://github.com/rahul-ismyname/toolboxed'
       ]
