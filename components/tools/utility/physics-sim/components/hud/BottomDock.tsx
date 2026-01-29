@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Play, Pause, RotateCcw, Box, Circle, Triangle, Hexagon, Minus, Link, GripHorizontal, MapPin, Eraser } from 'lucide-react';
+import { Play, Pause, RotateCcw, Box, Circle, Triangle, Hexagon, Minus, Link, GripHorizontal, MapPin, Eraser, Zap, Pencil } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface BottomDockProps {
@@ -24,14 +24,16 @@ export function BottomDock({
     const [spawnSize, setSpawnSize] = useState(30);
 
     const tools = [
-        { type: 'box' as const, icon: Box, label: 'Box', color: 'hover:text-blue-500' },
-        { type: 'circle' as const, icon: Circle, label: 'Circle', color: 'hover:text-green-500' },
-        { type: 'triangle' as const, icon: Triangle, label: 'Triangle', color: 'hover:text-purple-500' },
-        { type: 'polygon' as const, icon: Hexagon, label: 'Polygon', color: 'hover:text-orange-500' },
-        { type: 'wall' as const, icon: Minus, label: 'Wall', color: 'hover:text-slate-500' },
-        { type: 'spring' as const, icon: Link, label: 'Spring', color: 'hover:text-amber-500' },
-        { type: 'rod' as const, icon: GripHorizontal, label: 'Rod', color: 'hover:text-indigo-500' },
-        { type: 'pin' as const, icon: MapPin, label: 'Pin', color: 'hover:text-red-500' },
+        { type: 'box' as const, icon: Box, label: 'Box', color: 'hover:text-blue-500', instruction: 'Click to spawn a box' },
+        { type: 'circle' as const, icon: Circle, label: 'Circle', color: 'hover:text-green-500', instruction: 'Click to spawn a circle' },
+        { type: 'triangle' as const, icon: Triangle, label: 'Triangle', color: 'hover:text-purple-500', instruction: 'Click to spawn a triangle' },
+        { type: 'polygon' as const, icon: Hexagon, label: 'Polygon', color: 'hover:text-orange-500', instruction: 'Click to spawn a polygon' },
+        { type: 'wall' as const, icon: Minus, label: 'Wall', color: 'hover:text-slate-500', instruction: 'Click to spawn a wall' },
+        { type: 'spring' as const, icon: Link, label: 'Spring', color: 'hover:text-amber-500', instruction: 'Drag between two objects to connect' },
+        { type: 'rod' as const, icon: GripHorizontal, label: 'Rod', color: 'hover:text-indigo-500', instruction: 'Drag between two objects to connect with a fixed rod' },
+        { type: 'pin' as const, icon: MapPin, label: 'Pin', color: 'hover:text-red-500', instruction: 'Click an object to pin it to background' },
+        { type: 'thruster' as const, icon: Zap, label: 'Thruster', color: 'hover:text-yellow-500', instruction: 'Drag on an object to apply force' },
+        { type: 'draw' as const, icon: Pencil, label: 'Draw', color: 'hover:text-slate-500', instruction: 'Draw path to create terrain' },
     ];
 
     return (
@@ -100,14 +102,15 @@ export function BottomDock({
                             type="button"
                             onClick={() => onSelectTool(tool.type, spawnSize)}
                             className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95 group relative ${activeTool === tool.type
-                                ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-inner'
+                                ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 shadow-inner ring-2 ring-indigo-500/20'
                                 : `bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 ${tool.color}`
                                 }`}
                             title={tool.label}
                         >
                             <tool.icon className="w-5 h-5 transition-transform group-hover:scale-110" />
-                            <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                                {tool.label}
+                            <span className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl border border-slate-700">
+                                <span className="font-bold">{tool.label}</span>
+                                <span className="opacity-75 block text-[9px] font-normal">{tool.instruction}</span>
                             </span>
                         </button>
                     ))}

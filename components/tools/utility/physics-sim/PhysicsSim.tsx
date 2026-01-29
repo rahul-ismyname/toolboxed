@@ -7,6 +7,7 @@ import { TopBar } from './components/hud/TopBar';
 import { BottomDock } from './components/hud/BottomDock';
 import { PropertiesPanel } from './components/hud/PropertiesPanel';
 import { ObjectList } from './components/hud/ObjectList';
+import { StatsMonitor } from './components/hud/StatsMonitor';
 import { PHYSICS_TEMPLATES } from '@/lib/sim-templates';
 import { Settings2 } from 'lucide-react';
 
@@ -27,7 +28,7 @@ export default function PhysicsSim() {
 
     // Global state
     const [paused, setPaused] = useState(true);
-    const [gravity, setGravity] = useState(1);
+    const [gravity, setGravity] = useState({ x: 0, y: 1 });
     const [bgColor, setBgColor] = useState('#f8f8f8');
     const [showVectors, setShowVectors] = useState(true);
     const [activeTemplateId, setActiveTemplateId] = useState(PHYSICS_TEMPLATES[0].id);
@@ -37,11 +38,12 @@ export default function PhysicsSim() {
     const [activeTool, setActiveTool] = useState<string | null>(null);
     const [spawnSize, setSpawnSize] = useState(30);
     const [showHUD, setShowHUD] = useState(true);
-    const [showObjectList, setShowObjectList] = useState(true);
+    const [showObjectList, setShowObjectList] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [timeScale, setTimeScale] = useState(1);
 
     // Physics engine hook
-    const engine = useMatterEngine({ gravity });
+    const engine = useMatterEngine({ gravity, timeScale });
 
     // Initialize engine
     useEffect(() => {
@@ -109,10 +111,36 @@ export default function PhysicsSim() {
     }, [isLoaded, selectedBodyId, engine]);
 
     // Handlers
-    const handleGravityChange = useCallback((g: number) => {
+    const handleGravityChange = useCallback((g: { x: number, y: number }) => {
         setGravity(g);
         engine.setGravity(g);
     }, [engine]);
+
+    const handleTimeScaleChange = useCallback((scale: number) => {
+        setTimeScale(scale);
+        engine.setTimeScale(scale);
+    }, [engine]);
+
+    const handleSaveScene = useCallback(() => {
+        const json = engine.serializeWorld();
+        if (json) {
+            localStorage.setItem('physics-sim-save', json);
+            // Could add toast notification here
+            console.log('Scene saved');
+        }
+    }, [engine]);
+
+    const handleLoadScene = useCallback(() => {
+        const json = localStorage.getItem('physics-sim-save');
+        if (json) {
+            engine.loadWorld(json);
+            renderer.clearTrails();
+            setPaused(true); // Pause on load to give user control
+            setActiveTemplateId(''); // Clear active template selection as we loaded custom scene
+        } else {
+            console.log('No saved scene found');
+        }
+    }, [engine, renderer]);
 
     const handleLoadTemplate = useCallback((templateId: string) => {
         const template = PHYSICS_TEMPLATES.find(t => t.id === templateId);
@@ -238,6 +266,10 @@ export default function PhysicsSim() {
                             isFullscreen={isFullscreen}
                             showObjectList={showObjectList}
                             onToggleObjectList={() => setShowObjectList(!showObjectList)}
+                            timeScale={timeScale}
+                            onTimeScaleChange={handleTimeScaleChange}
+                            onSaveScene={handleSaveScene}
+                            onLoadScene={handleLoadScene}
                         />
                     )}
 
@@ -249,6 +281,10 @@ export default function PhysicsSim() {
                         >
                             <Settings2 className="w-6 h-6" />
                         </button>
+                    )}
+
+                    {showHUD && (
+                        <StatsMonitor engine={engine} bodyCount={engine.getAllBodies().length} />
                     )}
 
                     {showHUD && (

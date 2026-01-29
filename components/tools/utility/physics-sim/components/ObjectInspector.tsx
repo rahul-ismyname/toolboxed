@@ -20,6 +20,15 @@ interface ObjectInspectorProps {
     onDelete: (id: number) => void;
 }
 
+const MATERIALS = {
+    custom: { name: 'Custom', restitution: 0.5, friction: 0.5, density: 0.001 },
+    rubber: { name: 'Rubber', restitution: 0.9, friction: 0.8, density: 0.002 },
+    metal: { name: 'Metal', restitution: 0.2, friction: 0.1, density: 0.008 },
+    wood: { name: 'Wood', restitution: 0.3, friction: 0.5, density: 0.001 },
+    ice: { name: 'Ice', restitution: 0.1, friction: 0.01, density: 0.0009 },
+    superball: { name: 'Super Ball', restitution: 1.1, friction: 0.5, density: 0.001 }
+};
+
 export function ObjectInspector({ body, onUpdate, onDelete }: ObjectInspectorProps) {
     const [localData, setLocalData] = useState<any>(null);
     const isEditingRef = useRef(false);
@@ -29,17 +38,17 @@ export function ObjectInspector({ body, onUpdate, onDelete }: ObjectInspectorPro
         if (!isEditingRef.current && body) {
             setLocalData({
                 ...body,
-                angle: body.angle.toString(),
+                angle: body.angle.toFixed(2),
                 velocity: {
-                    x: body.velocity.x.toString(),
-                    y: body.velocity.y.toString()
+                    x: body.velocity.x.toFixed(2),
+                    y: body.velocity.y.toFixed(2)
                 },
                 acceleration: {
-                    x: body.acceleration.x.toString(),
-                    y: body.acceleration.y.toString()
+                    x: body.acceleration.x.toFixed(2),
+                    y: body.acceleration.y.toFixed(2)
                 },
-                restitution: body.restitution.toString(),
-                friction: body.friction.toString()
+                restitution: body.restitution.toFixed(2),
+                friction: body.friction.toFixed(2)
             });
         }
     }, [body]);
@@ -195,7 +204,7 @@ export function ObjectInspector({ body, onUpdate, onDelete }: ObjectInspectorPro
             <div>
                 <div className="flex justify-between text-[10px] text-slate-500 mb-1">
                     <span>Rotation</span>
-                    <span className="font-mono">{parseFloat(localData.angle).toFixed(0)}°</span>
+                    <span className="font-mono">{parseFloat(localData.angle).toFixed(2)}°</span>
                 </div>
                 <input
                     type="range"
@@ -273,11 +282,42 @@ export function ObjectInspector({ body, onUpdate, onDelete }: ObjectInspectorPro
             <div className="pt-3 border-t border-slate-200 dark:border-slate-700">
                 <div className="text-[10px] text-slate-500 mb-3">Material</div>
 
+                {/* Material Preset Selector */}
+                <div className="mb-3">
+                    <select
+                        className="w-full text-xs p-2 bg-slate-100 dark:bg-slate-800 rounded-lg border-0 focus:ring-2 focus:ring-indigo-500 text-slate-700 dark:text-slate-300"
+                        value={Object.entries(MATERIALS).find(([key, mat]) =>
+                            Math.abs(mat.restitution - parseFloat(localData.restitution)) < 0.05 &&
+                            Math.abs(mat.friction - parseFloat(localData.friction)) < 0.05
+                        )?.[0] || 'custom'}
+                        onChange={(e) => {
+                            const mat = MATERIALS[e.target.value as keyof typeof MATERIALS];
+                            if (mat) {
+                                handleImmediateUpdate({
+                                    restitution: mat.restitution,
+                                    friction: mat.friction,
+                                    // density: mat.density // Density update requires mass recalc in engine, simpler to skip for now or add explicit support
+                                });
+                                // Update local data to reflect changes immediately in sliders
+                                setLocalData((prev: any) => ({
+                                    ...prev,
+                                    restitution: mat.restitution.toString(),
+                                    friction: mat.friction.toString()
+                                }));
+                            }
+                        }}
+                    >
+                        {Object.entries(MATERIALS).map(([key, mat]) => (
+                            <option key={key} value={key}>{mat.name}</option>
+                        ))}
+                    </select>
+                </div>
+
                 {/* Bounciness */}
                 <div className="mb-3">
                     <div className="flex justify-between text-[9px] text-slate-400 mb-1">
                         <span>Bounciness</span>
-                        <span className="font-mono">{parseFloat(localData.restitution).toFixed(1)}</span>
+                        <span className="font-mono">{parseFloat(localData.restitution).toFixed(2)}</span>
                     </div>
                     <input
                         type="range"

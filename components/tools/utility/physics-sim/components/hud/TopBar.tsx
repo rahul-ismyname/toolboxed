@@ -1,16 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Dispatch, SetStateAction } from 'react';
 import { ChevronDown, Settings2, Wind, Eye, EyeOff, Maximize2, Minimize2, List } from 'lucide-react';
 import { PHYSICS_TEMPLATES } from '@/lib/sim-templates';
 
 interface TopBarProps {
     activeTemplateId: string;
-    onLoadTemplate: (template: any) => void;
-    gravity: number;
-    onGravityChange: (g: number) => void;
+    onLoadTemplate: (templateId: string) => void;
+    gravity: { x: number, y: number };
+    onGravityChange: (g: { x: number, y: number }) => void;
     showVectors: boolean;
-    onShowVectorsChange: (show: boolean) => void;
+    onShowVectorsChange: Dispatch<SetStateAction<boolean>>;
     bgColor: string;
     onBgColorChange: (color: string) => void;
     onToggleHUD: () => void;
@@ -18,6 +18,10 @@ interface TopBarProps {
     isFullscreen: boolean;
     showObjectList: boolean;
     onToggleObjectList: () => void;
+    timeScale: number;
+    onTimeScaleChange: (scale: number) => void;
+    onSaveScene: () => void;
+    onLoadScene: () => void;
 }
 
 export function TopBar({
@@ -33,7 +37,11 @@ export function TopBar({
     onToggleFullScreen,
     isFullscreen,
     showObjectList,
-    onToggleObjectList
+    onToggleObjectList,
+    timeScale,
+    onTimeScaleChange,
+    onSaveScene,
+    onLoadScene
 }: TopBarProps) {
     const [isTemplateMenuOpen, setIsTemplateMenuOpen] = useState(false);
     const activeTemplate = PHYSICS_TEMPLATES.find(t => t.id === activeTemplateId);
@@ -91,6 +99,25 @@ export function TopBar({
                     />
                 </div>
 
+                {/* Save/Load (Left of Vectors) */}
+                <div className="flex items-center gap-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-white/20 p-1 rounded-2xl shadow-lg mr-2">
+                    <button
+                        onClick={onSaveScene}
+                        className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-indigo-500 transition-all active:scale-95"
+                        title="Save Scene (Local Storage)"
+                    >
+                        <span className="font-bold text-[10px] uppercase tracking-wider px-1">Save</span>
+                    </button>
+                    <div className="w-px h-4 bg-slate-200 dark:bg-slate-700" />
+                    <button
+                        onClick={onLoadScene}
+                        className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-indigo-500 transition-all active:scale-95"
+                        title="Load Scene"
+                    >
+                        <span className="font-bold text-[10px] uppercase tracking-wider px-1">Load</span>
+                    </button>
+                </div>
+
                 {/* Vectors Toggle */}
                 <button
                     onClick={() => onShowVectorsChange(!showVectors)}
@@ -103,24 +130,38 @@ export function TopBar({
                     {showVectors ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
                 </button>
 
-                {/* Gravity Slider (Simplified) */}
-                <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-white/20 px-4 py-2 rounded-2xl shadow-lg flex items-center gap-3">
-                    <Wind className="w-4 h-4 text-slate-400" />
-                    <div className="flex flex-col w-24">
-                        <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                            <span>Gravity</span>
-                            <span>{gravity.toFixed(1)}G</span>
-                        </div>
-                        <input
-                            type="range"
-                            min="0"
-                            max="3"
-                            step="0.1"
-                            value={gravity}
-                            onChange={(e) => onGravityChange(parseFloat(e.target.value))}
-                            className="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-                        />
+                {/* Gravity Y Controls */}
+                <div className="flex items-center gap-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-white/20 p-1 pr-3 rounded-2xl shadow-lg">
+                    <div className="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-500">
+                        <span className="text-[10px] font-bold">GY</span>
                     </div>
+                    <input
+                        type="range"
+                        min="-2"
+                        max="2"
+                        step="0.1"
+                        value={gravity.y}
+                        onChange={(e) => onGravityChange({ ...gravity, y: parseFloat(e.target.value) })}
+                        className="w-20 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                        title={`Gravity Y: ${gravity.y.toFixed(2)}`}
+                    />
+                </div>
+
+                {/* Gravity X (Wind) Controls */}
+                <div className="flex items-center gap-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-white/20 p-1 pr-3 rounded-2xl shadow-lg mr-2">
+                    <div className="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-500">
+                        <Wind className="w-4 h-4" />
+                    </div>
+                    <input
+                        type="range"
+                        min="-2"
+                        max="2"
+                        step="0.1"
+                        value={gravity.x}
+                        onChange={(e) => onGravityChange({ ...gravity, x: parseFloat(e.target.value) })}
+                        className="w-20 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-500"
+                        title={`Wind (Gravity X): ${gravity.x.toFixed(2)}`}
+                    />
                 </div>
 
                 {/* Hide HUD & FullScreen */}
@@ -128,8 +169,8 @@ export function TopBar({
                     <button
                         onClick={onToggleObjectList}
                         className={`p-2 rounded-xl transition-all active:scale-95 ${showObjectList
-                                ? 'bg-indigo-500 text-white shadow-indigo-500/30 shadow-lg'
-                                : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500'
+                            ? 'bg-indigo-500 text-white shadow-indigo-500/30 shadow-lg'
+                            : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500'
                             }`}
                         title="Toggle Object List (L)"
                     >
@@ -151,6 +192,27 @@ export function TopBar({
                     </button>
                 </div>
             </div>
-        </div>
+
+            {/* Time Controls (Bottom Right - Floated) */}
+            <div className="absolute top-[72px] right-4 pointer-events-auto flex items-center gap-2">
+                <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-white/20 px-4 py-2 rounded-2xl shadow-lg flex items-center gap-3">
+                    <div className="flex flex-col w-24">
+                        <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                            <span>Time Scale</span>
+                            <span>{timeScale.toFixed(2)}x</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="0.1"
+                            max="2"
+                            step="0.1"
+                            value={timeScale}
+                            onChange={(e) => onTimeScaleChange(parseFloat(e.target.value))}
+                            className="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                        />
+                    </div>
+                </div>
+            </div>
+        </div >
     );
 }

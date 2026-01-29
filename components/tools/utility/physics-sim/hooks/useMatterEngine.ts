@@ -3,10 +3,11 @@
 import React, { useRef, useCallback } from 'react';
 
 interface UseMatterEngineOptions {
-    gravity?: number;
+    gravity?: { x: number, y: number } | number;
     enableSleeping?: boolean;
     substeps?: number;
     fixedDelta?: number;
+    timeScale?: number;
 }
 
 export interface MatterEngineAPI {
@@ -19,7 +20,8 @@ export interface MatterEngineAPI {
     getBodyById: (id: number) => any;
     updateBody: (id: number, updates: any) => void;
     deleteBody: (id: number) => void;
-    setGravity: (g: number) => void;
+    setGravity: (g: { x: number, y: number } | number) => void;
+    setTimeScale: (scale: number) => void;
     setSubsteps: (s: number) => void;
     setSleeping: (enabled: boolean) => void;
     addWorldBounds: (width: number, height: number, thickness?: number) => void;
@@ -28,6 +30,8 @@ export interface MatterEngineAPI {
     addPin: (body: any, x: number, y: number) => void;
     addRevoluteJoint: (bodyA: any, bodyB: any, pointA: { x: number, y: number }, pointB: { x: number, y: number }) => void;
     getAllConstraints: () => any[];
+    serializeWorld: () => string;
+    loadWorld: (json: string) => void;
     isReady: boolean;
 }
 
@@ -40,6 +44,7 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
     const substepsRef = useRef(options.substeps ?? 8); // Default to 8 for extreme stability
     const accumulatorRef = useRef(0);
     const fixedDelta = options.fixedDelta ?? (1000 / 60);
+    const timeScaleRef = useRef(options.timeScale ?? 1);
 
     const initEngine = useCallback(async () => {
         const MatterModule = await import('matter-js');
@@ -51,7 +56,12 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
             positionIterations: 30, // Default 6, increased for extreme precision
             velocityIterations: 30  // Default 6, increased for extreme precision
         });
-        engine.gravity.y = options.gravity ?? 1;
+        if (typeof options.gravity === 'object' && options.gravity !== null) {
+            engine.gravity.x = options.gravity.x;
+            engine.gravity.y = options.gravity.y;
+        } else {
+            engine.gravity.y = options.gravity ?? 1;
+        }
         engineRef.current = engine;
 
         // Custom force application before each engine update
@@ -83,8 +93,12 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         const Matter = MatterRef.current;
         const engine = engineRef.current;
 
+        // Apply time scaling
+        const scaledDelta = delta * timeScaleRef.current;
+
         // Implementation of fixed timestep with accumulator
-        accumulatorRef.current += Math.min(delta, 100); // Cap delta to avoid "spiral of death"
+        if (!Number.isFinite(accumulatorRef.current)) accumulatorRef.current = 0;
+        accumulatorRef.current += Math.min(scaledDelta, 100); // Cap delta to avoid "spiral of death"
 
         while (accumulatorRef.current >= fixedDelta) {
             const subDelta = fixedDelta / substepsRef.current;
@@ -181,10 +195,19 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         }
     }, [getBodyById]);
 
-    const setGravity = useCallback((g: number) => {
+    const setGravity = useCallback((g: { x: number, y: number } | number) => {
         if (engineRef.current) {
-            engineRef.current.gravity.y = g;
+            if (typeof g === 'number') {
+                engineRef.current.gravity.y = g;
+            } else {
+                engineRef.current.gravity.x = g.x;
+                engineRef.current.gravity.y = g.y;
+            }
         }
+    }, []);
+
+    const setTimeScale = useCallback((scale: number) => {
+        timeScaleRef.current = Math.max(0, scale);
     }, []);
 
     const getAllBodies = useCallback(() => {
@@ -313,9 +336,128 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
     // Sync gravity when it changes without re-initializing the engine
     React.useEffect(() => {
         if (engineRef.current && options.gravity !== undefined) {
-            engineRef.current.gravity.y = options.gravity;
+            if (typeof options.gravity === 'number') {
+                engineRef.current.gravity.y = options.gravity;
+            } else {
+                engineRef.current.gravity.x = options.gravity.x;
+                engineRef.current.gravity.y = options.gravity.y;
+            }
         }
     }, [options.gravity]);
+
+    const serializeWorld = useCallback(() => {
+        if (!engineRef.current || !MatterRef.current) return '';
+        const { Composite } = MatterRef.current;
+        const bodies = Composite.allBodies(engineRef.current.world);
+        const constraints = Composite.allConstraints(engineRef.current.world);
+
+        const data = {
+            bodies: bodies.filter((b: any) => b.label !== 'ground' && b.label !== 'World Boundary').map((b: any) => ({
+                id: b.id,
+                type: b.label === 'Circle Body' ? 'circle' : 'rectangle',
+                position: b.position,
+                angle: b.angle,
+                velocity: b.velocity,
+                angularVelocity: b.angularVelocity,
+                isStatic: b.isStatic,
+                render: b.render,
+                restitution: b.restitution,
+                friction: b.friction,
+                density: b.density,
+                vertices: b.vertices.map((v: any) => ({ x: v.x, y: v.y }))
+            })),
+            constraints: constraints.filter((c: any) => c.label !== 'Mouse Constraint').map((c: any) => ({
+                type: c.render.type,
+                bodyAId: c.bodyA?.id,
+                bodyBId: c.bodyB?.id,
+                pointA: c.pointA,
+                pointB: c.pointB,
+                stiffness: c.stiffness,
+                damping: c.damping,
+                length: c.length,
+                render: c.render
+            })),
+            gravity: { x: engineRef.current.gravity.x, y: engineRef.current.gravity.y }
+        };
+        return JSON.stringify(data);
+    }, []);
+
+    const loadWorld = useCallback((json: string) => {
+        if (!engineRef.current || !MatterRef.current) return;
+
+        try {
+            const data = JSON.parse(json);
+            const { World, Bodies, Composite, Constraint } = MatterRef.current;
+
+            // Clear existing world (except bounds)
+            World.clear(engineRef.current.world, false);
+
+            // Re-add bounds (hacky but necessary since clear removes them if keepStatic is false, 
+            // and if true it keeps everything static)
+            // Actually, best to just clear all and re-add bounds calling addWorldBounds from parent if needed.
+            // But we can just use our ref to re-add them.
+            if (worldBoundsRef.current.length > 0) {
+                Composite.add(engineRef.current.world, worldBoundsRef.current);
+            }
+
+            // Restore Bodies
+            const idMap = new Map();
+
+            data.bodies.forEach((bData: any) => {
+                let body;
+                // Simple reconstruction based on vertices for polygons/rects and radius for circles
+                // For exact restoration, passing vertices is safest
+                body = Bodies.fromVertices(bData.position.x, bData.position.y, [bData.vertices], {
+                    id: bData.id,
+                    isStatic: bData.isStatic,
+                    angle: bData.angle,
+                    restitution: bData.restitution,
+                    friction: bData.friction,
+                    density: bData.density,
+                    render: bData.render
+                }, true); // flag internal: true prevents decomposition which can be slow/lossy
+
+                if (body) {
+                    MatterRef.current.Body.setVelocity(body, bData.velocity);
+                    MatterRef.current.Body.setAngularVelocity(body, bData.angularVelocity);
+                    idMap.set(bData.id, body);
+                    Composite.add(engineRef.current.world, body);
+                }
+            });
+
+            // Restore Constraints
+            data.constraints.forEach((cData: any) => {
+                const bodyA = cData.bodyAId ? idMap.get(cData.bodyAId) : null;
+                const bodyB = cData.bodyBId ? idMap.get(cData.bodyBId) : null;
+
+                if ((cData.bodyAId && !bodyA) || (cData.bodyBId && !bodyB)) return;
+
+                const constraint = Constraint.create({
+                    bodyA,
+                    bodyB,
+                    pointA: cData.pointA,
+                    pointB: cData.pointB,
+                    stiffness: cData.stiffness,
+                    damping: cData.damping,
+                    length: cData.length,
+                    render: cData.render
+                });
+                Composite.add(engineRef.current.world, constraint);
+            });
+
+            if (data.gravity !== undefined) {
+                if (typeof data.gravity === 'number') {
+                    engineRef.current.gravity.y = data.gravity;
+                } else {
+                    engineRef.current.gravity.x = data.gravity.x;
+                    engineRef.current.gravity.y = data.gravity.y;
+                }
+            }
+
+        } catch (e) {
+            console.error("Failed to load world:", e);
+        }
+    }, []);
 
     return React.useMemo(() => ({
         engineRef,
@@ -328,6 +470,7 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         updateBody,
         deleteBody,
         setGravity,
+        setTimeScale,
         setSubsteps,
         setSleeping,
         addWorldBounds,
@@ -336,6 +479,8 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         addPin,
         addRevoluteJoint,
         getAllConstraints,
+        serializeWorld,
+        loadWorld,
         isReady,
-    }), [initEngine, loadTemplate, update, spawnBody, getBodyById, updateBody, deleteBody, setGravity, setSubsteps, setSleeping, addWorldBounds, getAllBodies, addConstraint, addPin, addRevoluteJoint, getAllConstraints, isReady]);
+    }), [initEngine, loadTemplate, update, spawnBody, getBodyById, updateBody, deleteBody, setGravity, setTimeScale, setSubsteps, setSleeping, addWorldBounds, getAllBodies, addConstraint, addPin, addRevoluteJoint, getAllConstraints, serializeWorld, loadWorld, isReady]);
 }

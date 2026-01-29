@@ -110,5 +110,122 @@ export const PHYSICS_TEMPLATES: SimTemplate[] = [
 
             World.add(engine.world, [...terrain, ball]);
         }
+    },
+    {
+        id: 'newtons-cradle',
+        name: 'Newton\'s Cradle',
+        description: 'Conservation of momentum and energy transfer.',
+        setup: (Matter: any, engine: any) => {
+            const { World, Bodies, Constraint } = Matter;
+            World.clear(engine.world, false);
+
+            const cradle = (xx: number, yy: number, number: number, size: number, length: number) => {
+                const newtonsCradle = Matter.Composite.create({ label: 'Newtons Cradle' });
+
+                for (let i = 0; i < number; i++) {
+                    const separation = 1.9;
+                    const circle = Bodies.circle(
+                        xx + i * (size * separation),
+                        yy + length,
+                        size,
+                        {
+                            inertia: Infinity,
+                            restitution: 1,
+                            friction: 0,
+                            frictionAir: 0,
+                            slop: 1,
+                            render: { fillStyle: '#f0f0f0' }
+                        }
+                    );
+
+                    const constraint = Constraint.create({
+                        pointA: { x: xx + i * (size * separation), y: yy },
+                        bodyB: circle,
+                        render: { strokeStyle: '#909090' }
+                    });
+
+                    Matter.Composite.add(newtonsCradle, [circle, constraint]);
+                }
+
+                return newtonsCradle;
+            };
+
+            World.add(engine.world, cradle(280, 100, 5, 30, 200));
+            // Pull back the first ball
+            const firstBall = engine.world.composites[0].bodies[0];
+            Matter.Body.setPosition(firstBall, { x: 100, y: 200 });
+        }
+    },
+    {
+        id: 'cloth',
+        name: 'Cloth Simulation',
+        description: 'A grid of particles connected by constraints.',
+        setup: (Matter: any, engine: any) => {
+            const { World, Bodies, Composites, Constraint } = Matter;
+            World.clear(engine.world, false);
+
+            const group = Matter.Body.nextGroup(true);
+            const particleOptions = { friction: 0.00001, collisionFilter: { group: group }, render: { visible: false } };
+            const constraintOptions = { stiffness: 0.06, render: { type: 'line', anchors: false } };
+
+            const cloth = Composites.softBody(200, 200, 20, 12, 5, 5, false, 8, particleOptions, constraintOptions);
+
+            for (let i = 0; i < 20; i++) {
+                cloth.bodies[i].isStatic = true;
+            }
+
+            World.add(engine.world, [
+                cloth,
+                Bodies.circle(300, 500, 80, { isStatic: true, render: { fillStyle: '#444' } }),
+                Bodies.rectangle(500, 480, 80, 80, { isStatic: true, render: { fillStyle: '#444' } })
+            ]);
+        }
+    },
+    {
+        id: 'bridge',
+        name: 'Bridge Builder',
+        description: 'Test structural integrity with a bridge spanning a gap.',
+        setup: (Matter: any, engine: any) => {
+            const { World, Bodies, Composites, Constraint } = Matter;
+            World.clear(engine.world, false);
+
+            const group = Matter.Body.nextGroup(true);
+
+            const bridge = Composites.stack(160, 290, 15, 1, 0, 0, (x: number, y: number) => {
+                return Bodies.rectangle(x - 20, y, 53, 20, {
+                    collisionFilter: { group: group },
+                    chamfer: 5,
+                    density: 0.005,
+                    frictionAir: 0.05,
+                    render: { fillStyle: '#8F5C38' }
+                });
+            });
+
+            Composites.chain(bridge, 0.3, 0, -0.3, 0, {
+                stiffness: 0.99,
+                length: 0.0001,
+                render: { visible: false }
+            });
+
+            World.add(engine.world, [
+                bridge,
+                Bodies.rectangle(80, 440, 200, 280, { isStatic: true, render: { fillStyle: '#333' } }),
+                Bodies.rectangle(720, 440, 200, 280, { isStatic: true, render: { fillStyle: '#333' } }),
+                Constraint.create({
+                    pointA: { x: 140, y: 300 },
+                    bodyB: bridge.bodies[0],
+                    pointB: { x: -25, y: 0 },
+                    length: 2,
+                    stiffness: 0.9
+                }),
+                Constraint.create({
+                    pointA: { x: 660, y: 300 },
+                    bodyB: bridge.bodies[bridge.bodies.length - 1],
+                    pointB: { x: 25, y: 0 },
+                    length: 2,
+                    stiffness: 0.9
+                })
+            ]);
+        }
     }
 ];
