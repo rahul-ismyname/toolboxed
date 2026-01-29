@@ -5,14 +5,28 @@ import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-    title: '3D Device Mockup Studio | Professional Design Tool',
-    description: 'Transform your screenshots into stunning 3D device mockups. Custom rotatable models for iPhone and MacBook, entirely in your browser.',
-    keywords: ['3d mockup generator', 'iphone mockup', 'macbook mockup', 'app screenshot renderer', 'browser-based mockup tool', '3d device preview'],
-    alternates: {
-        canonical: '/mockup-studio',
-    },
-};
+import { toolContentData } from '@/config/tool-content';
+import { getCombinedTitle } from '@/lib/i18n';
+
+export async function generateMetadata({ searchParams }: { searchParams: { lang?: string } }): Promise<Metadata> {
+    const lang = searchParams.lang || 'en';
+    const slug = 'mockup-studio';
+    const title = getCombinedTitle(slug);
+    const description = toolContentData[slug]?.localizedMetadata?.[lang]?.description || toolContentData[slug]?.description;
+
+    return {
+        title,
+        description,
+        alternates: {
+            canonical: `/${slug}`,
+            languages: {
+                'es': `/${slug}?lang=es`,
+                'pt': `/${slug}?lang=pt`,
+                'hi': `/${slug}?lang=hi`,
+            },
+        },
+    };
+}
 
 export default function MockupPage() {
     return (

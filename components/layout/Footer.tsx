@@ -45,6 +45,7 @@ export function Footer() {
                             <li><Link href="/about" className="hover:text-emerald-500 transition-colors">About Us</Link></li>
                             <li><Link href="/privacy" className="hover:text-emerald-500 transition-colors">Privacy Policy</Link></li>
                             <li><Link href="/terms" className="hover:text-emerald-500 transition-colors">Terms of Service</Link></li>
+                            <li><Link href="/sitemap.xml" className="hover:text-emerald-500 transition-colors">Sitemap</Link></li>
                             <li><a href="mailto:r43381812@gmail.com" className="hover:text-emerald-500 transition-colors">Contact Us</a></li>
                         </ul>
                     </div>

@@ -1494,5 +1494,81 @@ export const toolContentData: Record<string, ToolData> = {
             pt: { title: 'Type Racer Teste de Velocidade', description: 'Um teste de digitação competitivo onde você corre contra bots inteligentes.' },
             hi: { title: 'टाइप रेसर स्पीड टेस्ट', description: 'एक प्रतिस्पर्धी टाइपिंग टेस्ट जहां आप बुद्धिमान बॉट्स के खिलाफ दौड़ते हैं।' }
         }
+    },
+    'text-statistics': {
+        title: 'Advanced Text Statistics',
+        description: 'Analyze reading time, character frequency, word complexity, and readability scores instantly.',
+        features: [
+            '**Detailed Metrics**: Get counts for words, characters, sentences, and paragraphs.',
+            '**Reading Time**: Estimate how long it takes to read your text at various speeds.',
+            '**Readability Scores**: Check the complexity and grade level of your writing.',
+            '**Character Analysis**: Detailed breakdown of vowels, consonants, and special characters.',
+            '**Word Frequency**: Identify the most common words and themes in your text.'
+        ],
+        howToUse: [
+            { title: 'Paste Text', description: 'Enter or paste the text you want to analyze into the editor.' },
+            { title: 'View Insights', description: 'The statistics and readability scores update automatically as you type.' },
+            { title: 'Analyze Details', description: 'Scroll down to see character frequency and reading time estimates.' }
+        ],
+        faqs: [
+            { question: 'What is a readability score?', answer: 'It measures how easy a text is to read based on sentence length and word complexity.' },
+            { question: 'Is my text private?', answer: 'Yes, all analysis happens in your browser and is never stored on a server.' }
+        ],
+        localizedMetadata: {
+            es: { title: 'Estadísticas de Texto Avanzadas', description: 'Analiza tiempo de lectura, frecuencia de caracteres y puntuaciones de legibilidad al instante.' },
+            pt: { title: 'Estatísticas de Texto Avançadas', description: 'Analise tempo de leitura, frequência de caracteres e pontuações de legibilidade instantaneamente.' },
+            hi: { title: 'उन्नत टेक्स्ट आंकड़े', description: 'पढ़ने का समय, वर्ण आवृत्ति और पठनीयता स्कोर का तुरंत विश्लेषण करें।' }
+        }
+    },
+    'mockup-studio': {
+        title: '3D Device Mockup Studio',
+        description: 'Create professional 3D device mockups for your apps and websites entirely in the browser using high-quality models.',
+        features: [
+            '**3D Device Models**: Choose from various iPhone, MacBook, and desktop models.',
+            '**Custom Framing**: Upload your own screenshots to see them inside professional hardware.',
+            '**Real-time Rendering**: Adjust rotation, scale, and lighting with live feedback.',
+            '**High-Res Export**: Download crystal-clear mockup images for your portfolio or marketing.',
+            '**Browser Based**: No heavy design software needed; works directly in your web browser.'
+        ],
+        howToUse: [
+            { title: 'Select Model', description: 'Pick the device model that best fits your screenshot.' },
+            { title: 'Upload Image', description: 'Drop your screenshot into the device screen area.' },
+            { title: 'Adjust 3D View', description: 'Rotate and position the device to create the perfect angle.' },
+            { title: 'Download Mockup', description: 'Export your high-resolution image with one click.' }
+        ],
+        faqs: [
+            { question: 'What file formats are supported?', answer: 'You can upload PNG, JPG, and WebP images.' },
+            { question: 'Are more models coming?', answer: 'Yes, we are constantly adding new device frames and environments.' }
+        ],
+        localizedMetadata: {
+            es: { title: 'Estudio de Mockups 3D', description: 'Crea maquetas de dispositivos 3D profesionales para tus aplicaciones y sitios web.' },
+            pt: { title: 'Estúdio de Mockups 3D', description: 'Crie mockups de dispositivos 3D profissionais para seus aplicativos e sites.' },
+            hi: { title: '3D डिवाइस मॉकअप स्टूडियो', description: 'अपने ऐप्स और वेबसाइटों के लिए पेशेवर 3D डिवाइस मॉकअप बनाएं।' }
+        }
+    },
+    'link-shortener': {
+        title: 'Fast Link Shortener',
+        description: 'Shorten long URLs into clean, shareable links. Track clicks and manage your digital presence for free.',
+        features: [
+            '**Instant Shortening**: Create compact URLs in seconds.',
+            '**Custom Slugs**: (Coming Soon) Choose your own branded link endings.',
+            '**Click Tracking**: Monitor how many people are clicking your links.',
+            '**QR Code Ready**: Generate a QR code for every shortened link automatically.',
+            '**Zero Ads**: Clean, focused experience without annoying redirects or popups.'
+        ],
+        howToUse: [
+            { title: 'Paste URL', description: 'Enter the long website address you want to shorten.' },
+            { title: 'Shorten', description: 'Click the shorten button to generate your new link.' },
+            { title: 'Copy & Share', description: 'Copy the new link or download the associated QR code.' }
+        ],
+        faqs: [
+            { question: 'Do the links expire?', answer: 'No, shortened links are permanent.' },
+            { question: 'Is there a limit?', answer: 'No, you can shorten as many links as you need for free.' }
+        ],
+        localizedMetadata: {
+            es: { title: 'Acortador de Enlaces Rápido', description: 'Acorta URLs largas en enlaces limpios y compartibles.' },
+            pt: { title: 'Encurtador de Links Rápido', description: 'Encurte URLs longas em links limpos e compartilháveis.' },
+            hi: { title: 'फास्ट लिंक शॉर्टनर', description: 'लंबे यूआरएल को साफ, साझा करने योग्य लिंक में छोटा करें।' }
+        }
     }
 };

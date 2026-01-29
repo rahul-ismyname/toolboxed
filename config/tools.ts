@@ -327,7 +327,7 @@ export const tools: Tool[] = [
         path: '/percentage-calculator'
     },
     {
-        slug: 'color-converter-new',
+        slug: 'color-converter',
         name: 'Color Converter',
         description: 'Advanced HEX, RGB, and HSL color conversion with visual picker.',
         category: 'Developer',
