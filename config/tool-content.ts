@@ -1570,5 +1570,60 @@ export const toolContentData: Record<string, ToolData> = {
             pt: { title: 'Encurtador de Links Rápido', description: 'Encurte URLs longas em links limpos e compartilháveis.' },
             hi: { title: 'फास्ट लिंक शॉर्टनर', description: 'लंबे यूआरएल को साफ, साझा करने योग्य लिंक में छोटा करें।' }
         }
+    },
+    'video-compressor': {
+        title: 'Privacy-First Video Compressor',
+        description: 'Compress and convert videos entirely in your browser using high-performance local processing. Convert to MP4, WebM, or GIF with custom target size and resolution scaling.',
+        features: [
+            '**100% Private**: Processing happens locally using ffmpeg.wasm. No server uploads.',
+            '**Format Conversion**: Seamlessly convert between MP4, WebM, and high-quality GIF.',
+            '**Target Size Compression**: Specify an exact MB target (e.g. 25MB for Discord) for precise output.',
+            '**Resolution Scaling**: Downscale to 720p or 480p to further reduce file size.',
+            '**Easy & Advanced Modes**: Choose a simple quality slider or dive into technical controls.',
+            '**No Quality Loss**: Uses advanced H.264 and VP9 codecs for the best possible result.'
+        ],
+        howToUse: [
+            { title: 'Upload Video', description: 'Select any video file from your device for local processing.' },
+            { title: 'Choose Mode', description: 'Pick "Easy Mode" for quick compression or "Advanced" for specific formats and sizes.' },
+            { title: 'Select Settings', description: 'Choose your target format (MP4, WebM, GIF) and resolution if needed.' },
+            { title: 'Compress & Download', description: 'Click begin to process locally and save your optimized file instantly.' }
+        ],
+        faqs: [
+            { question: 'Is my data safe?', answer: 'Absolutely! We use ffmpeg.wasm to run all logic inside your browser tab. Your video is never uploaded or seen by our servers.' },
+            { question: 'Can I compress for Discord?', answer: 'Yes! Use the Advanced mode and set a Target Size of 25MB (or 10MB) to ensure your file fits Discord limits.' },
+            { question: 'What formats can I convert to?', answer: 'You can convert any video into MP4 (H.264), WebM (VP9), or high-quality animated GIFs.' },
+            { question: 'Why is local compression better?', answer: 'It is safer (no upload), cost-free (no bandwidth limits), and gives you full control over the output quality.' }
+        ],
+        localizedMetadata: {
+            es: { title: 'Compresor de Vídeo Privado', description: 'Comprime vídeos localmente en tu navegador sin subirlos a ningún servidor.' },
+            pt: { title: 'Compressor de Vídeo Privado', description: 'Comprima vídeos localmente no seu navegador sem carregá-los para nenhum servidor.' },
+            hi: { title: 'प्राइवेसी-फर्स्ट वीडियो कंप्रेसर', description: 'बिना सर्वर अपलोड के अपने ब्राउज़र में स्थानीय रूप से वीडियो कंप्रेस करें।' }
+        }
+    },
+    'background-remover': {
+        title: 'AI Background Remover - 100% Private & Fast',
+        description: 'Remove background from any photo instantly in your browser. No server uploads, high-quality transparent PNG output.',
+        features: [
+            '**AI-Powered Precision**: High-accuracy object detection for clean edges (even hair).',
+            '**100% Private**: Your images never leave your device. All processing happens locally.',
+            '**Instant Export**: Download your subject as a transparent PNG or copy to clipboard.',
+            '**Unlimited & Free**: No signups, no tokens, no limits. Just unlimited background removal.',
+            '**Device Accelerated**: Uses WebGL and WASM for near-instant results on most devices.'
+        ],
+        howToUse: [
+            { title: 'Upload Image', description: 'Select or drop the photo you want to remove the background from.' },
+            { title: 'Processing', description: 'Wait a few seconds for the local AI to work its magic.' },
+            { title: 'Preview & Download', description: 'Review the result and download it as an optimized, transparent PNG.' }
+        ],
+        faqs: [
+            { question: 'Is it really private?', answer: 'Yes. We use @imgly/background-removal, which runs a neural network inside your browser tab. No image data is ever sent to any server.' },
+            { question: 'Does it work with complex photos?', answer: 'Yes! Our model is trained on diverse sets of portraits, products, and pets, handling tricky edges like hair extremely well.' },
+            { question: 'Is it free?', answer: 'Absolutely. There are no credits or hidden fees because we don\'t have the server costs—your device does all the work!' }
+        ],
+        localizedMetadata: {
+            es: { title: 'Removedor de Fondo AI', description: 'Elimina el fondo de las fotos localmente en tu navegador.' },
+            pt: { title: 'Removedor de Fundo AI', description: 'Remova fundos de fotos localmente no seu navegador.' },
+            hi: { title: 'AI बैकग्राउंड रिमूवर', description: 'बिना सर्वर अपलोड के फोटो से बैकग्राउंड हटाएं।' }
+        }
     }
 };

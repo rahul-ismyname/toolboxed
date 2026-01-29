@@ -79,7 +79,7 @@ export function ToolExplorer() {
                     <input
                         type="text"
                         className="block w-full pl-11 pr-4 py-3 border-2 border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
-                        placeholder="Search 60+ tools..."
+                        placeholder="Search 65 professional tools..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />

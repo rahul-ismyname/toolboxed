@@ -47,6 +47,7 @@ import {
     Wallet,
     Database,
     ScanSearch,
+    Video,
     Workflow,
     Layout,
     Network,
@@ -581,5 +582,21 @@ export const tools: Tool[] = [
         category: 'Developer',
         icon: Zap,
         path: '/type-racer'
+    },
+    {
+        slug: 'background-remover',
+        name: 'AI Background Remover',
+        description: 'Remove backgrounds from images instantly and privately using on-device AI.',
+        category: 'Utility',
+        icon: Sparkles,
+        path: '/background-remover'
+    },
+    {
+        slug: 'video-compressor',
+        name: 'Privacy-First Video Compressor',
+        description: 'Compress and convert videos locally in your browser. No server uploads, 100% private.',
+        category: 'Utility',
+        icon: Video,
+        path: '/video-compressor'
     }
 ];
