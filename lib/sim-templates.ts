@@ -23,45 +23,64 @@ export const PHYSICS_TEMPLATES: SimTemplate[] = [
         }
     },
     {
-        id: 'double-pendulum',
-        name: 'Chaos Theory',
-        description: 'A double pendulum exhibits chaotic behavior. Sensitive to initial conditions.',
+        id: 'chaos-divergence',
+        name: 'Chaos Theory: Butterfly Effect',
+        description: '30 double pendulums starting with 0.001° difference. Watch them diverge rapidly.',
         setup: (Matter: any, engine: any) => {
-            const { World, Bodies, Constraint } = Matter;
+            const { World, Bodies, Constraint, Composite } = Matter;
             World.clear(engine.world, false);
 
-            const pin = Bodies.circle(400, 150, 5, { isStatic: true, render: { fillStyle: '#FFFF00' } });
+            const centerX = 400;
+            const centerY = 150;
+            const pin = Bodies.circle(centerX, centerY, 5, { isStatic: true, render: { fillStyle: '#FFFFFF' } });
+            World.add(engine.world, pin);
 
-            // Arms with zero air friction to main energy
-            const arm1 = Bodies.rectangle(400, 225, 10, 150, {
-                frictionAir: 0,
-                friction: 0,
-                render: { fillStyle: '#58C4DD' }
-            });
-            const arm2 = Bodies.rectangle(400, 375, 10, 150, {
-                frictionAir: 0,
-                friction: 0,
-                render: { fillStyle: '#FC6255' }
-            });
+            const count = 30;
+            for (let i = 0; i < count; i++) {
+                // Extremely tiny offset (0.001 degrees)
+                const offset = i * 0.00001;
+                const angle1 = Math.PI / 2 + offset;
+                const color = `hsla(${(i / count) * 360}, 70%, 60%, 0.8)`;
 
-            const constraint1 = Constraint.create({
-                bodyA: pin,
-                pointB: { x: 0, y: -75 },
-                bodyB: arm1,
-                stiffness: 1,
-                length: 0
-            });
+                const arm1 = Bodies.rectangle(centerX + 75, centerY, 150, 4, {
+                    frictionAir: 0,
+                    friction: 0,
+                    angle: angle1,
+                    collisionFilter: { group: -1 - i }, // Don't collide with each other
+                    render: { fillStyle: color, strokeStyle: color, lineWidth: 1 },
+                    plugin: { showTrail: false } // Only trail the endpoint (arm2)
+                });
 
-            const constraint2 = Constraint.create({
-                bodyA: arm1,
-                pointA: { x: 0, y: 75 },
-                bodyB: arm2,
-                pointB: { x: 0, y: -75 },
-                stiffness: 1,
-                length: 0
-            });
+                const arm2 = Bodies.rectangle(centerX + 225, centerY, 150, 4, {
+                    frictionAir: 0,
+                    friction: 0,
+                    angle: angle1,
+                    collisionFilter: { group: -1 - i },
+                    render: { fillStyle: color, strokeStyle: color, lineWidth: 1 }
+                });
 
-            World.add(engine.world, [pin, arm1, arm2, constraint1, constraint2]);
+                const constraint1 = Constraint.create({
+                    bodyA: pin,
+                    bodyB: arm1,
+                    pointA: { x: 0, y: 0 },
+                    pointB: { x: -75, y: 0 },
+                    stiffness: 1,
+                    length: 0,
+                    render: { visible: false }
+                });
+
+                const constraint2 = Constraint.create({
+                    bodyA: arm1,
+                    bodyB: arm2,
+                    pointA: { x: 75, y: 0 },
+                    pointB: { x: -75, y: 0 },
+                    stiffness: 1,
+                    length: 0,
+                    render: { visible: false }
+                });
+
+                World.add(engine.world, [arm1, arm2, constraint1, constraint2]);
+            }
         }
     },
     {

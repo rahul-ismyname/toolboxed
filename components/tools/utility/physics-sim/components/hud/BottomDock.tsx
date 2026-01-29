@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Play, Pause, RotateCcw, Box, Circle, Triangle, Hexagon, Minus, Link, GripHorizontal, MapPin } from 'lucide-react';
+import { Play, Pause, RotateCcw, Box, Circle, Triangle, Hexagon, Minus, Link, GripHorizontal, MapPin, Eraser } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface BottomDockProps {
     paused: boolean;
@@ -9,6 +10,7 @@ interface BottomDockProps {
     onReset: () => void;
     activeTool: string | null;
     onSelectTool: (tool: string, size?: number) => void;
+    onClearTrails: () => void;
 }
 
 export function BottomDock({
@@ -16,7 +18,8 @@ export function BottomDock({
     onPausedChange,
     onReset,
     activeTool,
-    onSelectTool
+    onSelectTool,
+    onClearTrails,
 }: BottomDockProps) {
     const [spawnSize, setSpawnSize] = useState(30);
 
@@ -32,8 +35,17 @@ export function BottomDock({
     ];
 
     return (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-auto">
+        <motion.div
+            drag
+            dragMomentum={false}
+            dragElastic={0}
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-auto cursor-grab active:cursor-grabbing"
+        >
             <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-white/20 p-3 rounded-3xl shadow-2xl flex items-center gap-2">
+                {/* Drag Handle */}
+                <div className="pl-1 pr-2 border-r border-slate-200 dark:border-slate-700 text-slate-300">
+                    <GripHorizontal className="w-5 h-5" />
+                </div>
 
                 {/* Playback Controls */}
                 <div className="flex items-center gap-1 pr-3 border-r border-slate-200 dark:border-slate-700">
@@ -55,6 +67,14 @@ export function BottomDock({
                         title="Reset Simulation (R)"
                     >
                         <RotateCcw className="w-5 h-5" />
+                    </button>
+                    <button
+                        type="button"
+                        onClick={onClearTrails}
+                        className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-amber-600 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-all active:scale-95 ml-1"
+                        title="Clear Trails"
+                    >
+                        <Eraser className="w-5 h-5" />
                     </button>
                 </div>
 
@@ -86,7 +106,6 @@ export function BottomDock({
                             title={tool.label}
                         >
                             <tool.icon className="w-5 h-5 transition-transform group-hover:scale-110" />
-                            {/* Simple tooltip */}
                             <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
                                 {tool.label}
                             </span>
@@ -94,7 +113,6 @@ export function BottomDock({
                     ))}
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }
-

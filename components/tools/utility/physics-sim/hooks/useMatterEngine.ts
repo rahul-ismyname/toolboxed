@@ -4,6 +4,9 @@ import React, { useRef, useCallback } from 'react';
 
 interface UseMatterEngineOptions {
     gravity?: number;
+    enableSleeping?: boolean;
+    substeps?: number;
+    fixedDelta?: number;
 }
 
 export interface MatterEngineAPI {
@@ -11,14 +14,19 @@ export interface MatterEngineAPI {
     MatterRef: React.MutableRefObject<any>;
     initEngine: () => Promise<void>;
     loadTemplate: (template: any) => void;
+    update: (delta: number) => void;
     spawnBody: (type: 'box' | 'circle' | 'wall' | 'triangle' | 'polygon', options?: any, size?: number) => any;
     getBodyById: (id: number) => any;
     updateBody: (id: number, updates: any) => void;
     deleteBody: (id: number) => void;
     setGravity: (g: number) => void;
+    setSubsteps: (s: number) => void;
+    setSleeping: (enabled: boolean) => void;
+    addWorldBounds: (width: number, height: number, thickness?: number) => void;
     getAllBodies: () => any[];
-    addConstraint: (bodyA: any, bodyB: any, type: 'spring' | 'rod') => void;
+    addConstraint: (bodyA: any, bodyB: any | null, type: 'spring' | 'rod', pointA?: { x: number, y: number }, pointB?: { x: number, y: number }) => void;
     addPin: (body: any, x: number, y: number) => void;
+    addRevoluteJoint: (bodyA: any, bodyB: any, pointA: { x: number, y: number }, pointB: { x: number, y: number }) => void;
     getAllConstraints: () => any[];
     isReady: boolean;
 }
@@ -26,24 +34,66 @@ export interface MatterEngineAPI {
 export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEngineAPI {
     const engineRef = useRef<any>(null);
     const MatterRef = useRef<any>(null);
+    const worldBoundsRef = useRef<any[]>([]);
 
     const [isReady, setIsReady] = React.useState(false);
+    const substepsRef = useRef(options.substeps ?? 8); // Default to 8 for extreme stability
+    const accumulatorRef = useRef(0);
+    const fixedDelta = options.fixedDelta ?? (1000 / 60);
 
     const initEngine = useCallback(async () => {
         const MatterModule = await import('matter-js');
         const Matter = (MatterModule as any).default || MatterModule;
         MatterRef.current = Matter;
 
-        const engine = Matter.Engine.create();
+        const engine = Matter.Engine.create({
+            enableSleeping: options.enableSleeping ?? false,
+            positionIterations: 30, // Default 6, increased for extreme precision
+            velocityIterations: 30  // Default 6, increased for extreme precision
+        });
         engine.gravity.y = options.gravity ?? 1;
         engineRef.current = engine;
+
+        // Custom force application before each engine update
+        Matter.Events.on(engine, 'beforeUpdate', () => {
+            const bodies = Matter.Composite.allBodies(engine.world);
+            bodies.forEach((body: any) => {
+                if (body.plugin && body.plugin.acceleration) {
+                    const force = {
+                        x: body.plugin.acceleration.x * 0.001 * body.mass,
+                        y: body.plugin.acceleration.y * 0.001 * body.mass
+                    };
+                    Matter.Body.applyForce(body, body.position, force);
+                }
+            });
+        });
+
         setIsReady(true);
-    }, []); // Stable initEngine
+    }, [options.enableSleeping, options.gravity]); // Stable initEngine
 
     const loadTemplate = useCallback((template: any) => {
         if (!MatterRef.current || !engineRef.current) return;
+        // Clear world before loading template
+        MatterRef.current.Composite.clear(engineRef.current.world, false);
         template.setup(MatterRef.current, engineRef.current);
     }, []);
+
+    const update = useCallback((delta: number) => {
+        if (!engineRef.current || !MatterRef.current) return;
+        const Matter = MatterRef.current;
+        const engine = engineRef.current;
+
+        // Implementation of fixed timestep with accumulator
+        accumulatorRef.current += Math.min(delta, 100); // Cap delta to avoid "spiral of death"
+
+        while (accumulatorRef.current >= fixedDelta) {
+            const subDelta = fixedDelta / substepsRef.current;
+            for (let i = 0; i < substepsRef.current; i++) {
+                Matter.Engine.update(engine, subDelta);
+            }
+            accumulatorRef.current -= fixedDelta;
+        }
+    }, [fixedDelta]);
 
     const spawnBody = useCallback((type: 'box' | 'circle' | 'wall' | 'triangle' | 'polygon', spawnOptions?: any, size?: number) => {
         if (!MatterRef.current || !engineRef.current) return null;
@@ -142,7 +192,50 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         return MatterRef.current.Composite.allBodies(engineRef.current.world);
     }, []);
 
-    const addConstraint = useCallback((bodyA: any, bodyB: any, type: 'spring' | 'rod') => {
+    const setSubsteps = useCallback((s: number) => {
+        substepsRef.current = Math.max(1, s);
+    }, []);
+
+    const setSleeping = useCallback((enabled: boolean) => {
+        if (engineRef.current) {
+            engineRef.current.enableSleeping = enabled;
+        }
+    }, []);
+
+    const addWorldBounds = useCallback((width: number, height: number, thickness: number = 2000) => {
+        if (!MatterRef.current || !engineRef.current) return;
+        const { Bodies, Composite } = MatterRef.current;
+        const world = engineRef.current.world;
+
+        // Remove old bounds if they exist
+        if (worldBoundsRef.current.length > 0) {
+            Composite.remove(world, worldBoundsRef.current);
+        }
+
+        const bounds = [
+            // Top
+            Bodies.rectangle(width / 2, -thickness / 2, width, thickness, {
+                isStatic: true, label: 'ground', render: { fillStyle: 'transparent' }
+            }),
+            // Bottom
+            Bodies.rectangle(width / 2, height + thickness / 2, width, thickness, {
+                isStatic: true, label: 'ground', render: { fillStyle: 'transparent' }
+            }),
+            // Left
+            Bodies.rectangle(-thickness / 2, height / 2, thickness, height, {
+                isStatic: true, label: 'ground', render: { fillStyle: 'transparent' }
+            }),
+            // Right
+            Bodies.rectangle(width + thickness / 2, height / 2, thickness, height, {
+                isStatic: true, label: 'ground', render: { fillStyle: 'transparent' }
+            }),
+        ];
+
+        worldBoundsRef.current = bounds;
+        Composite.add(world, bounds);
+    }, []);
+
+    const addConstraint = useCallback((bodyA: any, bodyB: any | null, type: 'spring' | 'rod', pointA?: { x: number, y: number }, pointB?: { x: number, y: number }) => {
         if (!engineRef.current || !MatterRef.current) return;
         const { Constraint, Composite } = MatterRef.current;
 
@@ -151,13 +244,25 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
             bodyB,
             stiffness: type === 'spring' ? 0.01 : 1,
             damping: type === 'spring' ? 0.05 : 0.1,
-            length: undefined, // Default to current distance
             render: {
-                strokeStyle: type === 'spring' ? '#F59E0B' : '#6366F1', // Amber for spring, Indigo for rod
+                strokeStyle: type === 'spring' ? '#F59E0B' : '#6366F1',
                 lineWidth: 4,
                 type: type === 'spring' ? 'spring' : 'line'
             }
         };
+
+        // If specific points were provided, convert them to relative coordinates for Matter.js
+        if (pointA) {
+            options.pointA = { x: pointA.x - bodyA.position.x, y: pointA.y - bodyA.position.y };
+        }
+
+        if (pointB) {
+            if (bodyB) {
+                options.pointB = { x: pointB.x - bodyB.position.x, y: pointB.y - bodyB.position.y };
+            } else {
+                options.pointB = pointB; // World point
+            }
+        }
 
         const constraint = Constraint.create(options);
         Composite.add(engineRef.current.world, constraint);
@@ -181,6 +286,25 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         Composite.add(engineRef.current.world, constraint);
     }, []);
 
+    const addRevoluteJoint = useCallback((bodyA: any, bodyB: any, pointA: { x: number, y: number }, pointB: { x: number, y: number }) => {
+        if (!engineRef.current || !MatterRef.current) return;
+        const { Constraint, Composite } = MatterRef.current;
+
+        const constraint = Constraint.create({
+            bodyA,
+            bodyB,
+            pointA,
+            pointB,
+            stiffness: 1,
+            length: 0,
+            render: {
+                strokeStyle: '#10B981', // Emerald for revolute joint
+                lineWidth: 4
+            }
+        });
+        Composite.add(engineRef.current.world, constraint);
+    }, []);
+
     const getAllConstraints = useCallback(() => {
         if (!engineRef.current || !MatterRef.current) return [];
         return MatterRef.current.Composite.allConstraints(engineRef.current.world);
@@ -198,15 +322,20 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         MatterRef,
         initEngine,
         loadTemplate,
+        update,
         spawnBody,
         getBodyById,
         updateBody,
         deleteBody,
         setGravity,
+        setSubsteps,
+        setSleeping,
+        addWorldBounds,
         getAllBodies,
         addConstraint,
         addPin,
+        addRevoluteJoint,
         getAllConstraints,
         isReady,
-    }), [initEngine, loadTemplate, spawnBody, getBodyById, updateBody, deleteBody, setGravity, getAllBodies, addConstraint, addPin, getAllConstraints, isReady]);
+    }), [initEngine, loadTemplate, update, spawnBody, getBodyById, updateBody, deleteBody, setGravity, setSubsteps, setSleeping, addWorldBounds, getAllBodies, addConstraint, addPin, addRevoluteJoint, getAllConstraints, isReady]);
 }

@@ -13,11 +13,14 @@ interface UseP5RendererOptions {
     onSelectBody: (id: number | null) => void;
     activeTool: string | null;
     spawnSize: number;
+    isFullscreen?: boolean;
+    onToolUsed?: () => void;
 }
 
 export interface P5RendererAPI {
     p5Ref: React.MutableRefObject<any>;
     isLoaded: boolean;
+    clearTrails: () => void;
 }
 
 export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
@@ -31,9 +34,12 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
         onSelectBody,
         activeTool,
         spawnSize,
+        isFullscreen = false,
+        onToolUsed,
     } = options;
 
     const p5Ref = useRef<any>(null);
+    const clearTrailsRef = useRef<(() => void) | null>(null);
     const [isLoaded, setIsLoaded] = useState(false);
 
     // Refs for draw loop access (avoids stale closures)
@@ -77,11 +83,14 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
 
                 p.setup = function () {
                     const canvas = p.createCanvas(
-                        Math.min(1920, containerRef.current!.clientWidth),
+                        containerRef.current!.clientWidth,
                         containerRef.current!.clientHeight
                     );
                     canvas.parent(containerRef.current!);
                     canvasElement = canvas.elt;
+                    canvasElement.style.width = '100%';
+                    canvasElement.style.height = '100%';
+                    canvasElement.style.display = 'block';
 
                     // Add MouseConstraint for physics dragging
                     const mouse = Matter.Mouse.create(canvas.elt);
@@ -92,30 +101,22 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                     });
                     Matter.Composite.add(matterEngine.world, mouseConstraint);
 
-                    // Remove scroll listeners
-                    if (mouse.element) {
-                        (mouse as any).element.removeEventListener("mousewheel", (mouse as any).mousewheel);
-                        (mouse as any).element.removeEventListener("DOMMouseScroll", (mouse as any).mousewheel);
-                    }
+                    // Add world bounds automatically
+                    engine.addWorldBounds(p.width, p.height);
                 };
 
                 p.mousePressed = function (event: any) {
                     // Check if we are clicking the canvas
-                    console.log('Mouse Pressed on target:', event?.target?.tagName);
                     if (event && event.target && event.target !== canvasElement) {
-                        console.log('Ignoring press - target is not canvas');
                         return;
                     }
 
                     const tool = activeToolRef.current;
-                    console.log('Current Tool:', tool);
-
                     const bodies = Matter.Composite.allBodies(matterEngine.world);
                     const clicked = Matter.Query.point(bodies, { x: p.mouseX, y: p.mouseY })[0];
 
                     if (tool === 'pin') {
                         if (clicked && !clicked.isStatic) {
-                            console.log('Adding pin to body:', clicked.id);
                             engine.addPin(clicked, p.mouseX, p.mouseY);
                         }
                         return;
@@ -123,7 +124,6 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
 
                     if (tool === 'spring' || tool === 'rod') {
                         if (clicked) {
-                            console.log('Starting constraint from body:', clicked.id);
                             constraintStartBody = clicked;
                             constraintStartPos = { x: p.mouseX, y: p.mouseY };
                         }
@@ -131,17 +131,15 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                     }
 
                     if (tool && ['box', 'circle', 'triangle', 'polygon', 'wall'].indexOf(tool) !== -1) {
-                        console.log('Spawning via tool click:', tool, 'at', p.mouseX, p.mouseY);
                         engine.spawnBody(tool as any, { x: p.mouseX, y: p.mouseY }, spawnSizeRef.current);
+                        if (onToolUsed) setTimeout(onToolUsed, 0);
                         return;
                     }
 
                     if (clicked) {
-                        console.log('Selected body:', clicked.id);
                         setTimeout(function () { onSelectBody(clicked.id); }, 0);
                         draggedBody = clicked;
                     } else {
-                        console.log('Clearing selection');
                         setTimeout(function () { onSelectBody(null); }, 0);
                         draggedBody = null;
                     }
@@ -162,13 +160,23 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                 p.mouseReleased = function () {
                     const tool = activeToolRef.current;
 
-                    if ((tool === 'spring' || tool === 'rod') && constraintStartBody) {
+                    if ((tool === 'spring' || tool === 'rod') && constraintStartBody && constraintStartPos) {
                         const bodies = Matter.Composite.allBodies(matterEngine.world);
-                        const released = Matter.Query.point(bodies, { x: p.mouseX, y: p.mouseY })[0];
+                        // Search in a small area (15px) for better hit detection
+                        const hitRadius = 15;
+                        const released = Matter.Query.region(bodies, {
+                            min: { x: p.mouseX - hitRadius, y: p.mouseY - hitRadius },
+                            max: { x: p.mouseX + hitRadius, y: p.mouseY + hitRadius }
+                        })[0];
 
                         if (released && released !== constraintStartBody) {
-                            engine.addConstraint(constraintStartBody, released, tool as any);
+                            // Body to Body
+                            engine.addConstraint(constraintStartBody, released, tool as any, constraintStartPos, { x: p.mouseX, y: p.mouseY });
+                        } else if (!released) {
+                            // Body to World (Pin)
+                            engine.addConstraint(constraintStartBody, null, tool as any, constraintStartPos, { x: p.mouseX, y: p.mouseY });
                         }
+                        if (onToolUsed) setTimeout(onToolUsed, 0);
                     }
 
                     draggedBody = null;
@@ -176,14 +184,26 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                     constraintStartPos = null;
                 };
 
-                const trailHistory = new Map();
-                const MAX_TRAIL_LENGTH = 20;
+                const trailHistory = new Map<number, { x: number, y: number }[]>();
+                const MAX_TRAIL_LENGTH = 200;
+
+                clearTrailsRef.current = () => {
+                    trailHistory.clear();
+                };
 
                 p.draw = function () {
                     if (!pausedRef.current && matterEngine) {
+                        // Use new engine update with delta time
+                        engine.update(p.deltaTime);
+
+                        // Update trail history
                         const bodies = Matter.Composite.allBodies(matterEngine.world);
                         bodies.forEach(function (body: any) {
-                            if (!body.isStatic) {
+                            const shouldTrail = !body.isStatic &&
+                                body.label !== 'ground' &&
+                                (body.plugin?.showTrail !== false);
+
+                            if (shouldTrail) {
                                 if (!trailHistory.has(body.id)) trailHistory.set(body.id, []);
                                 const history = trailHistory.get(body.id);
                                 if (history) {
@@ -191,20 +211,30 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                                     if (history.length > MAX_TRAIL_LENGTH) history.shift();
                                 }
                             }
-                            if (body.plugin && body.plugin.acceleration) {
-                                Matter.Body.applyForce(body, body.position, {
-                                    x: body.plugin.acceleration.x * 0.001 * body.mass,
-                                    y: body.plugin.acceleration.y * 0.001 * body.mass
-                                });
-                            }
                         });
-
-                        // Cap delta time to prevent physics "explosion" or tunneling after tab switching
-                        const cappedDelta = Math.min(p.deltaTime, 33);
-                        Matter.Engine.update(matterEngine, cappedDelta);
                     }
 
                     p.background(bgColorRef.current);
+
+                    // Draw Trails
+                    p.noFill();
+                    trailHistory.forEach((history, bodyId) => {
+                        const body = engine.getBodyById(bodyId);
+                        if (!body) return;
+
+                        const color = p.color((body.render && body.render.fillStyle) || '#E8E8E8');
+
+                        p.beginShape();
+                        for (let i = 0; i < history.length; i++) {
+                            const pos = history[i];
+                            const alpha = p.map(i, 0, history.length, 0, 150);
+                            color.setAlpha(alpha);
+                            p.stroke(color);
+                            p.strokeWeight(p.map(i, 0, history.length, 0.5, 2));
+                            p.vertex(pos.x, pos.y);
+                        }
+                        p.endShape();
+                    });
 
                     const constraints = Matter.Composite.allConstraints(matterEngine.world);
                     constraints.forEach(function (c: any) {
@@ -212,25 +242,50 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                         const bodyA = c.bodyA;
                         const bodyB = c.bodyB;
 
-                        const startX = bodyA ? bodyA.position.x + (c.pointA ? c.pointA.x : 0) : (c.pointA ? c.pointA.x : 0);
-                        const startY = bodyA ? bodyA.position.y + (c.pointA ? c.pointA.y : 0) : (c.pointA ? c.pointA.y : 0);
-                        const endX = bodyB ? bodyB.position.x + (c.pointB ? c.pointB.x : 0) : (c.pointB ? c.pointB.y : 0);
-                        const endY = bodyB ? bodyB.position.y + (c.pointB ? c.pointB.y : 0) : (c.pointB ? c.pointB.y : 0);
+                        const Vector = Matter.Vector;
+
+                        let startX, startY, endX, endY;
+
+                        if (bodyA) {
+                            const worldPointA = Vector.rotate(c.pointA, bodyA.angle);
+                            startX = bodyA.position.x + worldPointA.x;
+                            startY = bodyA.position.y + worldPointA.y;
+                        } else {
+                            startX = c.pointA.x;
+                            startY = c.pointA.y;
+                        }
+
+                        if (bodyB) {
+                            const worldPointB = Vector.rotate(c.pointB, bodyB.angle);
+                            endX = bodyB.position.x + worldPointB.x;
+                            endY = bodyB.position.y + worldPointB.y;
+                        } else {
+                            endX = c.pointB.x;
+                            endY = c.pointB.y;
+                        }
 
                         p.stroke((c.render && c.render.strokeStyle) || '#999');
                         p.strokeWeight((c.render && c.render.lineWidth) || 2);
 
                         if (c.render && c.render.type === 'spring') {
-                            const steps = 10;
+                            const steps = 14;
                             p.noFill();
                             p.beginShape();
                             p.vertex(startX, startY);
+
+                            const dx = endX - startX;
+                            const dy = endY - startY;
+                            const len = Math.sqrt(dx * dx + dy * dy) || 1;
+                            const nx = -dy / len;
+                            const ny = dx / len;
+
                             for (let i = 1; i < steps; i++) {
                                 const t = i / steps;
-                                const x = p.lerp(startX, endX, t);
-                                const y = p.lerp(startY, endY, t);
-                                const offset = (i % 2 === 0 ? 1 : -1) * 3;
-                                p.vertex(x + offset, y + offset);
+                                const px = p.lerp(startX, endX, t);
+                                const py = p.lerp(startY, endY, t);
+                                const amplitude = 6;
+                                const offset = (i % 2 === 0 ? 1 : -1) * amplitude;
+                                p.vertex(px + nx * offset, py + ny * offset);
                             }
                             p.vertex(endX, endY);
                             p.endShape();
@@ -257,24 +312,8 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                         p.circle(p.mouseX, p.mouseY, 6);
                     }
 
-                    const bodies = Matter.Composite.allBodies(matterEngine.world);
-                    p.noFill();
-                    bodies.forEach(function (body: any) {
-                        if (trailHistory.has(body.id)) {
-                            const history = trailHistory.get(body.id);
-                            if (history) {
-                                p.beginShape();
-                                for (let i = 0; i < history.length; i++) {
-                                    const pos = history[i];
-                                    p.stroke(p.color((body.render && body.render.fillStyle) || '#E8E8E8'));
-                                    p.strokeWeight(i * 0.2);
-                                    p.vertex(pos.x, pos.y);
-                                }
-                                p.endShape();
-                            }
-                        }
-                    });
 
+                    const bodies = Matter.Composite.allBodies(matterEngine.world);
                     p.noStroke();
                     bodies.forEach(function (body: any) {
                         p.fill((body.render && body.render.fillStyle) || '#E8E8E8');
@@ -306,7 +345,12 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                 };
 
                 p.windowResized = function () {
-                    if (containerRef.current) p.resizeCanvas(Math.min(1920, containerRef.current.clientWidth), containerRef.current.clientHeight);
+                    if (containerRef.current) {
+                        const w = containerRef.current.clientWidth;
+                        const h = containerRef.current.clientHeight;
+                        p.resizeCanvas(w, h);
+                        engine.addWorldBounds(w, h);
+                    }
                 };
             };
 
@@ -318,5 +362,34 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
         return () => { if (p5Ref.current) p5Ref.current.remove(); };
     }, [containerRef, engine, onSelectBody, engine.isReady]);
 
-    return useMemo(() => ({ p5Ref, isLoaded }), [isLoaded]);
+    useEffect(() => {
+        if (p5Ref.current && containerRef.current) {
+            const p = p5Ref.current;
+
+            const performResize = () => {
+                const w = containerRef.current!.clientWidth;
+                const h = containerRef.current!.clientHeight;
+                p.resizeCanvas(w, h);
+                engine.addWorldBounds(w, h);
+            };
+
+            // Immediate resize
+            performResize();
+
+            // Also resize after a short delay for CSS settling
+            const timer = setTimeout(performResize, 100);
+            const timer2 = setTimeout(performResize, 500); // Second pass for safety
+
+            return () => {
+                clearTimeout(timer);
+                clearTimeout(timer2);
+            };
+        }
+    }, [isFullscreen, containerRef, engine]);
+
+    return useMemo(() => ({
+        p5Ref,
+        isLoaded,
+        clearTrails: () => clearTrailsRef.current?.()
+    }), [isLoaded]);
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ChevronDown, Settings2, Wind, Eye, EyeOff } from 'lucide-react';
+import { ChevronDown, Settings2, Wind, Eye, EyeOff, Maximize2, Minimize2, List } from 'lucide-react';
 import { PHYSICS_TEMPLATES } from '@/lib/sim-templates';
 
 interface TopBarProps {
@@ -13,6 +13,11 @@ interface TopBarProps {
     onShowVectorsChange: (show: boolean) => void;
     bgColor: string;
     onBgColorChange: (color: string) => void;
+    onToggleHUD: () => void;
+    onToggleFullScreen: () => void;
+    isFullscreen: boolean;
+    showObjectList: boolean;
+    onToggleObjectList: () => void;
 }
 
 export function TopBar({
@@ -23,7 +28,12 @@ export function TopBar({
     showVectors,
     onShowVectorsChange,
     bgColor,
-    onBgColorChange
+    onBgColorChange,
+    onToggleHUD,
+    onToggleFullScreen,
+    isFullscreen,
+    showObjectList,
+    onToggleObjectList
 }: TopBarProps) {
     const [isTemplateMenuOpen, setIsTemplateMenuOpen] = useState(false);
     const activeTemplate = PHYSICS_TEMPLATES.find(t => t.id === activeTemplateId);
@@ -111,6 +121,34 @@ export function TopBar({
                             className="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
                         />
                     </div>
+                </div>
+
+                {/* Hide HUD & FullScreen */}
+                <div className="flex items-center gap-1 ml-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-white/20 p-1 rounded-2xl shadow-lg">
+                    <button
+                        onClick={onToggleObjectList}
+                        className={`p-2 rounded-xl transition-all active:scale-95 ${showObjectList
+                                ? 'bg-indigo-500 text-white shadow-indigo-500/30 shadow-lg'
+                                : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500'
+                            }`}
+                        title="Toggle Object List (L)"
+                    >
+                        <List className="w-4 h-4" />
+                    </button>
+                    <button
+                        onClick={onToggleHUD}
+                        className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-all active:scale-95"
+                        title="Hide UI (H)"
+                    >
+                        <EyeOff className="w-4 h-4" />
+                    </button>
+                    <button
+                        onClick={onToggleFullScreen}
+                        className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-all active:scale-95"
+                        title="Toggle FullScreen (F)"
+                    >
+                        {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                    </button>
                 </div>
             </div>
         </div>

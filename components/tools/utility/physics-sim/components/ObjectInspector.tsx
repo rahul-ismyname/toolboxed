@@ -52,8 +52,9 @@ export function ObjectInspector({ body, onUpdate, onDelete }: ObjectInspectorPro
         );
     }
 
-    const handleFocus = () => {
+    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
         isEditingRef.current = true;
+        e.currentTarget.select();
     };
 
     const handleUpdateField = (field: string, value: string) => {

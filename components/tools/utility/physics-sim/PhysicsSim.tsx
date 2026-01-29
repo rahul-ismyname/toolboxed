@@ -6,7 +6,9 @@ import { useP5Renderer } from './hooks/useP5Renderer';
 import { TopBar } from './components/hud/TopBar';
 import { BottomDock } from './components/hud/BottomDock';
 import { PropertiesPanel } from './components/hud/PropertiesPanel';
+import { ObjectList } from './components/hud/ObjectList';
 import { PHYSICS_TEMPLATES } from '@/lib/sim-templates';
+import { Settings2 } from 'lucide-react';
 
 interface BodyData {
     id: number;
@@ -21,6 +23,7 @@ interface BodyData {
 
 export default function PhysicsSim() {
     const containerRef = useRef<HTMLDivElement>(null);
+    const canvasContainerRef = useRef<HTMLDivElement>(null);
 
     // Global state
     const [paused, setPaused] = useState(true);
@@ -33,6 +36,9 @@ export default function PhysicsSim() {
     const [isLoaded, setIsLoaded] = useState(false);
     const [activeTool, setActiveTool] = useState<string | null>(null);
     const [spawnSize, setSpawnSize] = useState(30);
+    const [showHUD, setShowHUD] = useState(true);
+    const [showObjectList, setShowObjectList] = useState(true);
+    const [isFullscreen, setIsFullscreen] = useState(false);
 
     // Physics engine hook
     const engine = useMatterEngine({ gravity });
@@ -47,9 +53,11 @@ export default function PhysicsSim() {
         init();
     }, []);
 
+    const handleToolUsed = useCallback(() => setActiveTool(null), []);
+
     // P5 Renderer hook
     const renderer = useP5Renderer({
-        containerRef,
+        containerRef: canvasContainerRef,
         engine,
         bgColor,
         showVectors,
@@ -58,7 +66,18 @@ export default function PhysicsSim() {
         onSelectBody: setSelectedBodyId,
         activeTool,
         spawnSize,
+        isFullscreen,
+        onToolUsed: handleToolUsed,
     });
+
+    // Handle FullScreen change
+    useEffect(() => {
+        const handleFSChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+        document.addEventListener('fullscreenchange', handleFSChange);
+        return () => document.removeEventListener('fullscreenchange', handleFSChange);
+    }, []);
 
     // Refresh selected body data periodically
     useEffect(() => {
@@ -70,8 +89,6 @@ export default function PhysicsSim() {
         const interval = setInterval(() => {
             const body = engine.getBodyById(selectedBodyId);
             if (body) {
-                // Only update if we are not editing locally to avoid flicker
-                // Note: ObjectInspector has its own local state, but we provide the source of truth
                 setSelectedBodyData({
                     id: body.id,
                     color: body.render?.fillStyle || '#E8E8E8',
@@ -83,11 +100,10 @@ export default function PhysicsSim() {
                     friction: body.friction,
                 });
             } else {
-                // Body likely deleted
                 setSelectedBodyId(null);
                 setSelectedBodyData(null);
             }
-        }, 200); // 5Hz is enough for HUD refresh
+        }, 200);
 
         return () => clearInterval(interval);
     }, [isLoaded, selectedBodyId, engine]);
@@ -102,35 +118,25 @@ export default function PhysicsSim() {
         const template = PHYSICS_TEMPLATES.find(t => t.id === templateId);
         if (template) {
             engine.loadTemplate(template);
+            renderer.clearTrails();
             setActiveTemplateId(templateId);
             setPaused(true);
             setSelectedBodyId(null);
         }
-    }, [engine]);
+    }, [engine, renderer]);
 
     const handleReset = useCallback(() => {
         handleLoadTemplate(activeTemplateId);
-    }, [handleLoadTemplate, activeTemplateId]);
+        renderer.clearTrails();
+    }, [handleLoadTemplate, activeTemplateId, renderer]);
 
     const handleToolSelect = useCallback((tool: string, size?: number) => {
-        const isNewTool = activeTool !== tool;
         setActiveTool(current => current === tool ? null : tool);
         if (size) setSpawnSize(size);
-
-        console.log('Tool Selected:', tool, 'Active Size:', size || spawnSize, 'Is New:', isNewTool);
-
-        // Immediate spawn if a shape tool is selected
-        if (isNewTool && ['box', 'circle', 'triangle', 'polygon'].includes(tool)) {
-            const centerX = containerRef.current ? containerRef.current.clientWidth / 2 : 400;
-            const centerY = containerRef.current ? containerRef.current.clientHeight / 2 : 300;
-            console.log('Immediate summon at center:', centerX, centerY);
-            engine.spawnBody(tool as any, { x: centerX, y: centerY }, size || spawnSize);
-        }
-    }, [activeTool, spawnSize, engine]);
+    }, []);
 
     const handleUpdateBody = useCallback((id: number, updates: Partial<BodyData>) => {
         engine.updateBody(id, updates);
-        // Update local state immediately for better responsiveness
         if (selectedBodyId === id && selectedBodyData) {
             setSelectedBodyData({ ...selectedBodyData, ...updates });
         }
@@ -142,15 +148,25 @@ export default function PhysicsSim() {
         setSelectedBodyData(null);
     }, [engine]);
 
+    const toggleFullScreen = useCallback(() => {
+        if (!containerRef.current) return;
+        if (!document.fullscreenElement) {
+            containerRef.current.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    }, []);
+
     // Keyboard Shortcuts
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Ignore if typing in an input
             if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') return;
 
             switch (e.key.toLowerCase()) {
                 case ' ':
-                    e.preventDefault(); // Prevent scroll
+                    e.preventDefault();
                     setPaused(p => !p);
                     break;
                 case 'r':
@@ -164,20 +180,36 @@ export default function PhysicsSim() {
                 case 'c': handleToolSelect('circle'); break;
                 case 't': handleToolSelect('triangle'); break;
                 case 'p': handleToolSelect('polygon'); break;
+                case 'h':
+                    e.preventDefault();
+                    setShowHUD(prev => !prev);
+                    break;
+                case 'l':
+                    e.preventDefault();
+                    setShowObjectList(prev => !prev);
+                    break;
+                case 'f':
+                    e.preventDefault();
+                    toggleFullScreen();
+                    break;
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [handleReset, handleToolSelect, handleDeleteBody, selectedBodyId]);
+    }, [handleReset, handleToolSelect, handleDeleteBody, selectedBodyId, toggleFullScreen]);
 
     return (
         <div
-            className="relative w-full h-[85vh] rounded-3xl overflow-hidden border-8 border-white dark:border-slate-900 shadow-2xl"
+            ref={containerRef}
+            className={`relative overflow-hidden ${isFullscreen
+                ? 'fixed inset-0 w-screen h-screen z-[100] rounded-none border-0 bg-slate-50 dark:bg-slate-900'
+                : 'w-full h-[85vh] rounded-3xl border-8 border-white dark:border-slate-900 shadow-2xl'
+                }`}
             style={{ backgroundColor: bgColor }}
         >
             {/* Canvas Container */}
-            <div ref={containerRef} className="absolute inset-0 cursor-crosshair">
+            <div ref={canvasContainerRef} className="absolute inset-0 cursor-crosshair">
                 {!isLoaded && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
                         <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
@@ -191,31 +223,62 @@ export default function PhysicsSim() {
             {/* HUD Overlay */}
             {isLoaded && (
                 <>
-                    <TopBar
-                        activeTemplateId={activeTemplateId}
-                        onLoadTemplate={handleLoadTemplate}
-                        gravity={gravity}
-                        onGravityChange={handleGravityChange}
-                        showVectors={showVectors}
-                        onShowVectorsChange={setShowVectors}
-                        bgColor={bgColor}
-                        onBgColorChange={setBgColor}
-                    />
+                    {showHUD && (
+                        <TopBar
+                            activeTemplateId={activeTemplateId}
+                            onLoadTemplate={handleLoadTemplate}
+                            gravity={gravity}
+                            onGravityChange={handleGravityChange}
+                            showVectors={showVectors}
+                            onShowVectorsChange={setShowVectors}
+                            bgColor={bgColor}
+                            onBgColorChange={setBgColor}
+                            onToggleHUD={() => setShowHUD(false)}
+                            onToggleFullScreen={toggleFullScreen}
+                            isFullscreen={isFullscreen}
+                            showObjectList={showObjectList}
+                            onToggleObjectList={() => setShowObjectList(!showObjectList)}
+                        />
+                    )}
 
-                    <BottomDock
-                        paused={paused}
-                        onPausedChange={setPaused}
-                        onReset={handleReset}
-                        activeTool={activeTool}
-                        onSelectTool={handleToolSelect}
-                    />
+                    {!showHUD && (
+                        <button
+                            onClick={() => setShowHUD(true)}
+                            className="absolute top-4 left-4 z-50 p-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 text-slate-500 hover:text-indigo-500 transition-all pointer-events-auto"
+                            title="Show UI (H)"
+                        >
+                            <Settings2 className="w-6 h-6" />
+                        </button>
+                    )}
 
-                    <PropertiesPanel
-                        selectedBody={selectedBodyData}
-                        onUpdateBody={handleUpdateBody}
-                        onDeleteBody={handleDeleteBody}
-                        onClose={() => setSelectedBodyId(null)}
-                    />
+                    {showHUD && (
+                        <BottomDock
+                            paused={paused}
+                            onPausedChange={setPaused}
+                            onReset={handleReset}
+                            activeTool={activeTool}
+                            onSelectTool={handleToolSelect}
+                            onClearTrails={renderer.clearTrails}
+                        />
+                    )}
+
+                    {showObjectList && showHUD && (
+                        <ObjectList
+                            bodies={engine.getAllBodies()}
+                            selectedBodyId={selectedBodyId}
+                            onSelectBody={setSelectedBodyId}
+                            onDeleteBody={engine.deleteBody}
+                        />
+                    )}
+
+                    {selectedBodyId && showHUD && (
+                        <PropertiesPanel
+                            selectedBody={selectedBodyData}
+                            onUpdateBody={handleUpdateBody}
+                            onDeleteBody={handleDeleteBody}
+                            onClose={() => setSelectedBodyId(null)}
+                        />
+                    )}
                 </>
             )}
         </div>
