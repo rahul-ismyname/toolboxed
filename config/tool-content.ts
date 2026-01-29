@@ -1624,6 +1624,33 @@ export const toolContentData: Record<string, ToolData> = {
             es: { title: 'Removedor de Fondo AI', description: 'Elimina el fondo de las fotos localmente en tu navegador.' },
             pt: { title: 'Removedor de Fundo AI', description: 'Remova fundos de fotos localmente no seu navegador.' },
             hi: { title: 'AI बैकग्राउंड रिमूवर', description: 'बिना सर्वर अपलोड के फोटो से बैकग्राउंड हटाएं।' }
+        },
+    },
+    'physics-sim': {
+        title: 'Universe Sandbox - 3b1b Style Physics & Math Simulator',
+        description: 'An interactive mathematical and physical playground. Simulate laws of inertia, acceleration, and complex functions with beautiful 3Blue1Brown aesthetics.',
+        features: [
+            'Real-time Rigid Body Physics (Matter.js)',
+            'Beautiful 3b1b Mathematical Aesthetics',
+            'Interactive Vector Visualization (Force, Velocity, Acceleration)',
+            'Dynamic Function Plotting and Physics Interaction',
+            '100% Private - Runs entirely in your browser'
+        ],
+        howToUse: [
+            { title: 'Choose a Template', description: 'Start with a pre-defined scenario like "Inertia Lab" or "Acceleration Demo".' },
+            { title: 'Interact with Objects', description: 'Drag objects to see how they react to forces and collisions.' },
+            { title: 'Edit Math Functions', description: 'Modify mathematical expressions to change the environment or object behavior.' },
+            { title: 'Visualize Vectors', description: 'Toggle show/hide for force, velocity, and acceleration vectors to learn physics concepts.' }
+        ],
+        faqs: [
+            { question: 'Is this simulator accurate?', answer: 'Yes, it uses Matter.js, a professional 2D rigid-body physics engine, to calculate real-world physical interactions.' },
+            { question: 'Can I simulate my own equations?', answer: 'Absolutely! You can enter mathematical functions to define terrains, forces, or orbital paths.' },
+            { question: 'Does it work offline?', answer: 'Yes, once the page is loaded, all calculations and rendering happen locally on your device.' }
+        ],
+        localizedMetadata: {
+            es: { title: 'Simulador de Física del Universo', description: 'Simula leyes de inercia y aceleración con estética 3b1b.' },
+            pt: { title: 'Simulador de Física do Universo', description: 'Simule leis de inércia e aceleração com estética 3b1b.' },
+            hi: { title: 'ब्रह्मांड भौतिकी सिम्युलेटर', description: '3b1b सौंदर्यशास्त्र के साथ जड़ता और त्वरण के नियमों का अनुकरण करें।' }
         }
     }
 };

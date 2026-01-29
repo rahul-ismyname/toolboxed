@@ -35,31 +35,51 @@ import {
     BarChart3,
     Hash,
     Fingerprint,
+    Search,
+    Languages,
+    Map,
+    MousePointer2,
+    Keyboard,
+    Smartphone,
+    Monitor,
+    CreditCard,
+    AtSign,
     Lock,
-    Ratio,
-    Scissors,
-    Tag,
-    PenTool,
-    Layers,
-    ImagePlus,
-    Timer,
-    LucideIcon,
-    Wallet,
+    Globe,
+    Zap,
+    Cpu,
     Database,
-    ScanSearch,
-    Video,
-    Workflow,
+    Cloud,
     Layout,
+    Box,
+    Sparkles,
+    Settings,
+    Music,
+    Video,
+    Mic,
+    Scissors,
+    Layers,
+    Move,
+    Maximize2,
+    Plus,
+    Minus,
+    Trash2,
+    History,
+    FileImage,
+    FileVideo,
+    FileAudio,
+    Gamepad2,
+    Atom,
+    Ratio,
+    Tag,
+    Workflow,
     Network,
     Columns,
-    Sparkles,
     Accessibility,
-    Monitor,
-    Zap
+    LucideIcon
 } from 'lucide-react';
 
 export type ToolCategory = 'Health' | 'Developer' | 'Business' | 'Utility' | 'Design';
-
 
 export interface Tool {
     slug: string;
@@ -112,491 +132,419 @@ export const tools: Tool[] = [
         path: '/invoice-builder'
     },
     {
-        slug: 'pdf-master',
-        name: 'Privacy-First PDF Master',
-        description: 'Merge, split, protect, and digitally sign PDFs entirely in your browser. 100% private.',
-        category: 'Utility',
-        icon: Shield,
-        path: '/pdf-master'
-    },
-    {
-        slug: 'sql-formatter',
-        name: 'SQL Formatter',
-        description: 'Beautify and validate SQL queries for multiple dialects (MySQL, Postgres, etc).',
-        category: 'Developer',
-        icon: Database,
-        path: '/sql-formatter'
-    },
-    {
-        slug: 'regex-tester',
-        name: 'RegEx Tester',
-        description: 'Test and debug regular expressions with real-time highlighting.',
-        category: 'Developer',
-        icon: ScanSearch,
-        path: '/regex-tester'
-    },
-    {
-        slug: 'mermaid-visualizer',
-        name: 'Mermaid Visualizer',
-        description: 'Create flowcharts, sequence diagrams, and more with text.',
-        category: 'Design',
-        icon: Workflow,
-        path: '/mermaid-visualizer'
-    },
-    {
-        slug: 'box-shadow-generator',
-        name: 'Box Shadow Generator',
-        description: 'Create layered, smooth CSS box-shadows with a visual editor.',
-        category: 'Design',
-        icon: Layers,
-        path: '/box-shadow-generator'
-    },
-    {
-        slug: 'image-pdf-compressor',
-        name: 'Image & PDF Compressor',
-        description: 'Convert and compress images and PDFs. Set target file sizes (e.g., 100KB) and process unlimited files locally.',
-        category: 'Utility',
-        icon: ImagePlus,
-        path: '/image-pdf-compressor'
-    },
-    {
-        slug: 'pomodoro-timer',
-        name: 'Pomodoro Timer',
-        description: 'Stay focused with customizable 25-minute work intervals.',
-        category: 'Health',
-        icon: Timer,
-        path: '/pomodoro-timer'
-    },
-    {
-        slug: 'css-clip-path',
-        name: 'CSS Clip Path Generator',
-        description: 'Create complex shapes and polygons with interactive CSS clip-path builder.',
-        category: 'Design',
-        icon: Scissors,
-        path: '/css-clip-path'
-    },
-    {
-        slug: 'meta-tag-generator',
-        name: 'Meta Tag Generator',
-        description: 'Generate SEO and Social Media meta tags with live Google/Facebook preview.',
-        category: 'Developer',
-        icon: Tag,
-        path: '/meta-tag-generator'
-    },
-    {
-        slug: 'signature-pad',
-        name: 'Digital Signature Pad',
-        description: 'Draw, save, and download your digital signature as transparent PNG.',
-        category: 'Business',
-        icon: PenTool,
-        path: '/signature-pad'
-    },
-    {
-        slug: 'uuid-generator',
-        name: 'UUID Generator',
-        description: 'Generate version 1, 3, 4, and 5 UUIDs instantly with bulk options.',
-        category: 'Developer',
-        icon: Fingerprint,
-        path: '/uuid-generator'
-    },
-    {
-        slug: 'jwt-decoder',
-        name: 'JWT Decoder',
-        description: 'Decode and inspect JSON Web Tokens (headers, payload, signature).',
-        category: 'Developer',
-        icon: Lock,
-        path: '/jwt-decoder'
-    },
-    {
-        slug: 'aspect-ratio-calculator',
-        name: 'Aspect Ratio Calculator',
-        description: 'Calculate dimensions and ratios for images, video, and screens.',
-        category: 'Design',
-        icon: Ratio,
-        path: '/aspect-ratio-calculator'
-    },
-    {
-        slug: 'stopwatch-timer',
-        name: 'Stopwatch & Timer',
-        description: 'Track time with high-precision stopwatch or countdown timer.',
-        category: 'Utility',
-        icon: Hourglass,
-        path: '/stopwatch-timer'
-    },
-    {
-        slug: 'json-to-csv',
-        name: 'JSON to CSV',
-        description: 'Convert JSON arrays to CSV format and download as Spreadsheet.',
-        category: 'Developer',
-        icon: ArrowRightLeft,
-        path: '/json-to-csv'
-    },
-    {
-        slug: 'sales-tax',
-        name: 'Sales Tax Calculator',
-        description: 'Calculate sales tax, GST, or VAT for any transaction.',
-        category: 'Business',
-        icon: Receipt,
-        path: '/sales-tax'
-    },
-    {
-        slug: 'case-converter',
-        name: 'Case Converter',
-        description: 'Transform text into UPPERCASE, lowercase, Title Case, and more.',
-        category: 'Utility',
-        icon: Type,
-        path: '/case-converter'
-    },
-    {
-        slug: 'url-converter',
-        name: 'URL Encoder / Decoder',
-        description: 'Safely encode and decode URLs and query parameters.',
-        category: 'Developer',
-        icon: Link2,
-        path: '/url-converter'
-    },
-    {
-        slug: 'lorem-ipsum',
-        name: 'Lorem Ipsum Generator',
-        description: 'Generate custom placeholder text for your designs and layouts.',
-        category: 'Utility',
-        icon: AlignLeft,
-        path: '/lorem-ipsum'
-    },
-    {
-        slug: 'placeholder-generator',
-        name: 'Image Placeholder',
-        description: 'Generate custom dummy image URLs for your web prototypes.',
-        category: 'Utility',
-        icon: Image,
-        path: '/placeholder-generator'
-    },
-    {
-        slug: 'html-entities',
-        name: 'HTML Entities',
-        description: 'Safely encode and decode HTML special characters.',
-        category: 'Developer',
-        icon: Codesandbox,
-        path: '/html-entities'
-    },
-    {
-        slug: 'bmr-calculator',
-        name: 'BMR Calculator',
-        description: 'Calculate your metabolic rate and daily calorie needs.',
-        category: 'Health',
-        icon: Flame,
-        path: '/bmr-calculator'
-    },
-    {
-        slug: 'loan-calculator',
-        name: 'Loan / EMI Calculator',
-        description: 'Calculate monthly payments and total interest for any loan or mortgage.',
-        category: 'Business',
-        icon: Landmark,
-        path: '/loan-calculator'
-    },
-    {
-        slug: 'glassmorphism-generator',
-        name: 'Glassmorphism Generator',
-        description: 'Create beautiful frosted-glass UI effects with auto-generated CSS.',
-        category: 'Developer',
-        icon: Wand2,
-        path: '/glassmorphism-generator'
-    },
-    {
-        slug: 'diff-checker',
-        name: 'Text Diff Checker',
-        description: 'Compare two blocks of text side-by-side and highlight differences.',
-        category: 'Developer',
-        icon: Diff,
-        path: '/diff-checker'
-    },
-    {
-        slug: 'markdown-previewer',
-        name: 'Markdown Previewer',
-        description: 'Live side-by-side markdown editor and real-time previewer.',
-        category: 'Developer',
-        icon: Eye,
-        path: '/markdown-previewer'
-    },
-    {
-        slug: 'percentage-calculator',
-        name: 'Percentage Calculator',
-        description: 'Solve any percentage problem: increases, decreases, and ratios.',
-        category: 'Utility',
-        icon: Percent,
-        path: '/percentage-calculator'
-    },
-    {
-        slug: 'color-converter',
-        name: 'Color Converter',
-        description: 'Advanced HEX, RGB, and HSL color conversion with visual picker.',
-        category: 'Developer',
-        icon: Palette,
-        path: '/color-converter'
-    },
-    {
-        slug: 'base64',
-        name: 'Base64 Encoder / Decoder',
-        description: 'Convert text to Base64 and vice versa with instant client-side processing.',
-        category: 'Developer',
-        icon: Binary,
-        path: '/base64'
-    },
-    {
-        slug: 'age-calculator',
-        name: 'Age Calculator',
-        description: 'Calculate your exact age in years, months, and days instantly.',
-        category: 'Utility',
-        icon: Calendar,
-        path: '/age-calculator'
-    },
-    {
-        slug: 'compound-interest',
-        name: 'Compound Interest',
-        description: 'Visualize the power of exponential growth on your investments.',
-        category: 'Business',
-        icon: Landmark,
-        path: '/compound-interest'
-    },
-    {
-        slug: 'qr-generator',
-        name: 'QR Code Generator',
-        description: 'Generate customizable QR codes for URLs, text, and Wi-Fi instanty.',
-        category: 'Utility',
-        icon: QrCode,
-        path: '/qr-generator'
-    },
-    {
-        slug: 'currency-converter',
-        name: 'Currency Converter',
-        description: 'Real-time exchange rates for 150+ global currencies.',
-        category: 'Business',
-        icon: Coins,
-        path: '/currency-converter'
-    },
-    {
-        slug: 'unit-converter',
-        name: 'Unit Converter',
-        description: 'Convert between Metric and Imperial units for length, weight, and temperature.',
-        category: 'Utility',
-        icon: Scale,
-        path: '/unit-converter'
-    },
-    {
         slug: 'bmi-calculator',
-        name: 'BMI Calculator',
-        description: 'Calculate your Body Mass Index and check your health category.',
+        name: 'Advanced BMI Calculator',
+        description: 'Professional health analysis with BMI, BMR, and Body Fat calculations.',
         category: 'Health',
-        icon: Activity,
+        icon: Scale,
         path: '/bmi-calculator'
     },
     {
-        slug: 'unix-timestamp',
-        name: 'Unix Timestamp',
-        description: 'Convert between Epoch time and human-readable dates.',
-        category: 'Developer',
-        icon: Clock,
-        path: '/unix-timestamp'
-    },
-    {
         slug: 'password-generator',
-        name: 'Password Generator',
-        description: 'Create strong, secure, and random passwords instantly.',
-        category: 'Utility',
-        icon: ShieldCheck,
+        name: 'Secure Password Guru',
+        description: 'Generate unbreakable passwords with custom security parameters.',
+        category: 'Developer',
+        icon: Shield,
         path: '/password-generator'
     },
     {
+        slug: 'unit-converter',
+        name: 'Scientific Unit Converter',
+        description: 'Convert any measurement across 50+ categories with live precision.',
+        category: 'Utility',
+        icon: ArrowRightLeft,
+        path: '/unit-converter'
+    },
+    {
+        slug: 'currency-converter',
+        name: 'Real-time FX Converter',
+        description: 'Global currency conversion with live exchange rates and historical data.',
+        category: 'Business',
+        icon: DollarSign,
+        path: '/currency-converter'
+    },
+    {
         slug: 'json-formatter',
-        name: 'JSON Formatter',
-        description: 'Format, validate, and minify your JSON data.',
+        name: 'JSON Forge & Validator',
+        description: 'Format, validate, and beautify JSON data with deep scanning.',
         category: 'Developer',
         icon: FileJson,
         path: '/json-formatter'
     },
     {
-        slug: 'word-counter',
-        name: 'Word Counter',
-        description: 'Check word, character, sentence, and paragraph counts instantly.',
-        category: 'Utility',
+        slug: 'qr-code-generator',
+        name: 'Dynamic QR Studio',
+        description: 'Create professional, branded QR codes for URLs, WiFi, and more.',
+        category: 'Business',
+        icon: QrCode,
+        path: '/qr-code-generator'
+    },
+    {
+        slug: 'aspect-ratio-calculator',
+        name: 'Aspect Ratio Master',
+        description: 'Calculate and visualize perfect dimensions for web and social media.',
+        category: 'Design',
+        icon: Ratio,
+        path: '/aspect-ratio-calculator'
+    },
+    {
+        slug: 'image-editor',
+        name: 'Visual Image Studio',
+        description: 'Crop, rotate, and filter images directly in your browser.',
+        category: 'Design',
+        icon: Palette,
+        path: '/image-editor'
+    },
+    {
+        slug: 'markdown-previewer',
+        name: 'MD Evolution Preview',
+        description: 'Write and preview GitHub-flavored markdown with professional styling.',
+        category: 'Developer',
         icon: FileText,
+        path: '/markdown-previewer'
+    },
+    {
+        slug: 'text-converter',
+        name: 'Elite Text Processor',
+        description: 'Transform text across myriad formats: Case, Base64, Slug and more.',
+        category: 'Utility',
+        icon: Type,
+        path: '/text-converter'
+    },
+    {
+        slug: 'crypto-price-tracker',
+        name: 'Crypto Market Pulse',
+        description: 'Live cryptocurrency market tracker with real-time price evolution.',
+        category: 'Business',
+        icon: TrendingUp,
+        path: '/crypto-price-tracker'
+    },
+    {
+        slug: 'color-palette-generator',
+        name: 'Chroma Design Studio',
+        description: 'Generate stunning, harmonious color palettes for your next project.',
+        category: 'Design',
+        icon: Palette,
+        path: '/color-palette-generator'
+    },
+    {
+        slug: 'lorem-ipsum-generator',
+        name: 'Professional Text Mock',
+        description: 'Generate placeholder text with custom lengths and structures.',
+        category: 'Developer',
+        icon: AlignLeft,
+        path: '/lorem-ipsum-generator'
+    },
+    {
+        slug: 'pomodoro-timer',
+        name: 'Deep Focus Engine',
+        description: 'Boost productivity with our advanced customizable Pomodoro timer.',
+        category: 'Utility',
+        icon: Hourglass,
+        path: '/pomodoro-timer'
+    },
+    {
+        slug: 'percent-calculator',
+        name: 'Percent Master Plus',
+        description: 'Solve any percentage problem instantly with interactive logic.',
+        category: 'Utility',
+        icon: Percent,
+        path: '/percent-calculator'
+    },
+    {
+        slug: 'compound-interest-calculator',
+        name: 'Wealth Projection Lab',
+        description: 'Calculate long-term investment growth with deep compounding logic.',
+        category: 'Business',
+        icon: Coins,
+        path: '/compound-interest-calculator'
+    },
+    {
+        slug: 'loan-calculator',
+        name: 'Financial Debt Engine',
+        description: 'Comprehensive loan and mortgage analysis with amortization schedules.',
+        category: 'Business',
+        icon: Landmark,
+        path: '/loan-calculator'
+    },
+    {
+        slug: 'stopwatch',
+        name: 'Precision Time Keeper',
+        description: 'High-precision stopwatch with lap times and visual tracking.',
+        category: 'Utility',
+        icon: Clock,
+        path: '/stopwatch'
+    },
+    {
+        slug: 'world-clock',
+        name: 'Global Time Horizon',
+        description: 'Monitor time across multiple cities with visual day/night tracking.',
+        category: 'Utility',
+        icon: Globe,
+        path: '/world-clock'
+    },
+    {
+        slug: 'password-strength-checker',
+        name: 'Vault Security Auditor',
+        description: 'Deep analysis of your password security with entropy calculation.',
+        category: 'Developer',
+        icon: ShieldCheck,
+        path: '/password-strength-checker'
+    },
+    {
+        slug: 'base64-encoder-decoder',
+        name: 'Base64 Stream Forge',
+        description: 'Encode and decode Base64 data with high-performance stream logic.',
+        category: 'Developer',
+        icon: Binary,
+        path: '/base64-encoder-decoder'
+    },
+    {
+        slug: 'url-encoder-decoder',
+        name: 'URL Protocol Studio',
+        description: 'Safe encoding and decoding of URLs with parameter analysis.',
+        category: 'Developer',
+        icon: Link2,
+        path: '/url-encoder-decoder'
+    },
+    {
+        slug: 'html-entities-converter',
+        name: 'HTML Entity Encoder',
+        description: 'Convert special characters to HTML entities and back instantly.',
+        category: 'Developer',
+        icon: Codesandbox,
+        path: '/html-entities-converter'
+    },
+    {
+        slug: 'diff-checker',
+        name: 'Logic Stream Diff',
+        description: 'Compare text and code to find deep differences in real-time.',
+        category: 'Developer',
+        icon: Diff,
+        path: '/diff-checker'
+    },
+    {
+        slug: 'random-number-generator',
+        name: 'Entropy Source Gen',
+        description: 'Generate true random numbers within custom ranges and constraints.',
+        category: 'Utility',
+        icon: Shuffle,
+        path: '/random-number-generator'
+    },
+    {
+        slug: 'case-converter',
+        name: 'Text Case Harmonizer',
+        description: 'Transform text between camelCase, PascalCase, kebab-case and more.',
+        category: 'Utility',
+        icon: Type,
+        path: '/case-converter'
+    },
+    {
+        slug: 'word-counter',
+        name: 'Lexical Analysis Kit',
+        description: 'Detailed analysis of text: words, characters, and reading time.',
+        category: 'Utility',
+        icon: AlignLeft,
         path: '/word-counter'
     },
     {
-        slug: 'keto-calc',
-        name: 'Keto Calorie Calculator',
-        description: 'Scientific macro calculator for Ketogenic diets with specialized inputs.',
-        category: 'Health',
-        icon: Calculator,
-        path: '/keto-calc'
+        slug: 'image-to-pdf',
+        name: 'Visual PDF Architect',
+        description: 'Convert and merge images into professional PDF documents.',
+        category: 'Design',
+        icon: FileText,
+        path: '/image-to-pdf'
     },
     {
-        slug: 'freelance-rate',
-        name: 'Freelance Rate Calculator',
-        description: 'Determine your ideal hourly rate based on income goals and overhead.',
-        category: 'Business',
-        icon: DollarSign,
-        path: '/freelance-rate'
-    },
-    {
-        slug: 'pix-rem',
-        name: 'Pixel to Rem Converter',
-        description: 'Convert PX to REM values for modern responsive web development.',
-        category: 'Developer',
+        slug: 'image-compressor',
+        name: 'Neural Image Shrinker',
+        description: 'Compress images with perfect quality-to-size ratio using AI.',
+        category: 'Design',
         icon: Maximize,
-        path: '/pix-rem'
+        path: '/image-compressor'
     },
     {
-        slug: 'privacy-policy-gen',
-        name: 'Privacy Policy Generator',
-        description: 'Create standard privacy policies for your apps and websites.',
-        category: 'Utility',
-        icon: Shield,
-        path: '/privacy-policy-gen'
-    },
-    {
-        slug: 'roi-calculator',
-        name: 'ROI Calculator',
-        description: 'Calculate Return on Investment for marketing campaigns or business projects.',
-        category: 'Business',
-        icon: TrendingUp,
-        path: '/roi-calculator'
-    },
-    {
-        slug: 'morse-code',
-        name: 'Morse Code Converter',
-        description: 'Convert text to Morse code and back with real-time audio playback.',
-        category: 'Utility',
-        icon: Radio,
-        path: '/morse-code'
-    },
-    {
-        slug: 'base-converter',
-        name: 'Base Converter',
-        description: 'Instant conversion between Binary, Decimal, Hex, and Octal bases.',
+        slug: 'binary-calculator',
+        name: 'Binary Logic Engine',
+        description: 'Perform complex arithmetic on binary, octal and hex values.',
         category: 'Developer',
-        icon: Hash,
-        path: '/base-converter'
+        icon: Binary,
+        path: '/binary-calculator'
     },
     {
-        slug: 'random-choice',
-        name: 'Random Choice Maker',
-        description: 'Pick a random item from a list with a fun shuffle animation.',
-        category: 'Utility',
-        icon: Shuffle,
-        path: '/random-choice'
-    },
-    {
-        slug: 'text-statistics',
-        name: 'Advanced Text Statistics',
-        description: 'Analyze reading time, character frequency, and readability scores.',
-        category: 'Utility',
-        icon: BarChart3,
-        path: '/text-statistics'
-    },
-    {
-        slug: 'family-spending-analyzer',
-        name: 'Family Spending Analyzer',
-        description: 'Track income, expenses, and analyze family budget with PDF/CSV export.',
-        category: 'Business',
-        icon: Wallet,
-        path: '/family-spending-analyzer'
-    },
-    {
-        slug: 'paint-app',
-        name: 'Paint App',
-        description: 'A full-featured digital canvas for sketching and drawing.',
+        slug: 'hex-to-rgb',
+        name: 'Color Vector Studio',
+        description: 'Convert between HEX, RGB, and HSL with visual feedback.',
         category: 'Design',
         icon: Palette,
-        path: '/paint-app'
+        path: '/hex-to-rgb'
     },
     {
-        slug: 'animated-patterns',
-        name: 'Animated Pattern Master',
-        description: 'Generate and animate infinite SVG patterns for modern backgrounds.',
+        slug: 'css-gradient-generator',
+        name: 'Prism Gradient Forge',
+        description: 'Design beautiful CSS gradients with advanced visual controls.',
         category: 'Design',
-        icon: Sparkles,
-        path: '/animated-patterns'
+        icon: Wand2,
+        path: '/css-gradient-generator'
     },
     {
-        slug: 'time-block-planner',
-        name: 'Time-Block Day Planner',
-        description: 'Visual day planner to "paint" your schedule with color-coded 30-minute blocks.',
-        category: 'Business',
-        icon: Layout,
-        path: '/time-block-planner'
+        slug: 'html-minifier',
+        name: 'DOM Stream Shrinker',
+        description: 'Minify and optimize HTML code for high-performance delivery.',
+        category: 'Developer',
+        icon: Codesandbox,
+        path: '/html-minifier'
     },
     {
-        slug: 'stickman-animator',
-        name: 'Stickman Animator',
-        description: 'Professional browser-based stickman animation tool with keyframes and interpolation.',
+        slug: 'css-minifier',
+        name: 'Style Logic Refiner',
+        description: 'Optimize CSS files for maximum loading speed and performance.',
+        category: 'Developer',
+        icon: Palette,
+        path: '/css-minifier'
+    },
+    {
+        slug: 'js-minifier',
+        name: 'Script Logic Forge',
+        description: 'Minify JavaScript code to reduce payload size and speed up execution.',
+        category: 'Developer',
+        icon: FileJson,
+        path: '/js-minifier'
+    },
+    {
+        slug: 'pixel-converter',
+        name: 'Fluid Layout Master',
+        description: 'Quickly convert between PX, EM, REM and percentage values.',
+        category: 'Developer',
+        icon: Maximize,
+        path: '/pixel-converter'
+    },
+    {
+        slug: 'svg-editor',
+        name: 'Vector Logic Studio',
+        description: 'Real-time visual editor for SVG graphics and animations.',
         category: 'Design',
-        icon: Accessibility,
-        path: '/stickman-animator'
+        icon: Wand2,
+        path: '/svg-editor'
     },
     {
-        slug: 'mockup-studio',
-        name: '3D Device Mockup Studio',
-        description: 'Create professional 3D device mockups for your apps and websites entirely in the browser.',
+        slug: 'csv-to-json',
+        name: 'Data Format Bridge',
+        description: 'Convert CSV data to JSON format with custom mapping logic.',
+        category: 'Developer',
+        icon: FileJson,
+        path: '/csv-to-json'
+    },
+    {
+        slug: 'image-resizer',
+        name: 'Dimension Architect',
+        description: 'Resize images with high precision and multiple aspect ratios.',
         category: 'Design',
-        icon: Monitor,
-        path: '/mockup-studio'
+        icon: Maximize2,
+        path: '/image-resizer'
     },
     {
         slug: 'link-shortener',
-        name: 'Link Shortener',
-        description: 'Shorten long URLs and track clicks instantly.',
+        name: 'Clean Link Studio',
+        description: 'Create short, clean, and trackable aliases for long URLs.',
         category: 'Utility',
         icon: Link2,
         path: '/link-shortener'
     },
     {
-        slug: 'svg-editor',
-        name: 'Live SVG Editor',
-        description: 'Edit, preview, and optimize SVG graphics in real-time with visual controls.',
+        slug: 'text-statistics',
+        name: 'Advanced Text Statistics',
+        description: 'Analyze text complexity, readability scores and word frequency.',
+        category: 'Utility',
+        icon: BarChart3,
+        path: '/text-statistics'
+    },
+    {
+        slug: 'mockup-studio',
+        name: 'Professional Device Mockup',
+        description: 'Create premium device mockups for your SaaS and apps instantly.',
         category: 'Design',
-        icon: PenTool,
-        path: '/svg-editor'
+        icon: Monitor,
+        path: '/mockup-studio'
     },
     {
-        slug: 'api-playground',
-        name: 'API Playground',
-        description: 'Professional HTTP client for testing and debugging REST APIs online.',
-        category: 'Developer',
-        icon: Zap,
-        path: '/api-playground'
+        slug: 'barcode-generator',
+        name: 'Precision Barcode Gen',
+        description: 'Generate professional barcodes in multiple industrial formats.',
+        category: 'Business',
+        icon: QrCode,
+        path: '/barcode-generator'
     },
     {
-        slug: 'code-playground',
-        name: 'Code Playground',
-        description: 'Instant HTML, CSS, and JavaScript sandbox with live preview.',
+        slug: 'signature-pad',
+        name: 'Legal Signature Studio',
+        description: 'Create and export professional hand-drawn digital signatures.',
+        category: 'Business',
+        icon: Wand2,
+        path: '/signature-pad'
+    },
+    {
+        slug: 'css-clip-path',
+        name: 'Visual CSS Path Gen',
+        description: 'Design complex CSS clip-paths visually with real-time preview.',
         category: 'Developer',
-        icon: Codesandbox,
-        path: '/code-playground'
+        icon: Scissors,
+        path: '/css-clip-path'
+    },
+    {
+        slug: 'meta-tag-generator',
+        name: 'Ultimate SEO Architect',
+        description: 'Generate high-performance meta tags for search and social media.',
+        category: 'Business',
+        icon: Tag,
+        path: '/meta-tag-generator'
+    },
+    {
+        slug: 'image-pdf-compressor',
+        name: 'Ultimate Asset Optimizer',
+        description: 'Professional-grade compression for Images and PDFs with AI precision.',
+        category: 'Design',
+        icon: Maximize,
+        path: '/image-pdf-compressor'
+    },
+    {
+        slug: 'advanced-pdf-editor',
+        name: 'Pro PDF Workspace',
+        description: 'Merge, split, and rotate PDFs directly in your browser with zero server uploads.',
+        category: 'Business',
+        icon: Layers,
+        path: '/advanced-pdf-editor'
+    },
+    {
+        slug: 'video-compressor',
+        name: 'HD Video Optimizer',
+        description: 'Compress and resize videos with pro-grade quality using on-device FFmpeg power.',
+        category: 'Utility',
+        icon: Video,
+        path: '/video-compressor'
     },
     {
         slug: 'type-racer',
-        name: 'Type Racer',
-        description: 'Test your typing speed in a high-octane race against bots.',
-        category: 'Developer',
-        icon: Zap,
+        name: 'Typing Speed Engine',
+        description: 'Test and improve your typing speed with real-time lexical tracking.',
+        category: 'Utility',
+        icon: Keyboard,
         path: '/type-racer'
+    },
+    {
+        slug: 'physics-sim',
+        name: 'Universe Sandbox',
+        description: '3b1b-style interactive physics and math simulator. Test inertia, acceleration, and complex functions.',
+        category: 'Utility',
+        icon: Atom,
+        path: '/physics-sim'
     },
     {
         slug: 'background-remover',
         name: 'AI Background Remover',
         description: 'Remove backgrounds from images instantly and privately using on-device AI.',
-        category: 'Utility',
-        icon: Sparkles,
+        category: 'Design',
+        icon: Wand2,
         path: '/background-remover'
-    },
-    {
-        slug: 'video-compressor',
-        name: 'Privacy-First Video Compressor',
-        description: 'Compress and convert videos locally in your browser. No server uploads, 100% private.',
-        category: 'Utility',
-        icon: Video,
-        path: '/video-compressor'
     }
 ];

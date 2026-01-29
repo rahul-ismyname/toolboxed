@@ -1,0 +1,96 @@
+﻿
+> master-app@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.4 (Turbopack)
+- Environments: .env.local
+
+node.exe : ΓÜá The "middleware" file 
+convention is deprecated. Please use 
+"proxy" instead. Learn more: https://nextjs.
+org/docs/messages/middleware-to-proxy
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" 
+"C:\Users\rahul\AppData\Roaming\ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: 
+    (ΓÜá The "middle...leware-to-proxy:Str  
+  ing) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommand 
+   Error
+ 
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 1 errors:
+./app/(tools)/physics-sim/page.tsx:3:20
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mimport[39m { 
+[33mMetadata[39m } [36mfrom[39m 
+[32m'next'[39m[33m;[39m
+ [90m 2 |[39m [36mimport[39m dynamic 
+[36mfrom[39m 
+[32m'next/dynamic'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 3 |[39m 
+[36mconst[39m [33mPhysicsSim[39m 
+[33m=[39m dynamic(() [33m=>[39m [36mimp
+ort[39m([32m'@/components/tools/utility/Ph
+ysicsSim'[39m)[33m,[39m { ssr[33m:[39m 
+[36mfalse[39m })[33m;[39m
+ [90m   |[39m                    [31m[1m
+^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[22m[39m[31m[1m
+^[22m[39m
+ [90m 4 |[39m [36mimport[39m { 
+[33mToolContent[39m } [36mfrom[39m [32m
+'@/components/tools/ToolContent'[39m[33m;
+[39m
+ [90m 5 |[39m [36mimport[39m { 
+[33mBackButton[39m } [36mfrom[39m [32m'
+@/components/shared/BackButton'[39m[33m;[
+39m
+ [90m 6 |[39m [36mimport[39m { 
+toolContentData } [36mfrom[39m [32m'@/con
+fig/tool-content'[39m[33m;[39m[0m
+
+`ssr: false` is not allowed with 
+`next/dynamic` in Server Components. Please 
+move it into a Client Component.
+
+
+    at <unknown> 
+(./app/(tools)/physics-sim/page.tsx:3:20)
