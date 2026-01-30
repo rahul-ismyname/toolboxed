@@ -3,6 +3,7 @@
 import React from 'react';
 import { X, Trash2 } from 'lucide-react';
 import { ObjectInspector } from '../ObjectInspector';
+import { MATERIALS } from '../../hooks/useMatterEngine';
 
 interface BodyData {
     id: number;
@@ -13,6 +14,8 @@ interface BodyData {
     acceleration: { x: number; y: number };
     restitution: number;
     friction: number;
+    density: number;
+    material?: string;
 }
 
 interface PropertiesPanelProps {
@@ -48,6 +51,30 @@ export function PropertiesPanel({
 
                 {/* Content */}
                 <div className="p-4 overflow-y-auto custom-scrollbar">
+                    <div className="mb-4">
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Material</label>
+                        <select
+                            value={selectedBody.material || 'DEFAULT'}
+                            onChange={(e) => {
+                                const matKey = e.target.value;
+                                const mat = MATERIALS[matKey];
+                                if (mat) {
+                                    onUpdateBody(selectedBody.id, {
+                                        material: matKey,
+                                        restitution: mat.restitution,
+                                        friction: mat.friction,
+                                        density: mat.density
+                                    });
+                                }
+                            }}
+                            className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-700 dark:text-slate-300"
+                        >
+                            {Object.entries(MATERIALS).map(([key, mat]) => (
+                                <option key={key} value={key}>{mat.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
                     <ObjectInspector
                         body={selectedBody}
                         onUpdate={onUpdateBody}

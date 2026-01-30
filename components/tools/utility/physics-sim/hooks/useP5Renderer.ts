@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect, useMemo, useState } from 'react';
-import type { MatterEngineAPI } from './useMatterEngine';
+import type { MatterEngineAPI, ActiveWalls } from './useMatterEngine';
 
 interface UseP5RendererOptions {
     containerRef: React.RefObject<HTMLDivElement | null>;
@@ -15,6 +15,8 @@ interface UseP5RendererOptions {
     spawnSize: number;
     isFullscreen?: boolean;
     onToolUsed?: () => void;
+    activeMaterial: string;
+    activeWalls: ActiveWalls;
 }
 
 export interface P5RendererAPI {
@@ -36,6 +38,8 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
         spawnSize,
         isFullscreen = false,
         onToolUsed,
+        activeMaterial,
+        activeWalls
     } = options;
 
     const p5Ref = useRef<any>(null);
@@ -49,6 +53,9 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
     const selectedBodyIdRef = useRef(selectedBodyId);
     const activeToolRef = useRef(activeTool);
     const spawnSizeRef = useRef(spawnSize);
+    const activeMaterialRef = useRef(activeMaterial);
+    const onToolUsedRef = useRef(onToolUsed);
+    const activeWallsRef = useRef(activeWalls);
 
     useEffect(() => { bgColorRef.current = bgColor; }, [bgColor]);
     useEffect(() => { showVectorsRef.current = showVectors; }, [showVectors]);
@@ -56,17 +63,20 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
     useEffect(() => { selectedBodyIdRef.current = selectedBodyId; }, [selectedBodyId]);
     useEffect(() => { activeToolRef.current = activeTool; }, [activeTool]);
     useEffect(() => { spawnSizeRef.current = spawnSize; }, [spawnSize]);
+    useEffect(() => { activeMaterialRef.current = activeMaterial; }, [activeMaterial]);
+    useEffect(() => { onToolUsedRef.current = onToolUsed; }, [onToolUsed]);
+    useEffect(() => { activeWallsRef.current = activeWalls; }, [activeWalls]);
 
     useEffect(() => {
         if (!containerRef.current || !engine.engineRef.current || !engine.MatterRef.current) return;
 
         const initP5 = async () => {
             const p5Module = await import('p5');
-            const p5 = (p5Module as any).default || p5Module;
+            const P5 = (p5Module as any).default || p5Module;
 
             // Disable Friendly Error System (FES) to prevent parser errors with modern JS
             try {
-                (p5 as any).disableFriendlyErrors = true;
+                (P5 as any).disableFriendlyErrors = true;
             } catch (e) { }
 
             const Matter = engine.MatterRef.current;
@@ -102,7 +112,7 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                     Matter.Composite.add(matterEngine.world, mouseConstraint);
 
                     // Add world bounds automatically
-                    engine.addWorldBounds(p.width, p.height);
+                    engine.addWorldBounds(p.width, p.height, 2000, activeWallsRef.current);
                 };
 
                 // Helper to check for snap
@@ -142,8 +152,38 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                     }
 
                     if (tool && ['box', 'circle', 'triangle', 'polygon', 'wall'].indexOf(tool) !== -1) {
-                        engine.spawnBody(tool as any, { x: p.mouseX, y: p.mouseY }, spawnSizeRef.current);
-                        if (onToolUsed) setTimeout(onToolUsed, 0);
+                        engine.spawnBody(tool as any, {
+                            x: p.mouseX,
+                            y: p.mouseY,
+                            material: activeMaterialRef.current // Use current material
+                        }, spawnSizeRef.current);
+                        if (onToolUsedRef.current) setTimeout(onToolUsedRef.current, 0);
+                        return;
+                    }
+
+                    if (tool === 'explosion') {
+                        const force = 0.5; // Adjustable explosion strength
+                        const activeWalls = activeWallsRef.current; // access if needed?
+                        const radius = 300; // Adjustable explosion radius
+                        engine.applyExplosionForce({ x: p.mouseX, y: p.mouseY }, force, radius);
+
+                        // Visual feedback (One-off particle system or just a shape)
+                        const explosionColor = p.color('#EF4444');
+                        explosionColor.setAlpha(150);
+
+                        // Simple visual: add a temporary object to a drawing list for a few frames
+                        // We can use a property on the p5 instance to store temporary fx
+                        if (!p.fx) p.fx = [];
+                        p.fx.push({
+                            x: p.mouseX,
+                            y: p.mouseY,
+                            radius: 10,
+                            maxRadius: radius,
+                            life: 1.0,
+                            color: explosionColor
+                        });
+
+                        if (onToolUsedRef.current) setTimeout(onToolUsedRef.current, 0);
                         return;
                     }
 
@@ -167,8 +207,9 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                 p.mouseDragged = function (event: any) {
                     if (event && event.target && event.target !== canvasElement && !draggedBody) return;
 
+                    const activeWalls = activeWallsRef.current; // Unused but available
                     const tool = activeToolRef.current;
-                    if (tool === 'spring' || tool === 'rod' || tool === 'pin') return;
+                    if (tool === 'spring' || tool === 'rod' || tool === 'pin' || tool === 'explosion') return;
 
                     if (tool === 'thruster' && draggedBody) {
                         const forceMagnitude = 0.002 * draggedBody.mass;
@@ -198,6 +239,7 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
 
                 p.mouseReleased = function () {
                     const tool = activeToolRef.current;
+                    if (tool === 'explosion') return;
 
                     if ((tool === 'spring' || tool === 'rod') && constraintStartBody && constraintStartPos) {
                         const bodies = Matter.Composite.allBodies(matterEngine.world);
@@ -217,7 +259,7 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                             // Body to World (Pin)
                             engine.addConstraint(constraintStartBody, null, tool as any, constraintStartPos, { x: p.mouseX, y: p.mouseY });
                         }
-                        if (onToolUsed) setTimeout(onToolUsed, 0);
+                        if (onToolUsedRef.current) setTimeout(onToolUsedRef.current, 0);
                     }
 
                     if (tool === 'draw' && p.drawPath && p.drawPath.length > 1) {
@@ -482,6 +524,25 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                             }
                         });
                     }
+
+                    // Render FX
+                    if ((p as any).fx && (p as any).fx.length > 0) {
+                        for (let i = (p as any).fx.length - 1; i >= 0; i--) {
+                            const fx = (p as any).fx[i];
+
+                            p.noFill();
+                            p.stroke(fx.color);
+                            p.strokeWeight(3 * fx.life);
+                            p.circle(fx.x, fx.y, fx.radius);
+
+                            fx.radius += (fx.maxRadius - fx.radius) * 0.1;
+                            fx.life -= 0.05;
+
+                            if (fx.life <= 0) {
+                                (p as any).fx.splice(i, 1);
+                            }
+                        }
+                    }
                 };
 
                 p.windowResized = function () {
@@ -489,16 +550,18 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                         const w = containerRef.current.clientWidth;
                         const h = containerRef.current.clientHeight;
                         p.resizeCanvas(w, h);
-                        engine.addWorldBounds(w, h);
+                        engine.addWorldBounds(w, h, 2000, activeWallsRef.current);
                     }
                 };
             };
 
             if (p5Ref.current) p5Ref.current.remove();
-            p5Ref.current = new p5(sketch);
+            p5Ref.current = new P5(sketch);
             setIsLoaded(true);
         };
+
         initP5();
+
         return () => { if (p5Ref.current) p5Ref.current.remove(); };
     }, [containerRef, engine, onSelectBody, engine.isReady]);
 
@@ -510,7 +573,8 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                 const w = containerRef.current!.clientWidth;
                 const h = containerRef.current!.clientHeight;
                 p.resizeCanvas(w, h);
-                engine.addWorldBounds(w, h);
+                // Use activeWalls directly from closure (dependancy updated) rather than ref to avoid race condition
+                engine.addWorldBounds(w, h, 2000, activeWalls);
             };
 
             // Immediate resize
@@ -525,7 +589,7 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                 clearTimeout(timer2);
             };
         }
-    }, [isFullscreen, containerRef, engine]);
+    }, [isFullscreen, containerRef, engine, activeWalls]); // Added activeWalls to dep array for resize triggering
 
     return useMemo(() => ({
         p5Ref,

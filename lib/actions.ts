@@ -144,3 +144,32 @@ export async function getLeaderboard(limit = 100) {
         return [];
     }
 }
+
+export async function savePhysicsScene(data: string) {
+    const id = generateId();
+    try {
+        await turso.execute({
+            sql: "INSERT INTO physics_scenes (id, data) VALUES (?, ?)",
+            args: [id, data]
+        });
+        return id;
+    } catch (error) {
+        console.error('Turso savePhysicsScene error:', error);
+        throw error;
+    }
+}
+
+export async function getPhysicsScene(id: string) {
+    try {
+        const rs = await turso.execute({
+            sql: "SELECT data FROM physics_scenes WHERE id = ?",
+            args: [id]
+        });
+
+        if (rs.rows.length === 0) return null;
+        return rs.rows[0].data as string;
+    } catch (error) {
+        console.error('Turso getPhysicsScene error:', error);
+        return null;
+    }
+}
