@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState, Dispatch, SetStateAction } from 'react';
-import { ChevronDown, Settings2, Wind, Eye, EyeOff, Maximize2, Minimize2, List } from 'lucide-react';
+import { ChevronDown, Wind, Eye, EyeOff, Maximize2, Minimize2, List, BoxSelect, Folder, Save, FolderOpen, Share2, Globe, Monitor, Settings2 } from 'lucide-react';
 import { PHYSICS_TEMPLATES } from '@/lib/sim-templates';
+import { ActiveWalls } from '../../hooks/useMatterEngine';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface TopBarProps {
     activeTemplateId: string;
@@ -22,6 +24,9 @@ interface TopBarProps {
     onTimeScaleChange: (scale: number) => void;
     onSaveScene: () => void;
     onLoadScene: () => void;
+    onShare: () => void;
+    activeWalls: ActiveWalls;
+    onActiveWallsChange: (walls: ActiveWalls) => void;
 }
 
 export function TopBar({
@@ -41,17 +46,43 @@ export function TopBar({
     timeScale,
     onTimeScaleChange,
     onSaveScene,
-    onLoadScene
+    onLoadScene,
+    onShare,
+    activeWalls,
+    onActiveWallsChange
 }: TopBarProps) {
     const [isTemplateMenuOpen, setIsTemplateMenuOpen] = useState(false);
+    const [activeMenu, setActiveMenu] = useState<'scene' | 'world' | 'view' | null>(null);
+
     const activeTemplate = PHYSICS_TEMPLATES.find(t => t.id === activeTemplateId);
+    const menuRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setActiveMenu(null);
+                setIsTemplateMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const toggleMenu = (menu: 'scene' | 'world' | 'view') => {
+        setActiveMenu(activeMenu === menu ? null : menu);
+        setIsTemplateMenuOpen(false); // Close other menu
+    };
 
     return (
-        <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start pointer-events-none z-40">
+        <div ref={menuRef} className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start pointer-events-none z-40">
             {/* Template Selector (Top Left) */}
             <div className="pointer-events-auto relative">
                 <button
-                    onClick={() => setIsTemplateMenuOpen(!isTemplateMenuOpen)}
+                    onClick={() => {
+                        setIsTemplateMenuOpen(!isTemplateMenuOpen);
+                        setActiveMenu(null); // Close other menus
+                    }}
                     className="flex items-center gap-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-white/20 px-4 py-2.5 rounded-2xl shadow-lg hover:bg-white dark:hover:bg-slate-900 transition-all active:scale-95"
                 >
                     <div className="flex flex-col items-start text-left">
@@ -86,133 +117,243 @@ export function TopBar({
                 )}
             </div>
 
-            {/* Global Settings (Top Right) */}
+            {/* Right Hand Menus */}
             <div className="pointer-events-auto flex items-center gap-2">
-                {/* Background Color Picker */}
-                <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-white/20 p-2 rounded-2xl shadow-lg flex items-center">
-                    <input
-                        type="color"
-                        value={bgColor}
-                        onChange={(e) => onBgColorChange(e.target.value)}
-                        className="w-6 h-6 rounded-lg cursor-pointer border-0 p-0"
-                        title="Background Color"
-                    />
-                </div>
 
-                {/* Save/Load (Left of Vectors) */}
-                <div className="flex items-center gap-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-white/20 p-1 rounded-2xl shadow-lg mr-2">
+                {/* 1. SCENE MENU (Save, Load, Share) */}
+                <div className="relative">
                     <button
-                        onClick={onSaveScene}
-                        className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-indigo-500 transition-all active:scale-95"
-                        title="Save Scene (Local Storage)"
-                    >
-                        <span className="font-bold text-[10px] uppercase tracking-wider px-1">Save</span>
-                    </button>
-                    <div className="w-px h-4 bg-slate-200 dark:bg-slate-700" />
-                    <button
-                        onClick={onLoadScene}
-                        className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-indigo-500 transition-all active:scale-95"
-                        title="Load Scene"
-                    >
-                        <span className="font-bold text-[10px] uppercase tracking-wider px-1">Load</span>
-                    </button>
-                </div>
-
-                {/* Vectors Toggle */}
-                <button
-                    onClick={() => onShowVectorsChange(!showVectors)}
-                    className={`p-2.5 rounded-2xl border shadow-lg backdrop-blur-md transition-all active:scale-95 ${showVectors
-                        ? 'bg-indigo-500/90 border-indigo-500/50 text-white'
-                        : 'bg-white/90 dark:bg-slate-900/90 border-white/20 text-slate-500 hover:text-slate-700'
-                        }`}
-                    title="Toggle Velocity Vectors"
-                >
-                    {showVectors ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
-                </button>
-
-                {/* Gravity Y Controls */}
-                <div className="flex items-center gap-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-white/20 p-1 pr-3 rounded-2xl shadow-lg">
-                    <div className="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-500">
-                        <span className="text-[10px] font-bold">GY</span>
-                    </div>
-                    <input
-                        type="range"
-                        min="-2"
-                        max="2"
-                        step="0.1"
-                        value={gravity.y}
-                        onChange={(e) => onGravityChange({ ...gravity, y: parseFloat(e.target.value) })}
-                        className="w-20 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-                        title={`Gravity Y: ${gravity.y.toFixed(2)}`}
-                    />
-                </div>
-
-                {/* Gravity X (Wind) Controls */}
-                <div className="flex items-center gap-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-white/20 p-1 pr-3 rounded-2xl shadow-lg mr-2">
-                    <div className="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-500">
-                        <Wind className="w-4 h-4" />
-                    </div>
-                    <input
-                        type="range"
-                        min="-2"
-                        max="2"
-                        step="0.1"
-                        value={gravity.x}
-                        onChange={(e) => onGravityChange({ ...gravity, x: parseFloat(e.target.value) })}
-                        className="w-20 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-500"
-                        title={`Wind (Gravity X): ${gravity.x.toFixed(2)}`}
-                    />
-                </div>
-
-                {/* Hide HUD & FullScreen */}
-                <div className="flex items-center gap-1 ml-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-white/20 p-1 rounded-2xl shadow-lg">
-                    <button
-                        onClick={onToggleObjectList}
-                        className={`p-2 rounded-xl transition-all active:scale-95 ${showObjectList
-                            ? 'bg-indigo-500 text-white shadow-indigo-500/30 shadow-lg'
-                            : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500'
+                        onClick={() => toggleMenu('scene')}
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95 shadow-lg ${activeMenu === 'scene'
+                            ? 'bg-indigo-500 text-white'
+                            : 'bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-500 hover:text-indigo-500'
                             }`}
-                        title="Toggle Object List (L)"
+                        title="Scene (Save/Load/Share)"
                     >
-                        <List className="w-4 h-4" />
+                        <Folder className="w-5 h-5" />
                     </button>
-                    <button
-                        onClick={onToggleHUD}
-                        className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-all active:scale-95"
-                        title="Hide UI (H)"
-                    >
-                        <EyeOff className="w-4 h-4" />
-                    </button>
-                    <button
-                        onClick={onToggleFullScreen}
-                        className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-all active:scale-95"
-                        title="Toggle FullScreen (F)"
-                    >
-                        {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-                    </button>
-                </div>
-            </div>
 
-            {/* Time Controls (Bottom Right - Floated) */}
-            <div className="absolute top-[72px] right-4 pointer-events-auto flex items-center gap-2">
-                <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-white/20 px-4 py-2 rounded-2xl shadow-lg flex items-center gap-3">
-                    <div className="flex flex-col w-24">
-                        <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                            <span>Time Scale</span>
-                            <span>{timeScale.toFixed(2)}x</span>
-                        </div>
-                        <input
-                            type="range"
-                            min="0.1"
-                            max="2"
-                            step="0.1"
-                            value={timeScale}
-                            onChange={(e) => onTimeScaleChange(parseFloat(e.target.value))}
-                            className="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-                        />
-                    </div>
+                    <AnimatePresence>
+                        {activeMenu === 'scene' && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                className="absolute top-full right-0 mt-2 w-48 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden py-1 z-50"
+                            >
+                                <button
+                                    onClick={() => { onSaveScene(); setActiveMenu(null); }}
+                                    className="w-full px-4 py-2.5 text-left hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-3 group"
+                                >
+                                    <Save className="w-4 h-4 text-slate-400 group-hover:text-indigo-500" />
+                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Save to Browser</span>
+                                </button>
+                                <button
+                                    onClick={() => { onLoadScene(); setActiveMenu(null); }}
+                                    className="w-full px-4 py-2.5 text-left hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-3 group"
+                                >
+                                    <FolderOpen className="w-4 h-4 text-slate-400 group-hover:text-indigo-500" />
+                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Load from Browser</span>
+                                </button>
+                                <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
+                                <button
+                                    onClick={() => { onShare(); setActiveMenu(null); }}
+                                    className="w-full px-4 py-2.5 text-left hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-3 group"
+                                >
+                                    <Share2 className="w-4 h-4 text-slate-400 group-hover:text-indigo-500" />
+                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Share Scene</span>
+                                </button>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
+
+                {/* 2. WORLD MENU (Environment: Gravity, Wind, Time, Walls, BG) */}
+                <div className="relative">
+                    <button
+                        onClick={() => toggleMenu('world')}
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95 shadow-lg ${activeMenu === 'world'
+                            ? 'bg-indigo-500 text-white'
+                            : 'bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-500 hover:text-indigo-500'
+                            }`}
+                        title="World Settings"
+                    >
+                        <Globe className="w-5 h-5" />
+                    </button>
+
+                    <AnimatePresence>
+                        {activeMenu === 'world' && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                className="absolute top-full right-0 mt-2 p-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl flex flex-col gap-4 min-w-[240px] z-50"
+                            >
+                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center border-b border-white/10 pb-2">World Environment</div>
+
+                                {/* Gravity Y */}
+                                <div>
+                                    <div className="flex justify-between text-[10px] text-slate-500 mb-1">
+                                        <span>Gravity (Y)</span>
+                                        <span className="font-mono">{gravity.y.toFixed(2)}</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="-2"
+                                        max="2"
+                                        step="0.1"
+                                        value={gravity.y}
+                                        onChange={(e) => onGravityChange({ ...gravity, y: parseFloat(e.target.value) })}
+                                        className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                                    />
+                                </div>
+
+                                {/* Gravity X (Wind) */}
+                                <div>
+                                    <div className="flex justify-between text-[10px] text-slate-500 mb-1">
+                                        <div className="flex items-center gap-1">
+                                            <Wind className="w-3 h-3" />
+                                            <span>Wind (X)</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="range"
+                                            min="-2"
+                                            max="2"
+                                            step="0.1"
+                                            value={gravity.x}
+                                            onChange={(e) => onGravityChange({ ...gravity, x: parseFloat(e.target.value) })}
+                                            className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-500"
+                                        />
+                                        <input
+                                            type="number"
+                                            min="-5"
+                                            max="5"
+                                            step="0.1"
+                                            value={gravity.x}
+                                            onChange={(e) => onGravityChange({ ...gravity, x: parseFloat(e.target.value) || 0 })}
+                                            className="w-12 text-[10px] p-1 bg-slate-100 dark:bg-slate-800 rounded-md border-0 focus:ring-2 focus:ring-sky-500 text-center font-mono"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Time Scale */}
+                                <div>
+                                    <div className="flex justify-between text-[10px] text-slate-500 mb-1">
+                                        <span>Time Scale</span>
+                                        <span className="font-mono">{timeScale.toFixed(2)}x</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="0.1"
+                                        max="2"
+                                        step="0.1"
+                                        value={timeScale}
+                                        onChange={(e) => onTimeScaleChange(parseFloat(e.target.value))}
+                                        className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                                    />
+                                </div>
+
+                                {/* Walls */}
+                                <div>
+                                    <div className="text-[10px] text-slate-500 mb-2 text-center">Boundaries</div>
+                                    <div className="grid grid-cols-3 gap-1 w-20 h-20 mx-auto">
+                                        <div className="col-start-1 col-end-4 flex justify-center">
+                                            <button onClick={() => onActiveWallsChange({ ...activeWalls, top: !activeWalls.top })} className={`w-full h-4 rounded-sm transition-colors ${activeWalls.top ? 'bg-indigo-500' : 'bg-slate-200 dark:bg-slate-700'}`} title="Top Wall" />
+                                        </div>
+                                        <div className="col-start-1 col-end-2 flex items-center"><button onClick={() => onActiveWallsChange({ ...activeWalls, left: !activeWalls.left })} className={`w-4 h-full rounded-sm transition-colors ${activeWalls.left ? 'bg-indigo-500' : 'bg-slate-200 dark:bg-slate-700'}`} title="Left Wall" /></div>
+                                        <div className="col-start-2 col-end-3 flex items-center justify-center"><div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" /></div>
+                                        <div className="col-start-3 col-end-4 flex items-center justify-end"><button onClick={() => onActiveWallsChange({ ...activeWalls, right: !activeWalls.right })} className={`w-4 h-full rounded-sm transition-colors ${activeWalls.right ? 'bg-indigo-500' : 'bg-slate-200 dark:bg-slate-700'}`} title="Right Wall" /></div>
+                                        <div className="col-start-1 col-end-4 flex justify-center">
+                                            <button onClick={() => onActiveWallsChange({ ...activeWalls, bottom: !activeWalls.bottom })} className={`w-full h-4 rounded-sm transition-colors ${activeWalls.bottom ? 'bg-indigo-500' : 'bg-slate-200 dark:bg-slate-700'}`} title="Bottom Wall" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* BG Color */}
+                                <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
+                                    <span className="text-xs text-slate-500">Background</span>
+                                    <input
+                                        type="color"
+                                        value={bgColor}
+                                        onChange={(e) => onBgColorChange(e.target.value)}
+                                        className="w-6 h-6 rounded-lg cursor-pointer border-0 p-0"
+                                    />
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+
+                {/* 3. VIEW MENU (Settings/Monitor) */}
+                <div className="relative">
+                    <button
+                        onClick={() => toggleMenu('view')}
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95 shadow-lg ${activeMenu === 'view'
+                            ? 'bg-indigo-500 text-white'
+                            : 'bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-500 hover:text-indigo-500'
+                            }`}
+                        title="View Settings"
+                    >
+                        <Monitor className="w-5 h-5" />
+                    </button>
+
+                    <AnimatePresence>
+                        {activeMenu === 'view' && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                className="absolute top-full right-0 mt-2 w-56 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden py-1 z-50 flex flex-col gap-1 p-2"
+                            >
+                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center border-b border-white/10 pb-1 mb-1">Display</div>
+
+                                <button
+                                    onClick={() => onShowVectorsChange(!showVectors)}
+                                    className={`w-full px-3 py-2 rounded-xl text-xs text-left flex items-center justify-between group ${showVectors ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600' : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600'}`}
+                                >
+                                    <span className="flex items-center gap-2">
+                                        {showVectors ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-slate-400" />}
+                                        Velocity Vectors
+                                    </span>
+                                </button>
+
+                                <button
+                                    onClick={onToggleObjectList}
+                                    className={`w-full px-3 py-2 rounded-xl text-xs text-left flex items-center justify-between group ${showObjectList ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600' : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600'}`}
+                                >
+                                    <span className="flex items-center gap-2">
+                                        Object List (L)
+                                    </span>
+                                </button>
+
+                                <button
+                                    onClick={onToggleFullScreen}
+                                    className="w-full px-3 py-2 rounded-xl text-xs text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600"
+                                >
+                                    <span className="flex items-center gap-2">
+                                        {isFullscreen ? 'Exit FullScreen (F)' : 'Enter FullScreen (F)'}
+                                    </span>
+                                </button>
+
+                                <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
+
+                                <button
+                                    onClick={onToggleHUD}
+                                    className="w-full px-3 py-2 rounded-xl text-xs text-left flex items-center justify-between hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-600 hover:text-red-500"
+                                >
+                                    <span className="flex items-center gap-2">
+                                        Hide UI (H)
+                                    </span>
+                                </button>
+
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+
             </div>
-        </div >
+        </div>
     );
 }

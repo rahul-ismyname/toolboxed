@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { useMatterEngine } from './hooks/useMatterEngine';
 import { useP5Renderer } from './hooks/useP5Renderer';
 import { TopBar } from './components/hud/TopBar';
@@ -9,6 +11,7 @@ import { PropertiesPanel } from './components/hud/PropertiesPanel';
 import { ObjectList } from './components/hud/ObjectList';
 import { StatsMonitor } from './components/hud/StatsMonitor';
 import { PHYSICS_TEMPLATES } from '@/lib/sim-templates';
+import { savePhysicsScene, getPhysicsScene } from '@/lib/actions';
 import { Settings2 } from 'lucide-react';
 
 interface BodyData {
@@ -20,11 +23,15 @@ interface BodyData {
     acceleration: { x: number; y: number };
     restitution: number;
     friction: number;
+    density: number;
+    material?: string;
 }
 
 export default function PhysicsSim() {
     const containerRef = useRef<HTMLDivElement>(null);
     const canvasContainerRef = useRef<HTMLDivElement>(null);
+    const searchParams = useSearchParams();
+    const router = useRouter();
 
     // Global state
     const [paused, setPaused] = useState(true);
@@ -41,6 +48,9 @@ export default function PhysicsSim() {
     const [showObjectList, setShowObjectList] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [timeScale, setTimeScale] = useState(1);
+    const [activeMaterial, setActiveMaterial] = useState('DEFAULT');
+    const [multiSpawnMode, setMultiSpawnMode] = useState(false);
+    const [activeWalls, setActiveWalls] = useState({ top: true, bottom: true, left: true, right: true });
 
     // Physics engine hook
     const engine = useMatterEngine({ gravity, timeScale });
@@ -55,7 +65,11 @@ export default function PhysicsSim() {
         init();
     }, []);
 
-    const handleToolUsed = useCallback(() => setActiveTool(null), []);
+    const handleToolUsed = useCallback(() => {
+        if (!multiSpawnMode) {
+            setActiveTool(null);
+        }
+    }, [multiSpawnMode]);
 
     // P5 Renderer hook
     const renderer = useP5Renderer({
@@ -70,6 +84,8 @@ export default function PhysicsSim() {
         spawnSize,
         isFullscreen,
         onToolUsed: handleToolUsed,
+        activeMaterial,
+        activeWalls
     });
 
     // Handle FullScreen change
@@ -100,6 +116,8 @@ export default function PhysicsSim() {
                     acceleration: body.plugin?.acceleration || { x: 0, y: 0 },
                     restitution: body.restitution,
                     friction: body.friction,
+                    density: body.density,
+                    material: body.plugin?.materialKey,
                 });
             } else {
                 setSelectedBodyId(null);
@@ -125,10 +143,26 @@ export default function PhysicsSim() {
         const json = engine.serializeWorld();
         if (json) {
             localStorage.setItem('physics-sim-save', json);
-            // Could add toast notification here
-            console.log('Scene saved');
+            toast.success('Scene saved locally');
         }
     }, [engine]);
+
+    const handleShareScene = useCallback(async () => {
+        const json = engine.serializeWorld();
+        if (!json) return;
+
+        const toastId = toast.loading('Creating share link...');
+        try {
+            const id = await savePhysicsScene(json);
+            const url = `${window.location.origin}${window.location.pathname}?scene=${id}`;
+            await navigator.clipboard.writeText(url);
+            toast.success('Link copied to clipboard!', { id: toastId });
+            router.push(`?scene=${id}`, { scroll: false });
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to create share link', { id: toastId });
+        }
+    }, [engine, router]);
 
     const handleLoadScene = useCallback(() => {
         const json = localStorage.getItem('physics-sim-save');
@@ -137,10 +171,36 @@ export default function PhysicsSim() {
             renderer.clearTrails();
             setPaused(true); // Pause on load to give user control
             setActiveTemplateId(''); // Clear active template selection as we loaded custom scene
+            toast.success('Loaded local save');
         } else {
-            console.log('No saved scene found');
+            toast.info('No local save found');
         }
     }, [engine, renderer]);
+
+    // Load from URL
+    useEffect(() => {
+        const sceneId = searchParams.get('scene');
+        if (sceneId && isLoaded) {
+            const load = async () => {
+                const toastId = toast.loading('Loading shared scene...');
+                try {
+                    const data = await getPhysicsScene(sceneId);
+                    if (data) {
+                        engine.loadWorld(data);
+                        renderer.clearTrails();
+                        setPaused(true);
+                        setActiveTemplateId('');
+                        toast.success('Scene loaded', { id: toastId });
+                    } else {
+                        toast.error('Scene not found', { id: toastId });
+                    }
+                } catch (e) {
+                    toast.error('Failed to load scene', { id: toastId });
+                }
+            };
+            load();
+        }
+    }, [searchParams, isLoaded, engine, renderer]);
 
     const handleLoadTemplate = useCallback((templateId: string) => {
         const template = PHYSICS_TEMPLATES.find(t => t.id === templateId);
@@ -150,12 +210,25 @@ export default function PhysicsSim() {
             setActiveTemplateId(templateId);
             setPaused(true);
             setSelectedBodyId(null);
+            // Clear scene param
+            router.push(window.location.pathname, { scroll: false });
         }
-    }, [engine, renderer]);
+    }, [engine, renderer, router]);
 
     const handleReset = useCallback(() => {
-        handleLoadTemplate(activeTemplateId);
-        renderer.clearTrails();
+        // If we have a scene ID, reload it? Or just reset to current template?
+        // For now, if we are in a shared scene, reset reloads the shared scene if possible, or we just reload active template.
+        // Actually, if activeTemplateId is empty (custom/shared), we might want to just reload the current world state?
+        // Simple behavior: reload current template.
+        if (activeTemplateId) {
+            handleLoadTemplate(activeTemplateId);
+        } else {
+            // If it's a shared scene or local load, maybe just clear trails and reset positions?
+            // Hard to reset "custom" state without reloading.
+            // Let's just clear trails for custom scenes or warn.
+            renderer.clearTrails();
+            toast.info('Cannot reset custom scene. Reload page or load a template.');
+        }
     }, [handleLoadTemplate, activeTemplateId, renderer]);
 
     const handleToolSelect = useCallback((tool: string, size?: number) => {
@@ -237,7 +310,7 @@ export default function PhysicsSim() {
             style={{ backgroundColor: bgColor }}
         >
             {/* Canvas Container */}
-            <div ref={canvasContainerRef} className="absolute inset-0 cursor-crosshair">
+            <div ref={canvasContainerRef} className={`absolute inset-0 ${activeTool ? 'cursor-crosshair' : ''}`}>
                 {!isLoaded && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
                         <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
@@ -270,6 +343,9 @@ export default function PhysicsSim() {
                             onTimeScaleChange={handleTimeScaleChange}
                             onSaveScene={handleSaveScene}
                             onLoadScene={handleLoadScene}
+                            onShare={handleShareScene}
+                            activeWalls={activeWalls}
+                            onActiveWallsChange={setActiveWalls}
                         />
                     )}
 
@@ -295,6 +371,10 @@ export default function PhysicsSim() {
                             activeTool={activeTool}
                             onSelectTool={handleToolSelect}
                             onClearTrails={renderer.clearTrails}
+                            activeMaterial={activeMaterial}
+                            onSelectMaterial={setActiveMaterial}
+                            multiSpawnMode={multiSpawnMode}
+                            onMultiSpawnModeChange={setMultiSpawnMode}
                         />
                     )}
 

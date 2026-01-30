@@ -203,17 +203,27 @@ export function ObjectInspector({ body, onUpdate, onDelete }: ObjectInspectorPro
             {/* Angle */}
             <div>
                 <div className="flex justify-between text-[10px] text-slate-500 mb-1">
-                    <span>Rotation</span>
-                    <span className="font-mono">{parseFloat(localData.angle).toFixed(2)}°</span>
+                    <span>Rotation (deg)</span>
                 </div>
-                <input
-                    type="range"
-                    min="0"
-                    max="360"
-                    value={parseFloat(localData.angle) || 0}
-                    onChange={(e) => handleUpdateField('angle', e.target.value)}
-                    className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-                />
+                <div className="flex items-center gap-2">
+                    <input
+                        type="range"
+                        min="0"
+                        max="360"
+                        value={parseFloat(localData.angle) || 0}
+                        onChange={(e) => handleUpdateField('angle', e.target.value)}
+                        className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                    />
+                    <input
+                        type="number"
+                        value={localData.angle}
+                        onChange={(e) => handleUpdateField('angle', e.target.value)}
+                        onBlur={(e) => handleBlur('angle', e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        className="w-16 text-xs p-1 bg-slate-100 dark:bg-slate-800 rounded-md border-0 focus:ring-2 focus:ring-indigo-500 text-center"
+                        step="1"
+                    />
+                </div>
             </div>
 
             {/* Velocity */}
