@@ -24,7 +24,7 @@ export interface MatterEngineAPI {
     setTimeScale: (scale: number) => void;
     setSubsteps: (s: number) => void;
     setSleeping: (enabled: boolean) => void;
-    addWorldBounds: (width: number, height: number, thickness?: number) => void;
+    addWorldBounds: (width: number, height: number, thickness?: number, activeWalls?: ActiveWalls) => void;
     getAllBodies: () => any[];
     addConstraint: (bodyA: any, bodyB: any | null, type: 'spring' | 'rod', pointA?: { x: number, y: number }, pointB?: { x: number, y: number }) => void;
     addPin: (body: any, x: number, y: number) => void;
@@ -33,7 +33,33 @@ export interface MatterEngineAPI {
     serializeWorld: () => string;
     loadWorld: (json: string) => void;
     isReady: boolean;
+    applyExplosionForce: (center: { x: number, y: number }, force: number, radius: number) => void;
 }
+
+export interface ActiveWalls {
+    top: boolean;
+    bottom: boolean;
+    left: boolean;
+    right: boolean;
+}
+
+export interface PhysicsMaterial {
+    name: string;
+    density: number;
+    friction: number;
+    restitution: number;
+    color: string;
+    label: string;
+}
+
+export const MATERIALS: Record<string, PhysicsMaterial> = {
+    DEFAULT: { name: 'Default', density: 0.001, friction: 0.1, restitution: 0.6, color: '#6366F1', label: 'Default' },
+    WOOD: { name: 'Wood', density: 0.001, friction: 0.4, restitution: 0.2, color: '#A97142', label: 'Wood' },
+    METAL: { name: 'Metal', density: 0.005, friction: 0.2, restitution: 0.1, color: '#94A3B8', label: 'Metal' },
+    RUBBER: { name: 'Rubber', density: 0.002, friction: 0.8, restitution: 0.9, color: '#EF4444', label: 'Rubber' },
+    BOUNCY: { name: 'Bouncy', density: 0.001, friction: 0, restitution: 1.1, color: '#10B981', label: 'Super Bouncy' },
+    HEAVY: { name: 'Heavy', density: 0.01, friction: 0.5, restitution: 0, color: '#334155', label: 'Heavy' },
+};
 
 export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEngineAPI {
     const engineRef = useRef<any>(null);
@@ -114,36 +140,38 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         const Matter = MatterRef.current;
         const { Bodies, Composite } = Matter;
 
-        const colors = ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6'];
-        const color = spawnOptions?.color || colors[Math.floor(Math.random() * colors.length)];
+        const materialKey = spawnOptions?.material || 'DEFAULT';
+        const material = MATERIALS[materialKey] || MATERIALS.DEFAULT;
 
-        let body;
         const x = spawnOptions?.x ?? 400;
         const y = spawnOptions?.y ?? 300;
         const s = size ?? 30; // Default size
 
-        console.log(`Spawning ${type} at (${x}, ${y}) with size ${s}`);
+        const color = spawnOptions?.color || material.color;
+
+        console.log(`Spawning ${type} at (${x}, ${y}) with size ${s} and material ${material.name}`);
+
+        const renderOpts = { fillStyle: color, strokeStyle: 'none' };
+
+        // Common body options
+        const bodyOpts: any = {
+            restitution: material.restitution,
+            friction: material.friction,
+            density: material.density,
+            render: renderOpts,
+            label: `${material.name} ${type}`
+        };
+
+        let body;
 
         if (type === 'box') {
-            body = Bodies.rectangle(x, y, s * 1.6, s * 1.6, {
-                restitution: 0.6,
-                render: { fillStyle: color, strokeStyle: 'none' }
-            });
+            body = Bodies.rectangle(x, y, s * 1.6, s * 1.6, bodyOpts);
         } else if (type === 'circle') {
-            body = Bodies.circle(x, y, s * 0.8, {
-                restitution: 0.6,
-                render: { fillStyle: color, strokeStyle: 'none' }
-            });
+            body = Bodies.circle(x, y, s * 0.8, bodyOpts);
         } else if (type === 'triangle') {
-            body = Bodies.polygon(x, y, 3, s, {
-                restitution: 0.6,
-                render: { fillStyle: color, strokeStyle: 'none' }
-            });
+            body = Bodies.polygon(x, y, 3, s, bodyOpts);
         } else if (type === 'polygon') {
-            body = Bodies.polygon(x, y, 5, s, {
-                restitution: 0.6,
-                render: { fillStyle: color, strokeStyle: 'none' }
-            });
+            body = Bodies.polygon(x, y, 5, s, bodyOpts);
         } else if (type === 'wall') {
             body = Bodies.rectangle(x, y, 200, 20, {
                 isStatic: true,
@@ -154,6 +182,7 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         if (body) {
             body.plugin = body.plugin || {};
             body.plugin.acceleration = { x: 0, y: 0 };
+            body.plugin.materialKey = materialKey; // Store material key for reference
             Composite.add(engineRef.current.world, body);
             console.log('Body added to world:', body.id);
         } else {
@@ -161,6 +190,26 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         }
 
         return body;
+    }, []);
+
+    const applyExplosionForce = useCallback((center: { x: number, y: number }, force: number, radius: number) => {
+        if (!MatterRef.current || !engineRef.current) return;
+        const bodies = MatterRef.current.Composite.allBodies(engineRef.current.world);
+
+        bodies.forEach((body: any) => {
+            if (body.isStatic) return;
+
+            const Vector = MatterRef.current.Vector;
+            const distanceVector = Vector.sub(body.position, center);
+            const distance = Vector.magnitude(distanceVector);
+
+            if (distance < radius && distance > 0.1) { // Avoid division by zero
+                const forceMagnitude = force * (1 - distance / radius);
+                const forceVector = Vector.mult(Vector.normalise(distanceVector), forceMagnitude * body.mass); // Scale by mass so everything flies
+
+                MatterRef.current.Body.applyForce(body, body.position, forceVector);
+            }
+        });
     }, []);
 
     const getBodyById = useCallback((id: number) => {
@@ -182,6 +231,7 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         if (updates.position) Matter.Body.setPosition(body, updates.position);
         if (updates.restitution !== undefined) body.restitution = updates.restitution;
         if (updates.friction !== undefined) body.friction = updates.friction;
+        if (updates.density !== undefined) Matter.Body.setDensity(body, updates.density);
         if (updates.acceleration) {
             body.plugin = body.plugin || {};
             body.plugin.acceleration = { ...body.plugin.acceleration, ...updates.acceleration };
@@ -225,7 +275,7 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         }
     }, []);
 
-    const addWorldBounds = useCallback((width: number, height: number, thickness: number = 2000) => {
+    const addWorldBounds = useCallback((width: number, height: number, thickness: number = 2000, activeWalls: ActiveWalls = { top: true, bottom: true, left: true, right: true }) => {
         if (!MatterRef.current || !engineRef.current) return;
         const { Bodies, Composite } = MatterRef.current;
         const world = engineRef.current.world;
@@ -235,24 +285,28 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
             Composite.remove(world, worldBoundsRef.current);
         }
 
-        const bounds = [
-            // Top
-            Bodies.rectangle(width / 2, -thickness / 2, width, thickness, {
+        const bounds = [];
+
+        if (activeWalls.top) {
+            bounds.push(Bodies.rectangle(width / 2, -thickness / 2, width, thickness, {
                 isStatic: true, label: 'ground', render: { fillStyle: 'transparent' }
-            }),
-            // Bottom
-            Bodies.rectangle(width / 2, height + thickness / 2, width, thickness, {
+            }));
+        }
+        if (activeWalls.bottom) {
+            bounds.push(Bodies.rectangle(width / 2, height + thickness / 2, width, thickness, {
                 isStatic: true, label: 'ground', render: { fillStyle: 'transparent' }
-            }),
-            // Left
-            Bodies.rectangle(-thickness / 2, height / 2, thickness, height, {
+            }));
+        }
+        if (activeWalls.left) {
+            bounds.push(Bodies.rectangle(-thickness / 2, height / 2, thickness, height, {
                 isStatic: true, label: 'ground', render: { fillStyle: 'transparent' }
-            }),
-            // Right
-            Bodies.rectangle(width + thickness / 2, height / 2, thickness, height, {
+            }));
+        }
+        if (activeWalls.right) {
+            bounds.push(Bodies.rectangle(width + thickness / 2, height / 2, thickness, height, {
                 isStatic: true, label: 'ground', render: { fillStyle: 'transparent' }
-            }),
-        ];
+            }));
+        }
 
         worldBoundsRef.current = bounds;
         Composite.add(world, bounds);
@@ -354,7 +408,7 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         const data = {
             bodies: bodies.filter((b: any) => b.label !== 'ground' && b.label !== 'World Boundary').map((b: any) => ({
                 id: b.id,
-                type: b.label === 'Circle Body' ? 'circle' : 'rectangle',
+                type: b.label?.includes('Circle') ? 'circle' : 'rectangle', // Basic type inference
                 position: b.position,
                 angle: b.angle,
                 velocity: b.velocity,
@@ -364,7 +418,8 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
                 restitution: b.restitution,
                 friction: b.friction,
                 density: b.density,
-                vertices: b.vertices.map((v: any) => ({ x: v.x, y: v.y }))
+                vertices: b.vertices.map((v: any) => ({ x: v.x, y: v.y })),
+                plugin: b.plugin // Save plugin data like materialKey
             })),
             constraints: constraints.filter((c: any) => c.label !== 'Mouse Constraint').map((c: any) => ({
                 type: c.render.type,
@@ -392,10 +447,6 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
             // Clear existing world (except bounds)
             World.clear(engineRef.current.world, false);
 
-            // Re-add bounds (hacky but necessary since clear removes them if keepStatic is false, 
-            // and if true it keeps everything static)
-            // Actually, best to just clear all and re-add bounds calling addWorldBounds from parent if needed.
-            // But we can just use our ref to re-add them.
             if (worldBoundsRef.current.length > 0) {
                 Composite.add(engineRef.current.world, worldBoundsRef.current);
             }
@@ -405,8 +456,6 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
 
             data.bodies.forEach((bData: any) => {
                 let body;
-                // Simple reconstruction based on vertices for polygons/rects and radius for circles
-                // For exact restoration, passing vertices is safest
                 body = Bodies.fromVertices(bData.position.x, bData.position.y, [bData.vertices], {
                     id: bData.id,
                     isStatic: bData.isStatic,
@@ -414,8 +463,9 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
                     restitution: bData.restitution,
                     friction: bData.friction,
                     density: bData.density,
-                    render: bData.render
-                }, true); // flag internal: true prevents decomposition which can be slow/lossy
+                    render: bData.render,
+                    plugin: bData.plugin
+                }, true);
 
                 if (body) {
                     MatterRef.current.Body.setVelocity(body, bData.velocity);
@@ -482,5 +532,6 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         serializeWorld,
         loadWorld,
         isReady,
-    }), [initEngine, loadTemplate, update, spawnBody, getBodyById, updateBody, deleteBody, setGravity, setTimeScale, setSubsteps, setSleeping, addWorldBounds, getAllBodies, addConstraint, addPin, addRevoluteJoint, getAllConstraints, serializeWorld, loadWorld, isReady]);
+        applyExplosionForce
+    }), [initEngine, loadTemplate, update, spawnBody, getBodyById, updateBody, deleteBody, setGravity, setTimeScale, setSubsteps, setSleeping, addWorldBounds, getAllBodies, addConstraint, addPin, addRevoluteJoint, getAllConstraints, serializeWorld, loadWorld, isReady, applyExplosionForce]);
 }
