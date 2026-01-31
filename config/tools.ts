@@ -76,7 +76,11 @@ import {
     Network,
     Columns,
     Accessibility,
-    LucideIcon
+    LucideIcon,
+    Brush,
+    PieChart,
+    Code,
+    Film
 } from 'lucide-react';
 
 export type ToolCategory = 'Health' | 'Developer' | 'Business' | 'Utility' | 'Design';
@@ -172,12 +176,12 @@ export const tools: Tool[] = [
         path: '/json-formatter'
     },
     {
-        slug: 'qr-code-generator',
+        slug: 'qr-generator',
         name: 'Dynamic QR Studio',
         description: 'Create professional, branded QR codes for URLs, WiFi, and more.',
         category: 'Business',
         icon: QrCode,
-        path: '/qr-code-generator'
+        path: '/qr-generator'
     },
     {
         slug: 'aspect-ratio-calculator',
@@ -188,14 +192,6 @@ export const tools: Tool[] = [
         path: '/aspect-ratio-calculator'
     },
     {
-        slug: 'image-editor',
-        name: 'Visual Image Studio',
-        description: 'Crop, rotate, and filter images directly in your browser.',
-        category: 'Design',
-        icon: Palette,
-        path: '/image-editor'
-    },
-    {
         slug: 'markdown-previewer',
         name: 'MD Evolution Preview',
         description: 'Write and preview GitHub-flavored markdown with professional styling.',
@@ -204,36 +200,12 @@ export const tools: Tool[] = [
         path: '/markdown-previewer'
     },
     {
-        slug: 'text-converter',
-        name: 'Elite Text Processor',
-        description: 'Transform text across myriad formats: Case, Base64, Slug and more.',
-        category: 'Utility',
-        icon: Type,
-        path: '/text-converter'
-    },
-    {
-        slug: 'crypto-price-tracker',
-        name: 'Crypto Market Pulse',
-        description: 'Live cryptocurrency market tracker with real-time price evolution.',
-        category: 'Business',
-        icon: TrendingUp,
-        path: '/crypto-price-tracker'
-    },
-    {
-        slug: 'color-palette-generator',
-        name: 'Chroma Design Studio',
-        description: 'Generate stunning, harmonious color palettes for your next project.',
-        category: 'Design',
-        icon: Palette,
-        path: '/color-palette-generator'
-    },
-    {
-        slug: 'lorem-ipsum-generator',
+        slug: 'lorem-ipsum',
         name: 'Professional Text Mock',
         description: 'Generate placeholder text with custom lengths and structures.',
         category: 'Developer',
         icon: AlignLeft,
-        path: '/lorem-ipsum-generator'
+        path: '/lorem-ipsum'
     },
     {
         slug: 'pomodoro-timer',
@@ -244,20 +216,20 @@ export const tools: Tool[] = [
         path: '/pomodoro-timer'
     },
     {
-        slug: 'percent-calculator',
+        slug: 'percentage-calculator',
         name: 'Percent Master Plus',
         description: 'Solve any percentage problem instantly with interactive logic.',
         category: 'Utility',
         icon: Percent,
-        path: '/percent-calculator'
+        path: '/percentage-calculator'
     },
     {
-        slug: 'compound-interest-calculator',
+        slug: 'compound-interest',
         name: 'Wealth Projection Lab',
         description: 'Calculate long-term investment growth with deep compounding logic.',
         category: 'Business',
         icon: Coins,
-        path: '/compound-interest-calculator'
+        path: '/compound-interest'
     },
     {
         slug: 'loan-calculator',
@@ -268,52 +240,36 @@ export const tools: Tool[] = [
         path: '/loan-calculator'
     },
     {
-        slug: 'stopwatch',
+        slug: 'stopwatch-timer',
         name: 'Precision Time Keeper',
         description: 'High-precision stopwatch with lap times and visual tracking.',
         category: 'Utility',
         icon: Clock,
-        path: '/stopwatch'
+        path: '/stopwatch-timer'
     },
     {
-        slug: 'world-clock',
-        name: 'Global Time Horizon',
-        description: 'Monitor time across multiple cities with visual day/night tracking.',
-        category: 'Utility',
-        icon: Globe,
-        path: '/world-clock'
-    },
-    {
-        slug: 'password-strength-checker',
-        name: 'Vault Security Auditor',
-        description: 'Deep analysis of your password security with entropy calculation.',
-        category: 'Developer',
-        icon: ShieldCheck,
-        path: '/password-strength-checker'
-    },
-    {
-        slug: 'base64-encoder-decoder',
+        slug: 'base64',
         name: 'Base64 Stream Forge',
         description: 'Encode and decode Base64 data with high-performance stream logic.',
         category: 'Developer',
         icon: Binary,
-        path: '/base64-encoder-decoder'
+        path: '/base64'
     },
     {
-        slug: 'url-encoder-decoder',
+        slug: 'url-converter',
         name: 'URL Protocol Studio',
         description: 'Safe encoding and decoding of URLs with parameter analysis.',
         category: 'Developer',
         icon: Link2,
-        path: '/url-encoder-decoder'
+        path: '/url-converter'
     },
     {
-        slug: 'html-entities-converter',
+        slug: 'html-entities',
         name: 'HTML Entity Encoder',
         description: 'Convert special characters to HTML entities and back instantly.',
         category: 'Developer',
         icon: Codesandbox,
-        path: '/html-entities-converter'
+        path: '/html-entities'
     },
     {
         slug: 'diff-checker',
@@ -322,14 +278,6 @@ export const tools: Tool[] = [
         category: 'Developer',
         icon: Diff,
         path: '/diff-checker'
-    },
-    {
-        slug: 'random-number-generator',
-        name: 'Entropy Source Gen',
-        description: 'Generate true random numbers within custom ranges and constraints.',
-        category: 'Utility',
-        icon: Shuffle,
-        path: '/random-number-generator'
     },
     {
         slug: 'case-converter',
@@ -348,76 +296,20 @@ export const tools: Tool[] = [
         path: '/word-counter'
     },
     {
-        slug: 'image-to-pdf',
-        name: 'Visual PDF Architect',
-        description: 'Convert and merge images into professional PDF documents.',
-        category: 'Design',
-        icon: FileText,
-        path: '/image-to-pdf'
-    },
-    {
-        slug: 'image-compressor',
-        name: 'Neural Image Shrinker',
-        description: 'Compress images with perfect quality-to-size ratio using AI.',
+        slug: 'image-pdf-compressor',
+        name: 'Ultimate Asset Optimizer',
+        description: 'Professional-grade compression for Images and PDFs with AI precision.',
         category: 'Design',
         icon: Maximize,
-        path: '/image-compressor'
+        path: '/image-pdf-compressor'
     },
     {
-        slug: 'binary-calculator',
-        name: 'Binary Logic Engine',
-        description: 'Perform complex arithmetic on binary, octal and hex values.',
-        category: 'Developer',
-        icon: Binary,
-        path: '/binary-calculator'
-    },
-    {
-        slug: 'hex-to-rgb',
-        name: 'Color Vector Studio',
-        description: 'Convert between HEX, RGB, and HSL with visual feedback.',
-        category: 'Design',
-        icon: Palette,
-        path: '/hex-to-rgb'
-    },
-    {
-        slug: 'css-gradient-generator',
-        name: 'Prism Gradient Forge',
-        description: 'Design beautiful CSS gradients with advanced visual controls.',
-        category: 'Design',
-        icon: Wand2,
-        path: '/css-gradient-generator'
-    },
-    {
-        slug: 'html-minifier',
-        name: 'DOM Stream Shrinker',
-        description: 'Minify and optimize HTML code for high-performance delivery.',
-        category: 'Developer',
-        icon: Codesandbox,
-        path: '/html-minifier'
-    },
-    {
-        slug: 'css-minifier',
-        name: 'Style Logic Refiner',
-        description: 'Optimize CSS files for maximum loading speed and performance.',
-        category: 'Developer',
-        icon: Palette,
-        path: '/css-minifier'
-    },
-    {
-        slug: 'js-minifier',
-        name: 'Script Logic Forge',
-        description: 'Minify JavaScript code to reduce payload size and speed up execution.',
-        category: 'Developer',
-        icon: FileJson,
-        path: '/js-minifier'
-    },
-    {
-        slug: 'pixel-converter',
+        slug: 'pix-rem',
         name: 'Fluid Layout Master',
         description: 'Quickly convert between PX, EM, REM and percentage values.',
         category: 'Developer',
         icon: Maximize,
-        path: '/pixel-converter'
+        path: '/pix-rem'
     },
     {
         slug: 'svg-editor',
@@ -428,20 +320,12 @@ export const tools: Tool[] = [
         path: '/svg-editor'
     },
     {
-        slug: 'csv-to-json',
-        name: 'Data Format Bridge',
-        description: 'Convert CSV data to JSON format with custom mapping logic.',
+        slug: 'json-to-csv',
+        name: 'JSON to CSV Converter',
+        description: 'Transform structured data into spreadsheets effortlessly.',
         category: 'Developer',
         icon: FileJson,
-        path: '/csv-to-json'
-    },
-    {
-        slug: 'image-resizer',
-        name: 'Dimension Architect',
-        description: 'Resize images with high precision and multiple aspect ratios.',
-        category: 'Design',
-        icon: Maximize2,
-        path: '/image-resizer'
+        path: '/json-to-csv'
     },
     {
         slug: 'link-shortener',
@@ -468,14 +352,6 @@ export const tools: Tool[] = [
         path: '/mockup-studio'
     },
     {
-        slug: 'barcode-generator',
-        name: 'Precision Barcode Gen',
-        description: 'Generate professional barcodes in multiple industrial formats.',
-        category: 'Business',
-        icon: QrCode,
-        path: '/barcode-generator'
-    },
-    {
         slug: 'signature-pad',
         name: 'Legal Signature Studio',
         description: 'Create and export professional hand-drawn digital signatures.',
@@ -500,22 +376,6 @@ export const tools: Tool[] = [
         path: '/meta-tag-generator'
     },
     {
-        slug: 'image-pdf-compressor',
-        name: 'Ultimate Asset Optimizer',
-        description: 'Professional-grade compression for Images and PDFs with AI precision.',
-        category: 'Design',
-        icon: Maximize,
-        path: '/image-pdf-compressor'
-    },
-    {
-        slug: 'advanced-pdf-editor',
-        name: 'Pro PDF Workspace',
-        description: 'Merge, split, and rotate PDFs directly in your browser with zero server uploads.',
-        category: 'Business',
-        icon: Layers,
-        path: '/advanced-pdf-editor'
-    },
-    {
         slug: 'video-compressor',
         name: 'HD Video Optimizer',
         description: 'Compress and resize videos with pro-grade quality using on-device FFmpeg power.',
@@ -534,7 +394,7 @@ export const tools: Tool[] = [
     {
         slug: 'physics-sim',
         name: 'Universe Sandbox',
-        description: '3b1b-style interactive physics and math simulator. Test inertia, acceleration, and complex functions.',
+        description: '3b1b-style interactive physics and math simulator.',
         category: 'Utility',
         icon: Atom,
         path: '/physics-sim'
@@ -546,5 +406,229 @@ export const tools: Tool[] = [
         category: 'Design',
         icon: Wand2,
         path: '/background-remover'
+    },
+    {
+        slug: 'age-calculator',
+        name: 'Precise Age Calculator',
+        description: 'Calculate your exact age in years, months, days, minutes, and seconds.',
+        category: 'Utility',
+        icon: Calendar,
+        path: '/age-calculator'
+    },
+    {
+        slug: 'animated-patterns',
+        name: 'CSS Pattern Animator',
+        description: 'Create mesmerizing, looped animated backgrounds with CSS.',
+        category: 'Design',
+        icon: Sparkles,
+        path: '/animated-patterns'
+    },
+    {
+        slug: 'api-playground',
+        name: 'REST API Playground',
+        description: 'Test API endpoints with a clean, powerful interface.',
+        category: 'Developer',
+        icon: Zap,
+        path: '/api-playground'
+    },
+    {
+        slug: 'base-converter',
+        name: 'Radix Base Converter',
+        description: 'Convert numbers between Binary, Octal, Decimal, and Hexadecimal.',
+        category: 'Developer',
+        icon: Hash,
+        path: '/base-converter'
+    },
+    {
+        slug: 'bmr-calculator',
+        name: 'BMR Health Monitor',
+        description: 'Calculate your Basal Metabolic Rate and daily calorie needs.',
+        category: 'Health',
+        icon: Activity,
+        path: '/bmr-calculator'
+    },
+    {
+        slug: 'box-shadow-generator',
+        name: 'CSS Shadow Generator',
+        description: 'Create layered, smooth box-shadows for modern web design.',
+        category: 'Design',
+        icon: Layers,
+        path: '/box-shadow-generator'
+    },
+    {
+        slug: 'code-playground',
+        name: 'Live Code Sandbox',
+        description: 'Write and execute HTML, CSS, and JS in real-time.',
+        category: 'Developer',
+        icon: Code,
+        path: '/code-playground'
+    },
+    {
+        slug: 'color-converter',
+        name: 'Color Format Bridge',
+        description: 'Convert between HEX, RGB, HSL, and CMYK instantly.',
+        category: 'Design',
+        icon: Palette,
+        path: '/color-converter'
+    },
+    {
+        slug: 'family-spending-analyzer',
+        name: 'Family Budget Tracker',
+        description: 'Track and analyze household expenses with visual charts.',
+        category: 'Business',
+        icon: PieChart,
+        path: '/family-spending-analyzer'
+    },
+    {
+        slug: 'freelance-rate',
+        name: 'Freelance Rate Calc',
+        description: 'Calculate your ideal hourly rate based on expenses and goals.',
+        category: 'Business',
+        icon: DollarSign,
+        path: '/freelance-rate'
+    },
+    {
+        slug: 'glassmorphism-generator',
+        name: 'Glassmorphism Studio',
+        description: 'Generate frosted glass effects with CSS backdrop-filter.',
+        category: 'Design',
+        icon: Layout,
+        path: '/glassmorphism-generator'
+    },
+    {
+        slug: 'jwt-decoder',
+        name: 'JWT Debugger',
+        description: 'Decode and inspect JSON Web Tokens without verification.',
+        category: 'Developer',
+        icon: Key,
+        path: '/jwt-decoder'
+    },
+    {
+        slug: 'keto-calc',
+        name: 'Keto Diet Calculator',
+        description: 'Calculate macronutrients for a ketogenic lifestyle.',
+        category: 'Health',
+        icon: Activity,
+        path: '/keto-calc'
+    },
+    {
+        slug: 'mermaid-visualizer',
+        name: 'Mermaid Diagram Preview',
+        description: 'Render Mermaid.js diagrams from text definitions instantly.',
+        category: 'Developer',
+        icon: Workflow,
+        path: '/mermaid-visualizer'
+    },
+    {
+        slug: 'morse-code',
+        name: 'Morse Code Translator',
+        description: 'Translate text to Morse code and play the audio.',
+        category: 'Utility',
+        icon: Radio,
+        path: '/morse-code'
+    },
+    {
+        slug: 'paint-app',
+        name: 'Paint App',
+        description: 'Create masterpieces directly in your browser with digital art tools.',
+        category: 'Design',
+        icon: Brush,
+        path: '/paint-app'
+    },
+    {
+        slug: 'placeholder-generator',
+        name: 'Placeholder Image Gen',
+        description: 'Create custom placeholder images with specific dimensions and colors.',
+        category: 'Design',
+        icon: Image,
+        path: '/placeholder-generator'
+    },
+    {
+        slug: 'privacy-policy-gen',
+        name: 'Privacy Policy Maker',
+        description: 'Generate standard privacy policies for your apps and websites.',
+        category: 'Business',
+        icon: ShieldCheck,
+        path: '/privacy-policy-gen'
+    },
+    {
+        slug: 'random-choice',
+        name: 'Random Choice Maker',
+        description: 'Let fate decide with a fun, animated picker.',
+        category: 'Utility',
+        icon: Shuffle,
+        path: '/random-choice'
+    },
+    {
+        slug: 'regex-tester',
+        name: 'RegEx Lab',
+        description: 'Test and debug regular expressions with live highlighting.',
+        category: 'Developer',
+        icon: Search,
+        path: '/regex-tester'
+    },
+    {
+        slug: 'roi-calculator',
+        name: 'ROI Analyzer',
+        description: 'Calculate Return on Investment for marketing campaigns.',
+        category: 'Business',
+        icon: TrendingUp,
+        path: '/roi-calculator'
+    },
+    {
+        slug: 'sales-tax',
+        name: 'Sales Tax Calculator',
+        description: 'Calculate final price including sales tax/VAT.',
+        category: 'Business',
+        icon: Receipt,
+        path: '/sales-tax'
+    },
+    {
+        slug: 'sql-formatter',
+        name: 'SQL Beautifier',
+        description: 'Format and beautify SQL queries for better readability.',
+        category: 'Developer',
+        icon: Database,
+        path: '/sql-formatter'
+    },
+    {
+        slug: 'stickman-animator',
+        name: 'Stickman Animator',
+        description: 'Create simple stickman animations and export them.',
+        category: 'Design',
+        icon: Film,
+        path: '/stickman-animator'
+    },
+    {
+        slug: 'time-block-planner',
+        name: 'Time Block Planner',
+        description: 'Plan your day using the time-blocking productivity method.',
+        category: 'Utility',
+        icon: Calendar,
+        path: '/time-block-planner'
+    },
+    {
+        slug: 'unix-timestamp',
+        name: 'Unix Timestamp Converter',
+        description: 'Convert between Unix timestamps and human-readable dates.',
+        category: 'Developer',
+        icon: Clock,
+        path: '/unix-timestamp'
+    },
+    {
+        slug: 'uuid-generator',
+        name: 'UUID/GUID Generator',
+        description: 'Generate version 4 UUIDs (Universally Unique Identifiers).',
+        category: 'Developer',
+        icon: Fingerprint,
+        path: '/uuid-generator'
+    },
+    {
+        slug: 'pdf-master',
+        name: 'PDF Master Studio',
+        description: 'Merge, split, protect, and sign PDFs entirely in your browser.',
+        category: 'Utility',
+        icon: FileText,
+        path: '/pdf-master'
     }
 ];

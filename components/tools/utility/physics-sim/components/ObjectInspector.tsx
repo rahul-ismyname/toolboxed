@@ -83,65 +83,43 @@ export function ObjectInspector({ body, onUpdate, onDelete }: ObjectInspectorPro
     };
 
     const handleVelocityUpdate = (axis: 'x' | 'y', value: string) => {
-        const newVelocity = { ...localData.velocity, [axis]: value };
-        setLocalData({ ...localData, velocity: newVelocity });
-
-        const parsed = parseFloat(value);
-        if (!isNaN(parsed) && value !== '-' && !value.endsWith('.')) {
-            onUpdate(body.id, {
-                velocity: {
-                    x: axis === 'x' ? parsed : parseFloat(localData.velocity.x),
-                    y: axis === 'y' ? parsed : parseFloat(localData.velocity.y)
-                }
-            });
-        }
+        setLocalData((prev: any) => ({
+            ...prev,
+            velocity: { ...prev.velocity, [axis]: value }
+        }));
     };
 
     const handleVelocityBlur = (axis: 'x' | 'y', value: string) => {
         isEditingRef.current = false;
-        const parsed = parseFloat(value) || 0;
-        const finalVelocity = {
-            x: axis === 'x' ? parsed : parseFloat(localData.velocity.x),
-            y: axis === 'y' ? parsed : parseFloat(localData.velocity.y)
-        };
-        onUpdate(body.id, { velocity: finalVelocity });
-        setLocalData({
-            ...localData,
+        const parsed = parseFloat(value);
+        if (isNaN(parsed)) return;
+
+        // When blurring, we only want to update the edited axis
+        // and keep the other axis as it is IN THE ENGINE currently
+        onUpdate(body.id, {
             velocity: {
-                x: finalVelocity.x.toString(),
-                y: finalVelocity.y.toString()
+                x: axis === 'x' ? parsed : body.velocity.x,
+                y: axis === 'y' ? parsed : body.velocity.y
             }
         });
     };
 
     const handleAccelerationUpdate = (axis: 'x' | 'y', value: string) => {
-        const newAccel = { ...localData.acceleration, [axis]: value };
-        setLocalData({ ...localData, acceleration: newAccel });
-
-        const parsed = parseFloat(value);
-        if (!isNaN(parsed) && value !== '-' && !value.endsWith('.')) {
-            onUpdate(body.id, {
-                acceleration: {
-                    x: axis === 'x' ? parsed : parseFloat(localData.acceleration.x),
-                    y: axis === 'y' ? parsed : parseFloat(localData.acceleration.y)
-                }
-            });
-        }
+        setLocalData((prev: any) => ({
+            ...prev,
+            acceleration: { ...prev.acceleration, [axis]: value }
+        }));
     };
 
     const handleAccelerationBlur = (axis: 'x' | 'y', value: string) => {
         isEditingRef.current = false;
-        const parsed = parseFloat(value) || 0;
-        const finalAccel = {
-            x: axis === 'x' ? parsed : parseFloat(localData.acceleration.x),
-            y: axis === 'y' ? parsed : parseFloat(localData.acceleration.y)
-        };
-        onUpdate(body.id, { acceleration: finalAccel });
-        setLocalData({
-            ...localData,
+        const parsed = parseFloat(value);
+        if (isNaN(parsed)) return;
+
+        onUpdate(body.id, {
             acceleration: {
-                x: finalAccel.x.toString(),
-                y: finalAccel.y.toString()
+                x: axis === 'x' ? parsed : body.acceleration.x,
+                y: axis === 'y' ? parsed : body.acceleration.y
             }
         });
     };

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, Dispatch, SetStateAction } from 'react';
-import { ChevronDown, Wind, Eye, EyeOff, Maximize2, Minimize2, List, BoxSelect, Folder, Save, FolderOpen, Share2, Globe, Monitor, Settings2 } from 'lucide-react';
+import { ChevronDown, Wind, Eye, EyeOff, Maximize2, Minimize2, List, BoxSelect, Folder, Save, FolderOpen, Share2, Globe, Monitor, Settings2, ZapOff, Snowflake, Eraser } from 'lucide-react';
 import { PHYSICS_TEMPLATES } from '@/lib/sim-templates';
 import { ActiveWalls } from '../../hooks/useMatterEngine';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,6 +27,10 @@ interface TopBarProps {
     onShare: () => void;
     activeWalls: ActiveWalls;
     onActiveWallsChange: (walls: ActiveWalls) => void;
+    vacuumMode: boolean;
+    onVacuumModeChange: (enabled: boolean) => void;
+    onClearConstraints: () => void;
+    onFreezeAll: () => void;
 }
 
 export function TopBar({
@@ -49,7 +53,11 @@ export function TopBar({
     onLoadScene,
     onShare,
     activeWalls,
-    onActiveWallsChange
+    onActiveWallsChange,
+    vacuumMode,
+    onVacuumModeChange,
+    onClearConstraints,
+    onFreezeAll
 }: TopBarProps) {
     const [isTemplateMenuOpen, setIsTemplateMenuOpen] = useState(false);
     const [activeMenu, setActiveMenu] = useState<'scene' | 'world' | 'view' | null>(null);
@@ -253,6 +261,40 @@ export function TopBar({
                                         onChange={(e) => onTimeScaleChange(parseFloat(e.target.value))}
                                         className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
                                     />
+                                </div>
+
+                                {/* Vacuum Mode */}
+                                <button
+                                    onClick={() => onVacuumModeChange(!vacuumMode)}
+                                    className={`w-full p-2 rounded-xl flex items-center justify-between transition-all ${vacuumMode
+                                        ? 'bg-sky-100 dark:bg-sky-900/30 text-sky-600 border border-sky-200 dark:border-sky-800'
+                                        : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500'
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <ZapOff className="w-4 h-4" />
+                                        <span className="text-xs font-bold">Ideal Vacuum</span>
+                                    </div>
+                                    <div className={`w-8 h-4 rounded-full relative transition-colors ${vacuumMode ? 'bg-sky-500' : 'bg-slate-300'}`}>
+                                        <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${vacuumMode ? 'left-4.5' : 'left-0.5'}`} />
+                                    </div>
+                                </button>
+
+                                <div className="grid grid-cols-2 gap-2 mt-1">
+                                    <button
+                                        onClick={onFreezeAll}
+                                        className="p-2 rounded-xl flex flex-col items-center justify-center gap-1 bg-slate-100 dark:bg-slate-800 hover:bg-sky-50 dark:hover:bg-sky-900/20 text-slate-600 hover:text-sky-500 transition-all border border-transparent hover:border-sky-100"
+                                    >
+                                        <Snowflake className="w-4 h-4" />
+                                        <span className="text-[10px] font-bold">Freeze</span>
+                                    </button>
+                                    <button
+                                        onClick={onClearConstraints}
+                                        className="p-2 rounded-xl flex flex-col items-center justify-center gap-1 bg-slate-100 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-600 hover:text-red-500 transition-all border border-transparent hover:border-red-100"
+                                    >
+                                        <Eraser className="w-4 h-4" />
+                                        <span className="text-[10px] font-bold">Unlink All</span>
+                                    </button>
                                 </div>
 
                                 {/* Walls */}

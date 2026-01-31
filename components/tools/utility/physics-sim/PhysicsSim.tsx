@@ -51,6 +51,7 @@ export default function PhysicsSim() {
     const [activeMaterial, setActiveMaterial] = useState('DEFAULT');
     const [multiSpawnMode, setMultiSpawnMode] = useState(false);
     const [activeWalls, setActiveWalls] = useState({ top: true, bottom: true, left: true, right: true });
+    const [vacuumMode, setVacuumMode] = useState(false);
 
     // Physics engine hook
     const engine = useMatterEngine({ gravity, timeScale });
@@ -137,6 +138,14 @@ export default function PhysicsSim() {
     const handleTimeScaleChange = useCallback((scale: number) => {
         setTimeScale(scale);
         engine.setTimeScale(scale);
+    }, [engine]);
+
+    const handleVacuumModeChange = useCallback((enabled: boolean) => {
+        setVacuumMode(enabled);
+        engine.setVacuumMode(enabled);
+        if (enabled) {
+            toast.info('Vacuum Mode: Air friction disabled');
+        }
     }, [engine]);
 
     const handleSaveScene = useCallback(() => {
@@ -346,6 +355,16 @@ export default function PhysicsSim() {
                             onShare={handleShareScene}
                             activeWalls={activeWalls}
                             onActiveWallsChange={setActiveWalls}
+                            vacuumMode={vacuumMode}
+                            onVacuumModeChange={handleVacuumModeChange}
+                            onClearConstraints={() => {
+                                engine.clearAllConstraints();
+                                toast.success('Cleared all constraints');
+                            }}
+                            onFreezeAll={() => {
+                                engine.freezeAllBodies();
+                                toast.info('Froze all objects');
+                            }}
                         />
                     )}
 

@@ -34,6 +34,9 @@ export interface MatterEngineAPI {
     loadWorld: (json: string) => void;
     isReady: boolean;
     applyExplosionForce: (center: { x: number, y: number }, force: number, radius: number) => void;
+    setVacuumMode: (enabled: boolean) => void;
+    clearAllConstraints: () => void;
+    freezeAllBodies: () => void;
 }
 
 export interface ActiveWalls {
@@ -59,6 +62,7 @@ export const MATERIALS: Record<string, PhysicsMaterial> = {
     RUBBER: { name: 'Rubber', density: 0.002, friction: 0.8, restitution: 0.9, color: '#EF4444', label: 'Rubber' },
     BOUNCY: { name: 'Bouncy', density: 0.001, friction: 0, restitution: 1.1, color: '#10B981', label: 'Super Bouncy' },
     HEAVY: { name: 'Heavy', density: 0.01, friction: 0.5, restitution: 0, color: '#334155', label: 'Heavy' },
+    VACUUM: { name: 'Vacuum', density: 0.001, friction: 0, restitution: 1, color: '#38BDF8', label: 'Vacuum (Ideal)' },
 };
 
 export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEngineAPI {
@@ -71,6 +75,7 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
     const accumulatorRef = useRef(0);
     const fixedDelta = options.fixedDelta ?? (1000 / 60);
     const timeScaleRef = useRef(options.timeScale ?? 1);
+    const vacuumModeRef = useRef(false);
 
     const initEngine = useCallback(async () => {
         const MatterModule = await import('matter-js');
@@ -155,8 +160,9 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
 
         // Common body options
         const bodyOpts: any = {
-            restitution: material.restitution,
+            restitution: vacuumModeRef.current ? 1 : material.restitution,
             friction: material.friction,
+            frictionAir: vacuumModeRef.current ? 0 : 0.01,
             density: material.density,
             render: renderOpts,
             label: `${material.name} ${type}`
@@ -509,6 +515,46 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         }
     }, []);
 
+    const setVacuumMode = useCallback((enabled: boolean) => {
+        vacuumModeRef.current = enabled;
+        if (!MatterRef.current || !engineRef.current) return;
+
+        const bodies = MatterRef.current.Composite.allBodies(engineRef.current.world);
+        bodies.forEach((body: any) => {
+            if (enabled) {
+                body.frictionAir = 0;
+                body.friction = 0;
+                body.restitution = 1; // Elastic collisions so energy isn't lost
+            } else {
+                body.frictionAir = 0.01;
+            }
+        });
+    }, []);
+
+    const clearAllConstraints = useCallback(() => {
+        if (!MatterRef.current || !engineRef.current) return;
+        const Matter = MatterRef.current;
+        const world = engineRef.current.world;
+        const constraints = Matter.Composite.allConstraints(world);
+        constraints.forEach((c: any) => {
+            if (c.label !== "Mouse Constraint") {
+                Matter.Composite.remove(world, c);
+            }
+        });
+    }, []);
+
+    const freezeAllBodies = useCallback(() => {
+        if (!MatterRef.current || !engineRef.current) return;
+        const Matter = MatterRef.current;
+        const bodies = Matter.Composite.allBodies(engineRef.current.world);
+        bodies.forEach((body: any) => {
+            if (!body.isStatic) {
+                Matter.Body.setVelocity(body, { x: 0, y: 0 });
+                Matter.Body.setAngularVelocity(body, 0);
+            }
+        });
+    }, []);
+
     return React.useMemo(() => ({
         engineRef,
         MatterRef,
@@ -532,6 +578,9 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         serializeWorld,
         loadWorld,
         isReady,
-        applyExplosionForce
-    }), [initEngine, loadTemplate, update, spawnBody, getBodyById, updateBody, deleteBody, setGravity, setTimeScale, setSubsteps, setSleeping, addWorldBounds, getAllBodies, addConstraint, addPin, addRevoluteJoint, getAllConstraints, serializeWorld, loadWorld, isReady, applyExplosionForce]);
+        applyExplosionForce,
+        setVacuumMode,
+        clearAllConstraints,
+        freezeAllBodies
+    }), [initEngine, loadTemplate, update, spawnBody, getBodyById, updateBody, deleteBody, setGravity, setTimeScale, setSubsteps, setSleeping, addWorldBounds, getAllBodies, addConstraint, addPin, addRevoluteJoint, getAllConstraints, serializeWorld, loadWorld, isReady, applyExplosionForce, setVacuumMode, clearAllConstraints, freezeAllBodies]);
 }
