@@ -227,5 +227,64 @@ export const PHYSICS_TEMPLATES: SimTemplate[] = [
                 })
             ]);
         }
+    },
+    {
+        id: 'tower',
+        name: 'Tower Stack',
+        description: 'A tall stack of boxes waiting to be knocked over.',
+        setup: (Matter: any, engine: any) => {
+            const { World, Bodies, Composites } = Matter;
+            World.clear(engine.world, false);
+
+            const stack = Composites.stack(350, 100, 8, 15, 0, 0, (x: number, y: number) => {
+                return Bodies.rectangle(x, y, 40, 40, {
+                    render: { fillStyle: '#eab308' }
+                });
+            });
+
+            World.add(engine.world, [
+                stack,
+                Bodies.rectangle(400, 600, 800, 50, { isStatic: true, render: { fillStyle: '#334155' } })
+            ]);
+        }
+    },
+    {
+        id: 'wrecking-ball',
+        name: 'Wrecking Ball',
+        description: 'Smash a wall with a heavy pendulum.',
+        setup: (Matter: any, engine: any) => {
+            const { World, Bodies, Constraint, Composites } = Matter;
+            World.clear(engine.world, false);
+
+            // The Wall
+            const stack = Composites.stack(500, 200, 5, 10, 0, 0, (x: number, y: number) => {
+                return Bodies.rectangle(x, y, 40, 40, {
+                    render: { fillStyle: '#94a3b8' }
+                });
+            });
+
+            // The Ball
+            const ball = Bodies.circle(150, 400, 40, {
+                density: 0.05, // Heavy
+                frictionAir: 0.005,
+                render: { fillStyle: '#ef4444' }
+            });
+
+            const pivot = { x: 250, y: 100 };
+            const chain = Constraint.create({
+                pointA: pivot,
+                bodyB: ball,
+                stiffness: 1,
+                length: 300,
+                render: { strokeStyle: '#333', lineWidth: 2 }
+            });
+
+            World.add(engine.world, [
+                stack,
+                ball,
+                chain,
+                Bodies.rectangle(400, 600, 800, 50, { isStatic: true, render: { fillStyle: '#334155' } })
+            ]);
+        }
     }
 ];

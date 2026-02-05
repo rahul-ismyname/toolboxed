@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useEffect } from 'react';
+import { LogicEngine, LogicRule } from '../logic/LogicSystem';
 
 interface UseMatterEngineOptions {
     gravity?: { x: number, y: number } | number;
@@ -37,6 +38,14 @@ export interface MatterEngineAPI {
     setVacuumMode: (enabled: boolean) => void;
     clearAllConstraints: () => void;
     freezeAllBodies: () => void;
+    removeBodyPins: (id: number) => void;
+    removePinAt: (x: number, y: number, radius: number) => void;
+    addRule: (rule: LogicRule) => void;
+    removeRule: (id: string) => void;
+    clearBodyRules: (bodyId: number) => void;
+    updateRule: (id: string, updates: Partial<LogicRule>) => void;
+    getAllRules: () => LogicRule[];
+    addRawConstraint: (options: any) => any;
 }
 
 export interface ActiveWalls {
@@ -71,11 +80,13 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
     const worldBoundsRef = useRef<any[]>([]);
 
     const [isReady, setIsReady] = React.useState(false);
-    const substepsRef = useRef(options.substeps ?? 8); // Default to 8 for extreme stability
+    const substepsRef = useRef(1);
     const accumulatorRef = useRef(0);
     const fixedDelta = options.fixedDelta ?? (1000 / 60);
     const timeScaleRef = useRef(options.timeScale ?? 1);
     const vacuumModeRef = useRef(false);
+    const activeKeysRef = useRef<Set<string>>(new Set());
+    const logicEngineRef = useRef<LogicEngine>(new LogicEngine());
 
     const initEngine = useCallback(async () => {
         const MatterModule = await import('matter-js');
@@ -109,8 +120,33 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
             });
         });
 
+        // Pass collisions to Logic Engine
+        Matter.Events.on(engine, 'collisionStart', (event: any) => {
+            if (logicEngineRef.current) {
+                logicEngineRef.current.handleCollisions(Matter, engine, event.pairs, spawnBody);
+            }
+        });
+
         setIsReady(true);
     }, [options.enableSleeping, options.gravity]); // Stable initEngine
+
+    // Key Listeners
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            activeKeysRef.current.add(e.key.toLowerCase());
+        };
+        const handleKeyUp = (e: KeyboardEvent) => {
+            activeKeysRef.current.delete(e.key.toLowerCase());
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+        };
+    }, []);
 
     const loadTemplate = useCallback((template: any) => {
         if (!MatterRef.current || !engineRef.current) return;
@@ -132,6 +168,13 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         accumulatorRef.current += Math.min(scaledDelta, 100); // Cap delta to avoid "spiral of death"
 
         while (accumulatorRef.current >= fixedDelta) {
+            // Logic Engine Step
+            // Logic Engine Step
+            if (logicEngineRef.current && engineRef.current) {
+                const bodies = Matter.Composite.allBodies(engineRef.current.world);
+                logicEngineRef.current.update(Matter, engineRef.current, bodies, activeKeysRef.current, spawnBody);
+            }
+
             const subDelta = fixedDelta / substepsRef.current;
             for (let i = 0; i < substepsRef.current; i++) {
                 Matter.Engine.update(engine, subDelta);
@@ -161,7 +204,8 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         // Common body options
         const bodyOpts: any = {
             restitution: vacuumModeRef.current ? 1 : material.restitution,
-            friction: material.friction,
+            friction: vacuumModeRef.current ? 0 : material.friction,
+            frictionStatic: vacuumModeRef.current ? 0 : 0.5,
             frictionAir: vacuumModeRef.current ? 0 : 0.01,
             density: material.density,
             render: renderOpts,
@@ -189,6 +233,8 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
             body.plugin = body.plugin || {};
             body.plugin.acceleration = { x: 0, y: 0 };
             body.plugin.materialKey = materialKey; // Store material key for reference
+            body.bodyType = type; // Store type for UI differentiation
+            if (type === 'circle') (body as any).circleRadius = s * 0.8;
             Composite.add(engineRef.current.world, body);
             console.log('Body added to world:', body.id);
         } else {
@@ -242,6 +288,34 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
             body.plugin = body.plugin || {};
             body.plugin.acceleration = { ...body.plugin.acceleration, ...updates.acceleration };
         }
+
+        if (updates.width || updates.height || updates.circleRadius) {
+            const currentWidth = body.bounds.max.x - body.bounds.min.x;
+            const currentHeight = body.bounds.max.y - body.bounds.min.y;
+
+            let scaleX = 1;
+            let scaleY = 1;
+
+            if (updates.circleRadius && currentWidth > 0) {
+                const newDiameter = updates.circleRadius * 2;
+                scaleX = newDiameter / currentWidth;
+                scaleY = newDiameter / currentHeight;
+            } else {
+                if (updates.width && currentWidth > 0) {
+                    scaleX = updates.width / currentWidth;
+                }
+                if (updates.height && currentHeight > 0) {
+                    scaleY = updates.height / currentHeight;
+                }
+            }
+
+            if (scaleX !== 1 || scaleY !== 1) {
+                Matter.Body.scale(body, scaleX, scaleY);
+                if (updates.circleRadius) {
+                    (body as any).circleRadius = updates.circleRadius;
+                }
+            }
+        }
     }, [getBodyById]);
 
     const deleteBody = useCallback((id: number) => {
@@ -259,6 +333,15 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
                 engineRef.current.gravity.x = g.x;
                 engineRef.current.gravity.y = g.y;
             }
+        }
+    }, []);
+
+    const setGravityFromVector = useCallback((angle: number, magnitude: number) => {
+        if (engineRef.current) {
+            const x = magnitude * Math.cos(angle);
+            const y = magnitude * Math.sin(angle);
+            engineRef.current.gravity.x = x;
+            engineRef.current.gravity.y = y;
         }
     }, []);
 
@@ -295,22 +378,38 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
 
         if (activeWalls.top) {
             bounds.push(Bodies.rectangle(width / 2, -thickness / 2, width, thickness, {
-                isStatic: true, label: 'ground', render: { fillStyle: 'transparent' }
+                isStatic: true,
+                label: 'ground',
+                render: { fillStyle: 'transparent' },
+                friction: vacuumModeRef.current ? 0 : 0.1,
+                frictionStatic: vacuumModeRef.current ? 0 : 0.5
             }));
         }
         if (activeWalls.bottom) {
             bounds.push(Bodies.rectangle(width / 2, height + thickness / 2, width, thickness, {
-                isStatic: true, label: 'ground', render: { fillStyle: 'transparent' }
+                isStatic: true,
+                label: 'ground',
+                render: { fillStyle: 'transparent' },
+                friction: vacuumModeRef.current ? 0 : 0.1,
+                frictionStatic: vacuumModeRef.current ? 0 : 0.5
             }));
         }
         if (activeWalls.left) {
             bounds.push(Bodies.rectangle(-thickness / 2, height / 2, thickness, height, {
-                isStatic: true, label: 'ground', render: { fillStyle: 'transparent' }
+                isStatic: true,
+                label: 'ground',
+                render: { fillStyle: 'transparent' },
+                friction: vacuumModeRef.current ? 0 : 0.1,
+                frictionStatic: vacuumModeRef.current ? 0 : 0.5
             }));
         }
         if (activeWalls.right) {
             bounds.push(Bodies.rectangle(width + thickness / 2, height / 2, thickness, height, {
-                isStatic: true, label: 'ground', render: { fillStyle: 'transparent' }
+                isStatic: true,
+                label: 'ground',
+                render: { fillStyle: 'transparent' },
+                friction: vacuumModeRef.current ? 0 : 0.1,
+                frictionStatic: vacuumModeRef.current ? 0 : 0.5
             }));
         }
 
@@ -524,9 +623,15 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
             if (enabled) {
                 body.frictionAir = 0;
                 body.friction = 0;
-                body.restitution = 1; // Elastic collisions so energy isn't lost
+                body.frictionStatic = 0;
+                body.restitution = 1; // Elastic collisions
             } else {
                 body.frictionAir = 0.01;
+                // Restore defaults roughly (hard to know exact original material, but 0.1/0.5 are reasonable defaults)
+                // If it's a specific material, we might lose that info here, but for "off", returning to "normal" friction is what's expected.
+                // We can check the plugin.materialKey if we wanted to be perfect, but this is a toggle.
+                body.friction = 0.1;
+                body.frictionStatic = 0.5;
             }
         });
     }, []);
@@ -555,6 +660,70 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         });
     }, []);
 
+    const removeBodyPins = useCallback((id: number) => {
+        if (!engineRef.current || !MatterRef.current) return;
+        const body = getBodyById(id);
+        if (!body) return;
+
+        const { Composite } = MatterRef.current;
+        const constraints = MatterRef.current.Composite.allConstraints(engineRef.current.world);
+
+        // Find constraints that are pins (attached to world, i.e., one body is null, or length 0 and static attachment)
+        // In our addPin, we use bodyA=body, bodyB=null (implied world).
+        const pinsToRemove = constraints.filter((c: any) =>
+            (c.bodyA === body && c.bodyB === null) ||
+            (c.bodyB === body && c.bodyA === null)
+        );
+
+        if (pinsToRemove.length > 0) {
+            Composite.remove(engineRef.current.world, pinsToRemove);
+        }
+    }, [getBodyById]);
+
+    const removePinAt = useCallback((x: number, y: number, radius: number = 20) => {
+        if (!engineRef.current || !MatterRef.current) return;
+        const Matter = MatterRef.current;
+        const { Composite } = Matter;
+        const constraints = Composite.allConstraints(engineRef.current.world);
+
+        const pinsToRemove = constraints.filter((c: any) => {
+            // Only consider constraints attached to the world (one body null)
+            if (c.bodyA && c.bodyB) return false;
+
+            // Get point in world space (the anchor point)
+            // If bodyA exists, pointB is likely the world point (standard addPin)
+            const point = c.bodyA ? c.pointB : c.pointA;
+            if (!point) return false;
+
+            const dist = Math.hypot(point.x - x, point.y - y);
+            return dist <= radius;
+        });
+
+        if (pinsToRemove.length > 0) {
+            Composite.remove(engineRef.current.world, pinsToRemove);
+        }
+    }, []);
+
+    const addRule = useCallback((rule: LogicRule) => {
+        logicEngineRef.current.addRule(rule);
+    }, []);
+
+    const removeRule = useCallback((id: string) => {
+        logicEngineRef.current.removeRule(id);
+    }, []);
+
+    const clearBodyRules = useCallback((bodyId: number) => {
+        logicEngineRef.current.clearRules(bodyId);
+    }, []);
+
+    const updateRule = useCallback((id: string, updates: Partial<LogicRule>) => {
+        logicEngineRef.current.updateRule(id, updates);
+    }, []);
+
+    const getAllRules = useCallback(() => {
+        return logicEngineRef.current ? logicEngineRef.current.getRules() : [];
+    }, []);
+
     return React.useMemo(() => ({
         engineRef,
         MatterRef,
@@ -579,8 +748,23 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         loadWorld,
         isReady,
         applyExplosionForce,
+        setGravityFromVector,
         setVacuumMode,
         clearAllConstraints,
-        freezeAllBodies
-    }), [initEngine, loadTemplate, update, spawnBody, getBodyById, updateBody, deleteBody, setGravity, setTimeScale, setSubsteps, setSleeping, addWorldBounds, getAllBodies, addConstraint, addPin, addRevoluteJoint, getAllConstraints, serializeWorld, loadWorld, isReady, applyExplosionForce, setVacuumMode, clearAllConstraints, freezeAllBodies]);
+        freezeAllBodies,
+        removeBodyPins,
+        removePinAt,
+        addRule,
+        removeRule,
+        updateRule,
+        clearBodyRules,
+        getAllRules,
+        addRawConstraint: (options: any) => {
+            if (!engineRef.current || !MatterRef.current) return null;
+            const { Constraint, Composite } = MatterRef.current;
+            const constraint = Constraint.create(options);
+            Composite.add(engineRef.current.world, constraint);
+            return constraint;
+        }
+    }), [initEngine, loadTemplate, update, spawnBody, getBodyById, updateBody, deleteBody, setGravity, setTimeScale, setSubsteps, setSleeping, addWorldBounds, getAllBodies, addConstraint, addPin, addRevoluteJoint, getAllConstraints, serializeWorld, loadWorld, isReady, applyExplosionForce, setGravityFromVector, setVacuumMode, clearAllConstraints, freezeAllBodies, removeBodyPins, removePinAt, addRule, removeRule, updateRule, clearBodyRules, getAllRules]);
 }

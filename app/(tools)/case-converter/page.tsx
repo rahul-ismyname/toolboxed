@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { CaseConverter } from '@/components/tools/utility/CaseConverter';
+import { CaseConverter } from '@/components/tools/developer/CaseConverter';
 import { TitleSection } from '@/components/shared/TitleSection';
 import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';

@@ -100,10 +100,29 @@ export function CaseConverter() {
                 </div>
             </div>
 
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-4 sm:px-0">
+                <div className="p-6 bg-slate-50 dark:bg-slate-900 rounded-[2rem] text-center border border-slate-100 dark:border-slate-800 shadow-sm">
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Words</div>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white tabular-nums">{input ? input.trim().split(/\s+/).length : 0}</div>
+                </div>
+                <div className="p-6 bg-slate-50 dark:bg-slate-900 rounded-[2rem] text-center border border-slate-100 dark:border-slate-800 shadow-sm">
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Characters</div>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white tabular-nums">{input.length}</div>
+                </div>
+                <div className="p-6 bg-slate-50 dark:bg-slate-900 rounded-[2rem] text-center border border-slate-100 dark:border-slate-800 shadow-sm">
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Lines</div>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white tabular-nums">{input ? input.split(/\r\n|\r|\n/).length : 0}</div>
+                </div>
+                <div className="p-6 bg-slate-50 dark:bg-slate-900 rounded-[2rem] text-center border border-slate-100 dark:border-slate-800 shadow-sm">
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Bytes</div>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white tabular-nums">{new Blob([input]).size}</div>
+                </div>
+            </div>
+
             <div className="flex items-center gap-3 px-6 text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 justify-center">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 Lexical Engine Status: Active
             </div>
-        </div>
+        </div >
     );
 }

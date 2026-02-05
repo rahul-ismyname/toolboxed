@@ -1,14 +1,13 @@
 'use client';
 
 import React, { useState, Dispatch, SetStateAction } from 'react';
-import { ChevronDown, Wind, Eye, EyeOff, Maximize2, Minimize2, List, BoxSelect, Folder, Save, FolderOpen, Share2, Globe, Monitor, Settings2, ZapOff, Snowflake, Eraser } from 'lucide-react';
-import { PHYSICS_TEMPLATES } from '@/lib/sim-templates';
+import { ChevronDown, Wind, Eye, EyeOff, Maximize2, Minimize2, List, BoxSelect, Folder, Save, FolderOpen, Share2, Globe, Monitor, Settings2, ZapOff, Snowflake, Eraser, Zap, Activity, Package } from 'lucide-react';
+import { PREFABS } from '@/lib/prefabs';
 import { ActiveWalls } from '../../hooks/useMatterEngine';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface TopBarProps {
-    activeTemplateId: string;
-    onLoadTemplate: (templateId: string) => void;
+    onSpawnPrefab: (prefabId: string) => void;
     gravity: { x: number, y: number };
     onGravityChange: (g: { x: number, y: number }) => void;
     showVectors: boolean;
@@ -31,11 +30,12 @@ interface TopBarProps {
     onVacuumModeChange: (enabled: boolean) => void;
     onClearConstraints: () => void;
     onFreezeAll: () => void;
+    showGrid: boolean;
+    onShowGridChange: Dispatch<SetStateAction<boolean>>;
 }
 
 export function TopBar({
-    activeTemplateId,
-    onLoadTemplate,
+    onSpawnPrefab,
     gravity,
     onGravityChange,
     showVectors,
@@ -57,19 +57,21 @@ export function TopBar({
     vacuumMode,
     onVacuumModeChange,
     onClearConstraints,
-    onFreezeAll
+    onFreezeAll,
+    showGrid,
+    onShowGridChange
 }: TopBarProps) {
-    const [isTemplateMenuOpen, setIsTemplateMenuOpen] = useState(false);
+    // State for the things library and active menus
+    const [isLibraryOpen, setIsLibraryOpen] = useState(false);
     const [activeMenu, setActiveMenu] = useState<'scene' | 'world' | 'view' | null>(null);
 
-    const activeTemplate = PHYSICS_TEMPLATES.find(t => t.id === activeTemplateId);
     const menuRef = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
                 setActiveMenu(null);
-                setIsTemplateMenuOpen(false);
+                setIsLibraryOpen(false);
             }
         };
 
@@ -79,48 +81,65 @@ export function TopBar({
 
     const toggleMenu = (menu: 'scene' | 'world' | 'view') => {
         setActiveMenu(activeMenu === menu ? null : menu);
-        setIsTemplateMenuOpen(false); // Close other menu
+        setIsLibraryOpen(false); // Close other menu
     };
 
     return (
         <div ref={menuRef} className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start pointer-events-none z-40">
-            {/* Template Selector (Top Left) */}
+            {/* Things Library Selector (Top Left) */}
             <div className="pointer-events-auto relative">
                 <button
                     onClick={() => {
-                        setIsTemplateMenuOpen(!isTemplateMenuOpen);
+                        setIsLibraryOpen(!isLibraryOpen);
                         setActiveMenu(null); // Close other menus
                     }}
-                    className="flex items-center gap-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-white/20 px-4 py-2.5 rounded-2xl shadow-lg hover:bg-white dark:hover:bg-slate-900 transition-all active:scale-95"
+                    className="flex items-center gap-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-white/20 px-4 py-2.5 rounded-2xl shadow-lg hover:bg-white dark:hover:bg-slate-900 transition-all active:scale-95 group"
                 >
                     <div className="flex flex-col items-start text-left">
-                        <span className="text-[10px] uppercase font-black tracking-widest text-slate-400">Template</span>
-                        <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{activeTemplate?.name || 'Select'}</span>
+                        <span className="text-[10px] uppercase font-black tracking-widest text-slate-400 group-hover:text-indigo-500 transition-colors">Add Premade</span>
+                        <span className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                            <Package className="w-4 h-4 text-indigo-500" /> Things Library
+                        </span>
                     </div>
-                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isTemplateMenuOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isLibraryOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-                {isTemplateMenuOpen && (
-                    <div className="absolute top-full left-0 mt-2 w-64 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden py-2">
-                        {PHYSICS_TEMPLATES.map((template) => (
-                            <button
-                                key={template.id}
-                                onClick={() => {
-                                    onLoadTemplate(template.id);
-                                    setIsTemplateMenuOpen(false);
-                                }}
-                                className={`w-full px-4 py-3 text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${activeTemplateId === template.id ? 'bg-indigo-50 dark:bg-indigo-900/30' : ''
-                                    }`}
-                            >
-                                <div className={`text-sm font-bold ${activeTemplateId === template.id ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-200'
-                                    }`}>
-                                    {template.name}
-                                </div>
-                                <div className="text-[10px] text-slate-500 mt-0.5 line-clamp-2">
-                                    {template.description}
-                                </div>
-                            </button>
-                        ))}
+                {isLibraryOpen && (
+                    <div className="absolute top-full left-0 mt-2 w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden py-2 z-50">
+                        <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800 mb-2">
+                            <span className="text-[10px] uppercase font-black tracking-widest text-slate-400">Spawn Anything</span>
+                        </div>
+                        <div className="max-h-[60vh] overflow-y-auto custom-scrollbar">
+                            {PREFABS.map((prefab) => {
+                                // Dynamic icon selection
+                                const Icon = prefab.id === 'logic-bouncer' ? Zap :
+                                    prefab.id === 'chaos-pendulum' ? Activity :
+                                        Package;
+
+                                return (
+                                    <button
+                                        key={prefab.id}
+                                        onClick={() => {
+                                            onSpawnPrefab(prefab.id);
+                                            setIsLibraryOpen(false);
+                                        }}
+                                        className="w-full px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-start gap-4"
+                                    >
+                                        <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0" style={{ color: prefab.color }}>
+                                            <Icon className="w-5 h-5" />
+                                        </div>
+                                        <div className="flex flex-col min-w-0">
+                                            <div className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">
+                                                {prefab.name}
+                                            </div>
+                                            <div className="text-[10px] text-slate-500 mt-0.5 line-clamp-2 leading-tight">
+                                                {prefab.description}
+                                            </div>
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
                 )}
             </div>
@@ -199,50 +218,87 @@ export function TopBar({
                             >
                                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center border-b border-white/10 pb-2">World Environment</div>
 
-                                {/* Gravity Y */}
+                                {/* Gravity Control */}
                                 <div>
-                                    <div className="flex justify-between text-[10px] text-slate-500 mb-1">
-                                        <span>Gravity (Y)</span>
-                                        <span className="font-mono">{gravity.y.toFixed(2)}</span>
+                                    <div className="flex justify-between text-[10px] text-slate-500 mb-2">
+                                        <span>Gravity (Direction & Strength)</span>
                                     </div>
-                                    <input
-                                        type="range"
-                                        min="-2"
-                                        max="2"
-                                        step="0.1"
-                                        value={gravity.y}
-                                        onChange={(e) => onGravityChange({ ...gravity, y: parseFloat(e.target.value) })}
-                                        className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-                                    />
-                                </div>
 
-                                {/* Gravity X (Wind) */}
-                                <div>
-                                    <div className="flex justify-between text-[10px] text-slate-500 mb-1">
-                                        <div className="flex items-center gap-1">
-                                            <Wind className="w-3 h-3" />
-                                            <span>Wind (X)</span>
+                                    <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 flex flex-col items-center gap-3">
+                                        {/* Compass */}
+                                        <div className="relative w-24 h-24 rounded-full border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-inner flex items-center justify-center">
+                                            {/* Cardinal Points */}
+                                            <div className="absolute top-1 text-[8px] font-bold text-slate-400">N</div>
+                                            <div className="absolute bottom-1 text-[8px] font-bold text-slate-400">S</div>
+                                            <div className="absolute left-1 text-[8px] font-bold text-slate-400">W</div>
+                                            <div className="absolute right-1 text-[8px] font-bold text-slate-400">E</div>
+
+                                            {/* Indicator Arrow */}
+                                            <div
+                                                className="absolute w-1 h-10 bg-gradient-to-t from-indigo-500 to-transparent origin-bottom left-1/2 -translate-x-1/2 top-2 rounded-full pointer-events-none"
+                                                style={{
+                                                    transform: `translateX(-50%) rotate(${Math.atan2(gravity.y, gravity.x) * (180 / Math.PI) + 90}deg) translateY(-50%)`,
+                                                    transformOrigin: 'bottom center'
+                                                }}
+                                            />
+                                            {/* Center Dot */}
+                                            <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-sm z-10" />
+
+                                            {/* Invisible Overlay for Interaction */}
+                                            <div
+                                                className="absolute inset-0 rounded-full cursor-crosshair z-20 active:cursor-grabbing"
+                                                onMouseDown={(e) => {
+                                                    const updateGravityFromMouse = (evt: MouseEvent) => {
+                                                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                                        const centerX = rect.left + rect.width / 2;
+                                                        const centerY = rect.top + rect.height / 2;
+                                                        const dx = evt.clientX - centerX;
+                                                        const dy = evt.clientY - centerY;
+                                                        const angle = Math.atan2(dy, dx);
+                                                        const magnitude = Math.hypot(gravity.x, gravity.y) || 1;
+
+                                                        onGravityChange({
+                                                            x: magnitude * Math.cos(angle),
+                                                            y: magnitude * Math.sin(angle)
+                                                        });
+                                                    };
+
+                                                    const handleMouseMove = (evt: MouseEvent) => updateGravityFromMouse(evt);
+                                                    const handleMouseUp = () => {
+                                                        document.removeEventListener('mousemove', handleMouseMove);
+                                                        document.removeEventListener('mouseup', handleMouseUp);
+                                                    };
+
+                                                    updateGravityFromMouse(e.nativeEvent);
+                                                    document.addEventListener('mousemove', handleMouseMove);
+                                                    document.addEventListener('mouseup', handleMouseUp);
+                                                }}
+                                            />
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="range"
-                                            min="-2"
-                                            max="2"
-                                            step="0.1"
-                                            value={gravity.x}
-                                            onChange={(e) => onGravityChange({ ...gravity, x: parseFloat(e.target.value) })}
-                                            className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-500"
-                                        />
-                                        <input
-                                            type="number"
-                                            min="-5"
-                                            max="5"
-                                            step="0.1"
-                                            value={gravity.x}
-                                            onChange={(e) => onGravityChange({ ...gravity, x: parseFloat(e.target.value) || 0 })}
-                                            className="w-12 text-[10px] p-1 bg-slate-100 dark:bg-slate-800 rounded-md border-0 focus:ring-2 focus:ring-sky-500 text-center font-mono"
-                                        />
+
+                                        {/* Strength Slider */}
+                                        <div className="w-full">
+                                            <div className="flex justify-between text-[9px] text-slate-400 mb-1">
+                                                <span>Strength</span>
+                                                <span className="font-mono">{Math.hypot(gravity.x, gravity.y).toFixed(2)}G</span>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="0"
+                                                max="5"
+                                                step="0.1"
+                                                value={Math.hypot(gravity.x, gravity.y)}
+                                                onChange={(e) => {
+                                                    const newMag = parseFloat(e.target.value);
+                                                    const angle = Math.atan2(gravity.y, gravity.x);
+                                                    onGravityChange({
+                                                        x: newMag * Math.cos(angle),
+                                                        y: newMag * Math.sin(angle)
+                                                    });
+                                                }}
+                                                className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -367,6 +423,16 @@ export function TopBar({
                                 >
                                     <span className="flex items-center gap-2">
                                         Object List (L)
+                                    </span>
+                                </button>
+
+                                <button
+                                    onClick={() => onShowGridChange(!showGrid)}
+                                    className={`w-full px-3 py-2 rounded-xl text-xs text-left flex items-center justify-between group ${showGrid ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600' : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600'}`}
+                                >
+                                    <span className="flex items-center gap-2">
+                                        <BoxSelect className="w-4 h-4" /> {/* Or Grid/Layout icon */}
+                                        Show Grid
                                     </span>
                                 </button>
 

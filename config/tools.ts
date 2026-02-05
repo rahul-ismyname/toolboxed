@@ -630,5 +630,13 @@ export const tools: Tool[] = [
         category: 'Utility',
         icon: FileText,
         path: '/pdf-master'
+    },
+    {
+        slug: 'css-gradient-generator',
+        name: 'CSS Gradient Generator',
+        description: 'Create beautiful linear and radial gradients visually and copy the CSS instantly.',
+        category: 'Design',
+        icon: Palette,
+        path: '/css-gradient-generator'
     }
 ];

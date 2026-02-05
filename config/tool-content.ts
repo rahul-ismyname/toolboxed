@@ -1630,11 +1630,11 @@ export const toolContentData: Record<string, ToolData> = {
         title: 'Universe Sandbox - 3b1b Style Physics & Math Simulator',
         description: 'An interactive mathematical and physical playground. Simulate laws of inertia, acceleration, and complex functions with beautiful 3Blue1Brown aesthetics.',
         features: [
-            'Real-time Rigid Body Physics (Matter.js)',
-            'Beautiful 3b1b Mathematical Aesthetics',
-            'Interactive Vector Visualization (Force, Velocity, Acceleration)',
-            'Dynamic Function Plotting and Physics Interaction',
-            '100% Private - Runs entirely in your browser'
+            '**Real-time Rigid Body Physics**: Powered by Matter.js for accurate physical interactions.',
+            '**Beautiful Aesthetics**: Inspired by 3Blue1Brown\'s visual style.',
+            '**Interactive Visualization**: View force, velocity, and acceleration vectors in real-time.',
+            '**Dynamic Plotting**: Graph and interact with physics functions dynamically.',
+            '**100% Private**: All simulations run entirely in your browser.'
         ],
         howToUse: [
             { title: 'Choose a Template', description: 'Start with a pre-defined scenario like "Inertia Lab" or "Acceleration Demo".' },
@@ -1651,6 +1651,32 @@ export const toolContentData: Record<string, ToolData> = {
             es: { title: 'Simulador de Física del Universo', description: 'Simula leyes de inercia y aceleración con estética 3b1b.' },
             pt: { title: 'Simulador de Física do Universo', description: 'Simule leis de inércia e aceleração com estética 3b1b.' },
             hi: { title: 'ब्रह्मांड भौतिकी सिम्युलेटर', description: '3b1b सौंदर्यशास्त्र के साथ जड़ता और त्वरण के नियमों का अनुकरण करें।' }
+        }
+    },
+    'css-gradient-generator': {
+        title: 'CSS Gradient Generator',
+        description: 'Design beautiful, smooth CSS gradients visually. Create linear and radial gradients with multiple color stops and real-time preview.',
+        features: [
+            '**Visual Editor**: Interactive controls to adjust angles, colors, and positions.',
+            '**Multi-Stop Support**: Add up to 5 color stops for complex gradient effects.',
+            '**Radial & Linear**: Switch between gradient types instantly.',
+            '**Real-time Preview**: See your changes immediately on a large canvas.',
+            '**One-Click Copy**: Get production-ready CSS code instantly.'
+        ],
+        howToUse: [
+            { title: 'Select Type', description: 'Choose between Linear or Radial gradient styles.' },
+            { title: 'Add Colors', description: 'Click "Add Stop" to introduce new colors to your gradient.' },
+            { title: 'Adjust Position', description: 'Use the sliders to tweak where each color transition occurs.' },
+            { title: 'Export', description: 'Click the Copy button to grab the CSS code for your project.' }
+        ],
+        faqs: [
+            { question: 'Is this compatible with all browsers?', answer: 'Yes, standard CSS gradients are supported by all modern browsers.' },
+            { question: 'Can I use transparent colors?', answer: 'Yes, the color picker supports transparency (alpha channel).' }
+        ],
+        localizedMetadata: {
+            es: { title: 'Generador de Degradados CSS', description: 'Diseña hermosos degradados CSS visualmente. Copia el código al instante.' },
+            pt: { title: 'Gerador de Degradês CSS', description: 'Projete belos degradês CSS visualmente. Copie o código instantaneamente.' },
+            hi: { title: 'CSS ग्रेडिएंट जेनरेटर', description: 'विज़ुअल्ली सुंदर CSS ग्रेडिएंट डिज़ाइन करें। तुरंत कोड कॉपी करें।' }
         }
     }
 };

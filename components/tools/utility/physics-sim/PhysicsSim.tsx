@@ -10,7 +10,7 @@ import { BottomDock } from './components/hud/BottomDock';
 import { PropertiesPanel } from './components/hud/PropertiesPanel';
 import { ObjectList } from './components/hud/ObjectList';
 import { StatsMonitor } from './components/hud/StatsMonitor';
-import { PHYSICS_TEMPLATES } from '@/lib/sim-templates';
+import { PREFABS } from '@/lib/prefabs';
 import { savePhysicsScene, getPhysicsScene } from '@/lib/actions';
 import { Settings2 } from 'lucide-react';
 
@@ -25,6 +25,11 @@ interface BodyData {
     friction: number;
     density: number;
     material?: string;
+    width: number;
+    height: number;
+    bodyType?: string;
+    circleRadius?: number;
+    vars?: Record<string, number>;
 }
 
 export default function PhysicsSim() {
@@ -38,7 +43,6 @@ export default function PhysicsSim() {
     const [gravity, setGravity] = useState({ x: 0, y: 1 });
     const [bgColor, setBgColor] = useState('#f8f8f8');
     const [showVectors, setShowVectors] = useState(true);
-    const [activeTemplateId, setActiveTemplateId] = useState(PHYSICS_TEMPLATES[0].id);
     const [selectedBodyId, setSelectedBodyId] = useState<number | null>(null);
     const [selectedBodyData, setSelectedBodyData] = useState<BodyData | null>(null);
     const [isLoaded, setIsLoaded] = useState(false);
@@ -52,6 +56,7 @@ export default function PhysicsSim() {
     const [multiSpawnMode, setMultiSpawnMode] = useState(false);
     const [activeWalls, setActiveWalls] = useState({ top: true, bottom: true, left: true, right: true });
     const [vacuumMode, setVacuumMode] = useState(false);
+    const [showGrid, setShowGrid] = useState(false);
 
     // Physics engine hook
     const engine = useMatterEngine({ gravity, timeScale });
@@ -60,7 +65,6 @@ export default function PhysicsSim() {
     useEffect(() => {
         const init = async () => {
             await engine.initEngine();
-            engine.loadTemplate(PHYSICS_TEMPLATES[0]);
             setIsLoaded(true);
         };
         init();
@@ -86,7 +90,8 @@ export default function PhysicsSim() {
         isFullscreen,
         onToolUsed: handleToolUsed,
         activeMaterial,
-        activeWalls
+        activeWalls,
+        showGrid
     });
 
     // Handle FullScreen change
@@ -119,6 +124,11 @@ export default function PhysicsSim() {
                     friction: body.friction,
                     density: body.density,
                     material: body.plugin?.materialKey,
+                    width: body.bounds.max.x - body.bounds.min.x,
+                    height: body.bounds.max.y - body.bounds.min.y,
+                    bodyType: (body as any).bodyType,
+                    circleRadius: (body as any).circleRadius,
+                    vars: (body as any).vars || {}
                 });
             } else {
                 setSelectedBodyId(null);
@@ -179,7 +189,6 @@ export default function PhysicsSim() {
             engine.loadWorld(json);
             renderer.clearTrails();
             setPaused(true); // Pause on load to give user control
-            setActiveTemplateId(''); // Clear active template selection as we loaded custom scene
             toast.success('Loaded local save');
         } else {
             toast.info('No local save found');
@@ -198,7 +207,6 @@ export default function PhysicsSim() {
                         engine.loadWorld(data);
                         renderer.clearTrails();
                         setPaused(true);
-                        setActiveTemplateId('');
                         toast.success('Scene loaded', { id: toastId });
                     } else {
                         toast.error('Scene not found', { id: toastId });
@@ -211,34 +219,56 @@ export default function PhysicsSim() {
         }
     }, [searchParams, isLoaded, engine, renderer]);
 
-    const handleLoadTemplate = useCallback((templateId: string) => {
-        const template = PHYSICS_TEMPLATES.find(t => t.id === templateId);
-        if (template) {
-            engine.loadTemplate(template);
-            renderer.clearTrails();
-            setActiveTemplateId(templateId);
-            setPaused(true);
-            setSelectedBodyId(null);
-            // Clear scene param
-            router.push(window.location.pathname, { scroll: false });
-        }
-    }, [engine, renderer, router]);
+    const handleSpawnPrefab = useCallback((prefabId: string) => {
+        const prefab = PREFABS.find(p => p.id === prefabId);
+        if (!prefab) return;
+
+        const { bodies, constraints, rules } = prefab.spawn(400, 300); // Default spawn location
+        const idMap = new Map();
+
+        // 1. Spawn Bodies
+        bodies.forEach(b => {
+            const body = engine.spawnBody(b.type, { ...b.options, x: b.x, y: b.y }, b.size);
+            if (body && b.options?.id) {
+                idMap.set(b.options.id, body);
+            }
+        });
+
+        // 2. Add Constraints
+        constraints?.forEach(c => {
+            const bodyA = c.bodyAId ? idMap.get(c.bodyAId) : null;
+            const bodyB = c.bodyBId ? idMap.get(c.bodyBId) : null;
+
+            // Matter.js expects bodies directly for constraints
+            engine.addRawConstraint({
+                bodyA,
+                bodyB,
+                pointA: c.pointA,
+                pointB: c.pointB,
+                stiffness: c.stiffness ?? 1,
+                length: c.length ?? 0,
+                render: { strokeStyle: '#333', lineWidth: 2 }
+            });
+        });
+
+        // 3. Add Rules
+        rules?.forEach(r => {
+            // Remap targetBodyId if necessary
+            const actualTargetId = r.targetBodyId ? idMap.get(r.targetBodyId)?.id : undefined;
+            engine.addRule({
+                ...r,
+                targetBodyId: actualTargetId
+            });
+        });
+
+        toast.success(`Spawned ${prefab.name}`);
+    }, [engine]);
 
     const handleReset = useCallback(() => {
-        // If we have a scene ID, reload it? Or just reset to current template?
-        // For now, if we are in a shared scene, reset reloads the shared scene if possible, or we just reload active template.
-        // Actually, if activeTemplateId is empty (custom/shared), we might want to just reload the current world state?
-        // Simple behavior: reload current template.
-        if (activeTemplateId) {
-            handleLoadTemplate(activeTemplateId);
-        } else {
-            // If it's a shared scene or local load, maybe just clear trails and reset positions?
-            // Hard to reset "custom" state without reloading.
-            // Let's just clear trails for custom scenes or warn.
-            renderer.clearTrails();
-            toast.info('Cannot reset custom scene. Reload page or load a template.');
-        }
-    }, [handleLoadTemplate, activeTemplateId, renderer]);
+        engine.loadWorld(JSON.stringify({ bodies: [], constraints: [], gravity: { x: 0, y: 1 } }));
+        renderer.clearTrails();
+        toast.info('Scene Reset');
+    }, [engine, renderer]);
 
     const handleToolSelect = useCallback((tool: string, size?: number) => {
         setActiveTool(current => current === tool ? null : tool);
@@ -335,8 +365,7 @@ export default function PhysicsSim() {
                 <>
                     {showHUD && (
                         <TopBar
-                            activeTemplateId={activeTemplateId}
-                            onLoadTemplate={handleLoadTemplate}
+                            onSpawnPrefab={handleSpawnPrefab}
                             gravity={gravity}
                             onGravityChange={handleGravityChange}
                             showVectors={showVectors}
@@ -365,6 +394,8 @@ export default function PhysicsSim() {
                                 engine.freezeAllBodies();
                                 toast.info('Froze all objects');
                             }}
+                            showGrid={showGrid}
+                            onShowGridChange={setShowGrid}
                         />
                     )}
 
@@ -412,6 +443,11 @@ export default function PhysicsSim() {
                             onUpdateBody={handleUpdateBody}
                             onDeleteBody={handleDeleteBody}
                             onClose={() => setSelectedBodyId(null)}
+                            addRule={engine.addRule}
+                            removeRule={engine.removeRule}
+                            updateRule={engine.updateRule}
+                            clearBodyRules={engine.clearBodyRules}
+                            getAllRules={engine.getAllRules}
                         />
                     )}
                 </>

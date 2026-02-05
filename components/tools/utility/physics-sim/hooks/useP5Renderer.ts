@@ -17,6 +17,7 @@ interface UseP5RendererOptions {
     onToolUsed?: () => void;
     activeMaterial: string;
     activeWalls: ActiveWalls;
+    showGrid: boolean;
 }
 
 export interface P5RendererAPI {
@@ -39,7 +40,8 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
         isFullscreen = false,
         onToolUsed,
         activeMaterial,
-        activeWalls
+        activeWalls,
+        showGrid
     } = options;
 
     const p5Ref = useRef<any>(null);
@@ -48,6 +50,8 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
 
     // Refs for draw loop access (avoids stale closures)
     const bgColorRef = useRef(bgColor);
+    const trailHistoryRef = useRef<Map<number, { x: number, y: number }[]>>(new Map());
+    const MAX_TRAIL_LENGTH = 20;
     const showVectorsRef = useRef(showVectors);
     const pausedRef = useRef(paused);
     const selectedBodyIdRef = useRef(selectedBodyId);
@@ -56,6 +60,7 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
     const activeMaterialRef = useRef(activeMaterial);
     const onToolUsedRef = useRef(onToolUsed);
     const activeWallsRef = useRef(activeWalls);
+    const showGridRef = useRef(showGrid);
 
     useEffect(() => { bgColorRef.current = bgColor; }, [bgColor]);
     useEffect(() => { showVectorsRef.current = showVectors; }, [showVectors]);
@@ -66,6 +71,7 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
     useEffect(() => { activeMaterialRef.current = activeMaterial; }, [activeMaterial]);
     useEffect(() => { onToolUsedRef.current = onToolUsed; }, [onToolUsed]);
     useEffect(() => { activeWallsRef.current = activeWalls; }, [activeWalls]);
+    useEffect(() => { showGridRef.current = showGrid; }, [showGrid]);
 
     useEffect(() => {
         if (!containerRef.current || !engine.engineRef.current || !engine.MatterRef.current) return;
@@ -140,6 +146,12 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                         if (clicked && !clicked.isStatic) {
                             engine.addPin(clicked, snap.x, snap.y);
                         }
+                        return;
+                    }
+
+                    if (tool === 'remove_pin') {
+                        // try to remove pin near mouse
+                        engine.removePinAt(p.mouseX, p.mouseY, 20);
                         return;
                     }
 
@@ -339,24 +351,72 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
 
                     p.background(bgColorRef.current);
 
+                    // Draw Grid if enabled
+                    if (showGridRef.current) {
+                        const gridSize = 50;
+                        p.stroke(0, 0, 0, 10); // Very faint grid lines
+                        p.strokeWeight(1);
+
+                        // Vertical lines
+                        for (let x = 0; x <= p.width; x += gridSize) {
+                            p.line(x, 0, x, p.height);
+                            if (x % 100 === 0) {
+                                p.noStroke();
+                                p.fill(0, 0, 0, 30);
+                                p.textSize(8);
+                                p.text(x, x + 2, 10);
+                                p.stroke(0, 0, 0, 10);
+                            }
+                        }
+
+                        // Horizontal lines
+                        for (let y = 0; y <= p.height; y += gridSize) {
+                            p.line(0, y, p.width, y);
+                            if (y % 100 === 0) {
+                                p.noStroke();
+                                p.fill(0, 0, 0, 30);
+                                p.textSize(8);
+                                p.text(y, 2, y - 2);
+                                p.stroke(0, 0, 0, 10);
+                            }
+                        }
+
+                        // Draw Mouse Coordinates
+                        p.noStroke();
+                        p.fill('#6366f1');
+                        p.rect(p.mouseX + 10, p.mouseY + 10, 80, 20, 4);
+                        p.fill('white');
+                        p.textSize(10);
+                        p.textAlign(p.LEFT, p.CENTER);
+                        p.text(`x: ${Math.round(p.mouseX)}, y: ${Math.round(p.mouseY)}`, p.mouseX + 15, p.mouseY + 20);
+                        p.textAlign(p.LEFT, p.BASELINE); // Reset alignment
+                    }
+
                     // Draw Trails
-                    p.noFill();
                     trailHistory.forEach((history, bodyId) => {
                         const body = engine.getBodyById(bodyId);
                         if (!body) return;
 
-                        const color = p.color((body.render && body.render.fillStyle) || '#E8E8E8');
+                        const colorStr = (body.render && body.render.fillStyle) || '#E8E8E8';
+                        const baseColor = p.color(colorStr);
 
-                        p.beginShape();
-                        for (let i = 0; i < history.length; i++) {
-                            const pos = history[i];
-                            const alpha = p.map(i, 0, history.length, 0, 150);
-                            color.setAlpha(alpha);
-                            p.stroke(color);
-                            p.strokeWeight(p.map(i, 0, history.length, 0.5, 2));
-                            p.vertex(pos.x, pos.y);
+                        // Draw segments for gradient effect
+                        p.noFill();
+                        for (let i = 0; i < history.length - 1; i++) {
+                            const pos1 = history[i];
+                            const pos2 = history[i + 1];
+
+                            const progress = i / history.length;
+                            const alpha = p.map(progress, 0, 1, 0, 100);
+                            const weight = p.map(progress, 0, 1, 0.5, 3);
+
+                            const c = p.color(colorStr); // Clone color
+                            c.setAlpha(alpha);
+
+                            p.stroke(c);
+                            p.strokeWeight(weight);
+                            p.line(pos1.x, pos1.y, pos2.x, pos2.y);
                         }
-                        p.endShape();
                     });
 
                     // 1. Draw Bodies
@@ -492,6 +552,31 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                         // Add current mouse pos
                         const path = (p as any).drawPath;
                         p.line(path[path.length - 1].x, path[path.length - 1].y, p.mouseX, p.mouseY);
+                    }
+
+                    // 4. Draw FX (Explosions, etc.)
+                    if ((p as any).fx && (p as any).fx.length > 0) {
+                        const fxList = (p as any).fx;
+                        for (let i = fxList.length - 1; i >= 0; i--) {
+                            const fx = fxList[i];
+                            fx.life -= 0.05; // Fade out speed
+                            if (fx.life <= 0) {
+                                fxList.splice(i, 1);
+                                continue;
+                            }
+
+                            // Expand effect
+                            fx.radius += (fx.maxRadius - fx.radius) * 0.15;
+
+                            p.noFill();
+                            // Clone color to avoid mutating the original object if it was shared? 
+                            // properly working with p5 color
+                            const c = p.color(fx.color);
+                            c.setAlpha(p.map(fx.life, 0, 1, 0, 200));
+                            p.stroke(c);
+                            p.strokeWeight(Math.max(1, 10 * fx.life));
+                            p.circle(fx.x, fx.y, fx.radius * 2);
+                        }
                     }
 
                     // Visualize Snap Centers for Constraint Tools

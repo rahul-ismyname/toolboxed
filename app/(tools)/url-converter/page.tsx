@@ -1,4 +1,4 @@
-import { UrlEncoderDecoder } from '@/components/tools/developer/UrlEncoderDecoder';
+import { UrlEncoder } from '@/components/tools/developer/UrlEncoder';
 import { TitleSection } from '@/components/shared/TitleSection';
 import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
@@ -30,7 +30,7 @@ export default function UrlPage() {
                     description="Convert URLs and query parameters safely."
                 />
 
-                <UrlEncoderDecoder />
+                <UrlEncoder />
             </div>
 
             <ToolContent slug="url-converter" />

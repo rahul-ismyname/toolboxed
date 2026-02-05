@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Pause, RotateCcw, Box, Circle, Triangle, Hexagon, Minus, Link, GripHorizontal, MapPin, Eraser, Zap, Pencil, Bomb, Package, Infinity, ChevronUp } from 'lucide-react';
+import { Play, Pause, RotateCcw, Box, Circle, Triangle, Hexagon, Minus, Link, GripHorizontal, MapPin, Eraser, Zap, Pencil, Bomb, Package, Infinity, ChevronUp, PinOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MATERIALS } from '../../hooks/useMatterEngine';
 
@@ -64,6 +64,7 @@ export function BottomDock({
                 { type: 'spring' as const, icon: Link, label: 'Spring', color: 'hover:text-amber-500', instruction: 'Drag between objects' },
                 { type: 'rod' as const, icon: GripHorizontal, label: 'Rod', color: 'hover:text-indigo-500', instruction: 'Fixed connection' },
                 { type: 'pin' as const, icon: MapPin, label: 'Pin', color: 'hover:text-red-500', instruction: 'Pin object to background' },
+                { type: 'remove_pin' as const, icon: PinOff, label: 'Unpin', color: 'hover:text-red-500', instruction: 'Click to unpin' },
             ]
         },
         forces: {
