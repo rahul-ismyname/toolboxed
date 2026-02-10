@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Trash2, Plus, Zap, ArrowRight, Activity, X } from 'lucide-react';
+import { Trash2, Plus, Zap, ArrowRight, Activity, X, Sparkles, Settings2, Move, Ruler, Weight, Wind, Lock, Unlock, Hash, BoxSelect } from 'lucide-react';
 import { LogicRule, ComparisonOperator, LogicProperty, LogicActionType } from '../logic/LogicSystem';
 
 interface BodyData {
@@ -53,7 +53,7 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
     const [isAddingRule, setIsAddingRule] = useState(false);
     const [isAdvancedMode, setIsAdvancedMode] = useState(false);
     const [newRule, setNewRule] = useState<{
-        trigger: 'continuous' | 'collision_start' | 'collision_horizontal' | 'collision_vertical' | 'key_hold',
+        trigger: 'continuous' | 'collision_start' | 'collision_horizontal' | 'collision_vertical' | 'key_hold' | 'timer',
         collisionTargetId: string,
         property: LogicProperty,
         operator: ComparisonOperator,
@@ -63,7 +63,8 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
         actions: { type: LogicActionType, value: any, variableName: string, useVariableValue?: boolean }[],
         elseActions: { type: LogicActionType, value: any, variableName: string, useVariableValue?: boolean }[],
         hasElse: boolean,
-        key: string
+        key: string,
+        interval?: number
     }>({
         trigger: 'continuous',
         key: ' ',
@@ -84,7 +85,7 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
             const all = getAllRules();
             setBodyRules(all.filter(r => r.targetBodyId === body.id));
         }
-    }, [body, getAllRules, isAddingRule]); // Refresh when adding too
+    }, [body, getAllRules, isAddingRule]);
 
     // Sync from external body when not editing
     useEffect(() => {
@@ -111,7 +112,7 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
 
     if (!body || !localData) {
         return (
-            <div className="text-center py-6 text-slate-400 text-xs">
+            <div className="text-center py-6 text-slate-400 text-xs font-medium">
                 Click an object to select it
             </div>
         );
@@ -138,7 +139,6 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
         isEditingRef.current = false;
         const parsed = parseFloat(value) || 0;
         onUpdate(body.id, { [field]: parsed });
-        // Sync local back to numeric if it was an invalid string
         setLocalData({ ...localData, [field]: parsed.toString() });
     };
 
@@ -153,9 +153,6 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
         isEditingRef.current = false;
         const parsed = parseFloat(value);
         if (isNaN(parsed)) return;
-
-        // When blurring, we only want to update the edited axis
-        // and keep the other axis as it is IN THE ENGINE currently
         onUpdate(body.id, {
             velocity: {
                 x: axis === 'x' ? parsed : body.velocity.x,
@@ -175,7 +172,6 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
         isEditingRef.current = false;
         const parsed = parseFloat(value);
         if (isNaN(parsed)) return;
-
         onUpdate(body.id, {
             acceleration: {
                 x: axis === 'x' ? parsed : body.acceleration.x,
@@ -191,7 +187,6 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
     };
 
     const handleImmediateUpdate = (updates: Partial<BodyData>) => {
-        // For non-numeric or simple toggles/colors
         setLocalData({ ...localData, ...updates });
         onUpdate(body.id, updates);
     };
@@ -222,25 +217,14 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
         setNewVarValue('0');
     };
 
-
-
-
     const handleAddRule = () => {
         if (!body) return;
 
-        const parseVector = (val: string) => {
-            const parts = val.split(',');
-            return parts.length === 2 ? { x: parseFloat(parts[0]), y: parseFloat(parts[1]) } : { x: 0, y: 0 };
-        };
-
         const getActValue = (type: LogicActionType, val: string) => {
             if (type === 'set_color') return val;
-            if (['apply_force', 'set_velocity'].includes(type)) {
-                const parts = val.split(',').map(p => parseFloat(p.trim()));
-                return { x: parts[0] || 0, y: parts[1] || 0 };
+            if (['set_velocity_x', 'set_velocity_y', 'maintain_speed_x', 'maintain_speed_y'].includes(type) || type === 'set_variable') {
+                return parseFloat(val) || 0;
             }
-            if (type === 'set_gravity') return parseFloat(val) || 0;
-            if (['set_variable', 'add_variable'].includes(type)) return parseFloat(val) || 0;
             return val;
         };
 
@@ -250,7 +234,8 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
             enabled: true,
             trigger: newRule.trigger,
             key: newRule.trigger === 'key_hold' ? newRule.key : undefined,
-            collisionTargetId: newRule.trigger === 'collision_start' && newRule.collisionTargetId ? parseInt(newRule.collisionTargetId) : undefined,
+            interval: newRule.trigger === 'timer' ? ((newRule as any).interval || 1000) : undefined,
+            collisionTargetId: (newRule.trigger === 'collision_start' || newRule.trigger === 'collision_horizontal' || newRule.trigger === 'collision_vertical') && newRule.collisionTargetId ? parseInt(newRule.collisionTargetId) : undefined,
             condition: {
                 property: newRule.property,
                 operator: newRule.operator,
@@ -258,15 +243,15 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
                 variableName: newRule.property === 'variable' ? newRule.conditionVariableName : undefined,
                 mode: newRule.mode
             },
-            actions: newRule.actions.map(a => ({
+            actions: (isAdvancedMode ? newRule.actions : [newRule.actions[0]]).map(a => ({
                 type: a.type,
-                value: getActValue(a.type, a.value),
-                variableName: ['set_variable', 'add_variable'].includes(a.type) ? a.variableName : undefined
+                value: (['explode'].includes(a.type) && typeof a.value === 'object') ? a.value : getActValue(a.type, a.value),
+                variableName: a.type === 'set_variable' ? a.variableName : undefined
             })),
-            elseActions: newRule.hasElse ? newRule.elseActions.map(a => ({
+            elseActions: (isAdvancedMode && newRule.hasElse) ? newRule.elseActions.map(a => ({
                 type: a.type,
                 value: getActValue(a.type, a.value),
-                variableName: ['set_variable', 'add_variable'].includes(a.type) ? a.variableName : undefined
+                variableName: a.type === 'set_variable' ? a.variableName : undefined
             })) : undefined
         };
 
@@ -274,10 +259,8 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
         setIsAddingRule(false);
     };
 
-
     return (
         <div className="space-y-4">
-            {/* ... (Keep header and tabs) ... */}
             <div className="flex items-center justify-between">
                 <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                     Object Inspector
@@ -290,26 +273,28 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
                 </button>
             </div>
 
-            {/* Tabs */}
             <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                {(['properties', 'physics', 'logic'] as const).map(tab => (
+                {[
+                    { id: 'properties', label: 'Basic', icon: Settings2 },
+                    { id: 'physics', label: 'Physics', icon: Activity },
+                    { id: 'logic', label: 'Logic', icon: Zap }
+                ].map(tab => (
                     <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all ${activeTab === tab
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id as any)}
+                        className={`flex-1 py-2 flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all ${activeTab === tab.id
                             ? 'bg-white dark:bg-slate-700 text-indigo-500 shadow-sm'
                             : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
                             }`}
                     >
-                        {tab}
+                        <tab.icon className="w-3 h-3" />
+                        <span className="hidden sm:inline">{tab.label}</span>
                     </button>
                 ))}
             </div>
 
-
             {activeTab === 'properties' && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    {/* Color */}
                     <div className="flex items-center gap-3">
                         <input
                             type="color"
@@ -317,10 +302,9 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
                             onChange={(e) => handleImmediateUpdate({ color: e.target.value })}
                             className="h-8 w-8 rounded-lg cursor-pointer border-0 p-0 shadow-sm"
                         />
-                        <span className="text-xs text-slate-500">Color</span>
+                        <span className="text-xs text-slate-500 font-medium">Object Style Color</span>
                     </div>
 
-                    {/* Static Toggle */}
                     <label className="flex items-center gap-3 cursor-pointer group">
                         <div className="relative">
                             <input
@@ -332,17 +316,18 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
                             <div className="w-9 h-5 bg-slate-200 dark:bg-slate-700 peer-checked:bg-amber-500 rounded-full transition-colors" />
                             <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4" />
                         </div>
-                        <span className="text-xs text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors">
+                        <span className="text-xs text-slate-500 font-medium group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors">
                             Static (Fixed Position)
                         </span>
                     </label>
 
-                    {/* Angle */}
                     <div>
-                        <div className="flex justify-between text-[10px] text-slate-500 mb-1">
-                            <span>Rotation (deg)</span>
+                        <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1">
+                            <span className="flex items-center gap-1.5">
+                                <Move className="w-3 h-3" /> Rotation (deg)
+                            </span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
                             <input
                                 type="range"
                                 min="0"
@@ -357,111 +342,104 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
                                 onChange={(e) => handleUpdateField('angle', e.target.value)}
                                 onBlur={(e) => handleBlur('angle', e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                className="w-16 text-xs p-1 bg-slate-100 dark:bg-slate-800 rounded-md border-0 focus:ring-2 focus:ring-indigo-500 text-center"
+                                className="w-16 text-xs p-2 bg-slate-100 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:border-indigo-400 outline-none text-center font-mono"
                                 step="1"
                             />
                         </div>
                     </div>
 
-                    {/* Dimensions */}
-                    <div>
+                    <div className="pt-2">
+                        <div className="text-[10px] font-bold text-slate-400 uppercase mb-3 flex items-center gap-1.5">
+                            <Ruler className="w-3 h-3" /> Dimensions
+                        </div>
                         {localData.circleRadius ? (
                             <div>
-                                <div className="text-[10px] text-slate-500 mb-2">Dimensions</div>
-                                <div>
-                                    <label className="text-[9px] text-slate-400 block mb-1">Radius</label>
-                                    <input
-                                        type="text"
-                                        value={localData.circleRadius}
-                                        onFocus={handleFocus}
-                                        onChange={(e) => handleLocalInput('circleRadius', e.target.value)}
-                                        onBlur={(e) => handleBlur('circleRadius', e.target.value)}
-                                        onKeyDown={handleKeyDown}
-                                        className="w-full text-xs p-2 bg-slate-100 dark:bg-slate-800 rounded-lg border-0 focus:ring-2 focus:ring-indigo-500"
-                                    />
-                                </div>
+                                <label className="text-[9px] text-slate-400 font-bold block mb-1 ml-1 uppercase">Radius</label>
+                                <input
+                                    type="text"
+                                    value={localData.circleRadius}
+                                    onFocus={handleFocus}
+                                    onChange={(e) => handleLocalInput('circleRadius', e.target.value)}
+                                    onBlur={(e) => handleBlur('circleRadius', e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    className="w-full text-xs p-2.5 bg-slate-100 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:border-indigo-400 outline-none font-mono"
+                                />
                             </div>
                         ) : (
-                            <div>
-                                <div className="text-[10px] text-slate-500 mb-2">Dimensions</div>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label className="text-[9px] text-slate-400 block mb-1">Width</label>
-                                        <input
-                                            type="text"
-                                            value={localData.width}
-                                            onFocus={handleFocus}
-                                            onChange={(e) => handleLocalInput('width', e.target.value)}
-                                            onBlur={(e) => handleBlur('width', e.target.value)}
-                                            onKeyDown={handleKeyDown}
-                                            className="w-full text-xs p-2 bg-slate-100 dark:bg-slate-800 rounded-lg border-0 focus:ring-2 focus:ring-indigo-500"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-[9px] text-slate-400 block mb-1">Height</label>
-                                        <input
-                                            type="text"
-                                            value={localData.height}
-                                            onFocus={handleFocus}
-                                            onChange={(e) => handleLocalInput('height', e.target.value)}
-                                            onBlur={(e) => handleBlur('height', e.target.value)}
-                                            onKeyDown={handleKeyDown}
-                                            className="w-full text-xs p-2 bg-slate-100 dark:bg-slate-800 rounded-lg border-0 focus:ring-2 focus:ring-indigo-500"
-                                        />
-                                    </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-[9px] text-slate-400 font-bold block mb-1 ml-1 uppercase">Width</label>
+                                    <input
+                                        type="text"
+                                        value={localData.width}
+                                        onFocus={handleFocus}
+                                        onChange={(e) => handleLocalInput('width', e.target.value)}
+                                        onBlur={(e) => handleBlur('width', e.target.value)}
+                                        onKeyDown={handleKeyDown}
+                                        className="w-full text-xs p-2.5 bg-slate-100 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:border-indigo-400 outline-none font-mono"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-[9px] text-slate-400 font-bold block mb-1 ml-1 uppercase">Height</label>
+                                    <input
+                                        type="text"
+                                        value={localData.height}
+                                        onFocus={handleFocus}
+                                        onChange={(e) => handleLocalInput('height', e.target.value)}
+                                        onBlur={(e) => handleBlur('height', e.target.value)}
+                                        onKeyDown={handleKeyDown}
+                                        className="w-full text-xs p-2.5 bg-slate-100 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:border-indigo-400 outline-none font-mono"
+                                    />
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    {/* Variable Manager Section */}
                     <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center justify-between mb-2">
-                            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                                <Activity className="w-3 h-3" /> Variable Manager
+                        <div className="flex items-center justify-between mb-3 px-1">
+                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                <Hash className="w-3.5 h-3.5 text-indigo-500" /> Variables
                             </h4>
                         </div>
 
-                        <div className="space-y-2">
-                            {/* List existing variables */}
+                        <div className="space-y-1.5">
                             {body.vars && Object.entries(body.vars).map(([name, value]) => (
-                                <div key={name} className="flex items-center gap-2 group/var">
-                                    <span className="text-[10px] font-mono text-slate-500 w-20 truncate" title={name}>{name}</span>
+                                <div key={name} className="flex items-center gap-1.5 group/var bg-slate-50 dark:bg-slate-900/50 p-1 rounded-lg border border-slate-100 dark:border-slate-800">
+                                    <span className="text-[9px] font-mono font-bold text-slate-400 w-20 truncate px-1.5" title={name}>{name}</span>
                                     <input
                                         type="number"
                                         value={value}
                                         onChange={(e) => handleVariableUpdate(name, e.target.value)}
-                                        className="flex-1 text-[10px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-1.5 py-1 outline-none focus:ring-1 focus:ring-indigo-500"
+                                        className="flex-1 text-[10px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded md py-0.5 outline-none focus:border-indigo-400 font-mono text-center"
                                     />
                                     <button
                                         onClick={() => handleVariableDelete(name)}
-                                        className="p-1 hover:bg-red-50 hover:text-red-500 rounded opacity-0 group-hover/var:opacity-100 transition-opacity"
+                                        className="p-1 hover:text-red-500 text-slate-300 transition-colors"
                                     >
-                                        <Trash2 className="w-3 h-3 text-slate-400" />
+                                        <X className="w-3 h-3" />
                                     </button>
                                 </div>
                             ))}
 
-                            {/* Add new variable */}
-                            <div className="flex items-center gap-1 mt-3 bg-indigo-50/50 dark:bg-indigo-900/20 p-1.5 rounded-lg border border-indigo-100/50 dark:border-indigo-800/30">
+                            <div className="flex items-center gap-1.5 mt-2 bg-indigo-50/20 dark:bg-indigo-900/10 p-1.5 rounded-lg border border-dashed border-indigo-200/50 dark:border-indigo-800/30">
                                 <input
                                     type="text"
                                     placeholder="Name"
                                     value={newVarName}
                                     onChange={(e) => setNewVarName(e.target.value)}
-                                    className="w-20 text-[10px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-1.5 py-1 outline-none"
+                                    className="w-16 text-[10px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded px-1.5 py-1 outline-none focus:border-indigo-400 font-bold"
                                 />
                                 <input
                                     type="number"
                                     placeholder="0"
                                     value={newVarValue}
                                     onChange={(e) => setNewVarValue(e.target.value)}
-                                    className="flex-1 text-[10px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded px-1.5 py-1 outline-none"
+                                    className="flex-1 text-[10px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded px-1.5 py-1 outline-none focus:border-indigo-400 font-mono text-center"
                                 />
                                 <button
                                     onClick={handleAddVariable}
                                     disabled={!newVarName}
-                                    className="p-1.5 bg-indigo-500 text-white rounded hover:bg-indigo-600 disabled:opacity-50 transition-colors"
+                                    className="bg-indigo-500 text-white rounded p-1 hover:bg-indigo-600 disabled:opacity-50 transition-all shadow-sm"
                                 >
                                     <Plus className="w-3 h-3" />
                                 </button>
@@ -471,15 +449,15 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
                 </div>
             )}
 
-            {/* TAB: PHYSICS */}
             {activeTab === 'physics' && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    {/* Velocity */}
                     <div>
-                        <div className="text-[10px] text-slate-500 mb-2">Velocity</div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1 flex items-center gap-1.5">
+                            <Wind className="w-3 h-3" /> Current Velocity
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="text-[9px] text-slate-400 block mb-1">X (+ Right)</label>
+                                <label className="text-[9px] text-slate-400 font-bold block mb-1 ml-1 uppercase">X-Axis</label>
                                 <input
                                     type="text"
                                     value={localData.velocity.x}
@@ -487,11 +465,11 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
                                     onChange={(e) => handleVelocityUpdate('x', e.target.value)}
                                     onBlur={(e) => handleVelocityBlur('x', e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    className="w-full text-xs p-2 bg-slate-100 dark:bg-slate-800 rounded-lg border-0 focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full text-xs p-2.5 bg-slate-100 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:border-indigo-400 outline-none font-mono"
                                 />
                             </div>
                             <div>
-                                <label className="text-[9px] text-slate-400 block mb-1">Y (+ Down)</label>
+                                <label className="text-[9px] text-slate-400 font-bold block mb-1 ml-1 uppercase">Y-Axis</label>
                                 <input
                                     type="text"
                                     value={localData.velocity.y}
@@ -499,18 +477,19 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
                                     onChange={(e) => handleVelocityUpdate('y', e.target.value)}
                                     onBlur={(e) => handleVelocityBlur('y', e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    className="w-full text-xs p-2 bg-slate-100 dark:bg-slate-800 rounded-lg border-0 focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full text-xs p-2.5 bg-slate-100 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:border-indigo-400 outline-none font-mono"
                                 />
                             </div>
                         </div>
                     </div>
 
-                    {/* Acceleration */}
                     <div>
-                        <div className="text-[10px] text-slate-500 mb-2">Constant Acceleration</div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1 flex items-center gap-1.5">
+                            <Zap className="w-3 h-3 text-amber-500" /> Constant Forces
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="text-[9px] text-slate-400 block mb-1">X (+ Right)</label>
+                                <label className="text-[9px] text-slate-400 font-bold block mb-1 ml-1 uppercase">Acceleration X</label>
                                 <input
                                     type="text"
                                     value={localData.acceleration.x}
@@ -518,11 +497,11 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
                                     onChange={(e) => handleAccelerationUpdate('x', e.target.value)}
                                     onBlur={(e) => handleAccelerationBlur('x', e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    className="w-full text-xs p-2 bg-slate-100 dark:bg-slate-800 rounded-lg border-0 focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full text-xs p-2.5 bg-slate-100 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:border-indigo-400 outline-none font-mono"
                                 />
                             </div>
                             <div>
-                                <label className="text-[9px] text-slate-400 block mb-1">Y (+ Down)</label>
+                                <label className="text-[9px] text-slate-400 font-bold block mb-1 ml-1 uppercase">Acceleration Y</label>
                                 <input
                                     type="text"
                                     value={localData.acceleration.y}
@@ -530,19 +509,19 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
                                     onChange={(e) => handleAccelerationUpdate('y', e.target.value)}
                                     onBlur={(e) => handleAccelerationBlur('y', e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    className="w-full text-xs p-2 bg-slate-100 dark:bg-slate-800 rounded-lg border-0 focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full text-xs p-2.5 bg-slate-100 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:border-indigo-400 outline-none font-mono"
                                 />
                             </div>
                         </div>
                     </div>
 
-                    {/* Material Properties */}
-                    <div className="pt-3 border-t border-slate-200 dark:border-slate-700">
-                        <div className="text-[10px] text-slate-500 mb-3">Material</div>
-                        {/* Material Preset Selector */}
-                        <div className="mb-3">
+                    <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                        <div className="text-[10px] font-bold text-slate-400 uppercase mb-3 ml-1 flex items-center gap-1.5">
+                            <BoxSelect className="w-3 h-3" /> Material presets
+                        </div>
+                        <div className="mb-4">
                             <select
-                                className="w-full text-xs p-2 bg-slate-100 dark:bg-slate-800 rounded-lg border-0 focus:ring-2 focus:ring-indigo-500 text-slate-700 dark:text-slate-300"
+                                className="w-full text-sm py-2.5 px-3 rounded-xl border-2 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 outline-none focus:border-indigo-400 transition-all font-medium cursor-pointer"
                                 value={Object.entries(MATERIALS).find(([key, mat]) =>
                                     Math.abs(mat.restitution - parseFloat(localData.restitution)) < 0.05 &&
                                     Math.abs(mat.friction - parseFloat(localData.friction)) < 0.05
@@ -568,463 +547,377 @@ export function ObjectInspector({ body, onUpdate, onDelete, addRule, removeRule,
                             </select>
                         </div>
 
-                        {/* Bounciness */}
-                        <div className="mb-3">
-                            <div className="flex justify-between text-[9px] text-slate-400 mb-1">
-                                <span>Bounciness</span>
-                                <span className="font-mono">{parseFloat(localData.restitution).toFixed(2)}</span>
+                        <div className="space-y-4">
+                            <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase mb-2 px-1">
+                                    <span className="flex items-center gap-1.5">
+                                        <ArrowRight className="w-3 h-3 -rotate-45" /> Bounciness
+                                    </span>
+                                    <span className="font-mono text-indigo-500">{parseFloat(localData.restitution).toFixed(2)}</span>
+                                </div>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="1.2"
+                                    step="0.05"
+                                    value={parseFloat(localData.restitution) || 0}
+                                    onChange={(e) => handleUpdateField('restitution', e.target.value)}
+                                    className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                                />
                             </div>
-                            <input
-                                type="range"
-                                min="0"
-                                max="1.2"
-                                step="0.1"
-                                value={parseFloat(localData.restitution) || 0}
-                                onChange={(e) => handleUpdateField('restitution', e.target.value)}
-                                className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500"
-                            />
-                        </div>
 
-                        {/* Friction */}
-                        <div>
-                            <div className="flex justify-between text-[9px] text-slate-400 mb-1">
-                                <span>Friction</span>
-                                <span className="font-mono">{parseFloat(localData.friction).toFixed(2)}</span>
+                            <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase mb-2 px-1">
+                                    <span className="flex items-center gap-1.5">
+                                        <Sparkles className="w-3 h-3" /> Friction
+                                    </span>
+                                    <span className="font-mono text-amber-500">{parseFloat(localData.friction).toFixed(2)}</span>
+                                </div>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="1"
+                                    step="0.05"
+                                    value={parseFloat(localData.friction) || 0}
+                                    onChange={(e) => handleUpdateField('friction', e.target.value)}
+                                    className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                                />
                             </div>
-                            <input
-                                type="range"
-                                min="0"
-                                max="1"
-                                step="0.05"
-                                value={parseFloat(localData.friction) || 0}
-                                onChange={(e) => handleUpdateField('friction', e.target.value)}
-                                className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
-                            />
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* TAB: LOGIC */}
             {activeTab === 'logic' && (
-                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    <div className="flex items-center justify-between mb-3 px-1">
-                        <div className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest flex items-center gap-1">
-                            <Zap className="w-3 h-3" />
-                            <span>Rules Management</span>
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className="flex items-center justify-between px-1">
+                        <div className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                            <Zap className="w-4 h-4 fill-indigo-500/10" />
+                            Behavior Logic
                         </div>
-                        <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
                             <button
                                 onClick={() => setIsAdvancedMode(false)}
-                                className={`px-2 py-0.5 text-[9px] rounded-md transition-all ${!isAdvancedMode ? 'bg-white dark:bg-slate-600 shadow-sm text-indigo-600 dark:text-white font-bold' : 'text-slate-500 hover:text-slate-700'}`}
+                                className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${!isAdvancedMode ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}
                             >
-                                Basic
+                                Simple
                             </button>
                             <button
                                 onClick={() => setIsAdvancedMode(true)}
-                                className={`px-2 py-0.5 text-[9px] rounded-md transition-all ${isAdvancedMode ? 'bg-white dark:bg-slate-600 shadow-sm text-indigo-600 dark:text-white font-bold' : 'text-slate-500 hover:text-slate-700'}`}
+                                className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${isAdvancedMode ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}
                             >
-                                Advanced
+                                Sequence
                             </button>
                         </div>
                     </div>
 
-                    {/* Add Rule Form */}
-                    <div className="mb-4">
-                        {!isAddingRule ? (
-                            <button
-                                onClick={() => setIsAddingRule(true)}
-                                className="w-full py-2 flex items-center justify-center gap-2 bg-indigo-500 text-white rounded-lg text-xs font-bold hover:bg-indigo-600 transition-all shadow-md active:scale-[0.98]"
-                            >
-                                <Plus className="w-3.5 h-3.5" />
-                                Create New Behavior
-                            </button>
-                        ) : (
-                            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
-                                <div className="flex items-center justify-between mb-3">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">IF (Trigger)</span>
-                                    <button
-                                        onClick={() => setIsAddingRule(false)}
-                                        className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-md transition-colors"
-                                    >
-                                        <X className="w-3.5 h-3.5" />
-                                    </button>
-                                </div>
+                    <div className="space-y-4">
+                        <button
+                            onClick={() => setIsAddingRule(true)}
+                            className={`w-full py-4 group flex flex-col items-center justify-center gap-1 bg-white dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl hover:border-indigo-400 dark:hover:border-indigo-500 transition-all active:scale-[0.98] ${isAddingRule ? 'opacity-0 pointer-events-none' : ''}`}
+                        >
+                            <Plus className="w-6 h-6 text-slate-300 group-hover:text-indigo-500 transition-colors mb-1" />
+                            <span className="text-[10px] font-black text-slate-400 group-hover:text-indigo-500 uppercase tracking-widest">New Logic Rule</span>
+                        </button>
 
-                                {/* Trigger Type */}
-                                <div className="mb-4">
-                                    <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Trigger</label>
-                                    <select
-                                        className="w-full text-sm p-2 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                                        value={newRule.trigger}
-                                        onChange={e => setNewRule({ ...newRule, trigger: e.target.value as any })}
-                                    >
-                                        <option value="continuous">Condition Check</option>
-                                        <option value="collision_start">Any Collision</option>
-                                        <option value="collision_horizontal">Horizontal Collision</option>
-                                        <option value="collision_vertical">Vertical Collision</option>
-                                        <option value="key_hold">Key Press</option>
-                                    </select>
-                                </div>
+                        {isAddingRule && (
+                            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 animate-in fade-in duration-200">
+                                <div className="bg-white dark:bg-slate-900 w-full max-w-lg border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 ring-4 ring-indigo-500/10 relative overflow-hidden">
+                                    {/* Decorative Background */}
+                                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-                                {/* Condition */}
-                                {newRule.trigger === 'continuous' ? (
-                                    <div className="mb-4">
-                                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Condition</label>
-                                        <div className="flex gap-2">
-                                            <select
-                                                className="flex-1 text-sm p-2 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                                                value={newRule.property}
-                                                onChange={e => setNewRule({ ...newRule, property: e.target.value as any })}
-                                            >
-                                                <option value="position.x">X Position</option>
-                                                <option value="position.y">Y Position</option>
-                                                <option value="velocity.x">X Velocity</option>
-                                                <option value="velocity.y">Y Velocity</option>
-                                                <option value="variable">Variable</option>
-                                            </select>
-                                            <select
-                                                className="w-16 text-sm p-2 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-center"
-                                                value={newRule.operator}
-                                                onChange={e => setNewRule({ ...newRule, operator: e.target.value as any })}
-                                            >
-                                                <option value=">">&gt;</option>
-                                                <option value="<">&lt;</option>
-                                                <option value=">=">&ge;</option>
-                                                <option value="<=">&le;</option>
-                                                <option value="==">=</option>
-                                            </select>
-                                            <input
-                                                type="number"
-                                                className="w-20 text-sm p-2 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-center"
-                                                value={newRule.value}
-                                                onChange={e => setNewRule({ ...newRule, value: e.target.value })}
-                                                placeholder="0"
-                                            />
-                                        </div>
-                                        {newRule.property === 'variable' && (
-                                            <input
-                                                type="text"
-                                                className="w-full text-sm p-2 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 mt-2"
-                                                value={newRule.conditionVariableName}
-                                                onChange={e => setNewRule({ ...newRule, conditionVariableName: e.target.value })}
-                                                placeholder="Variable name"
-                                            />
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div className="mb-4">
-                                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                                            {newRule.trigger === 'key_hold' ? 'Key' : 'Target Body ID'}
-                                        </label>
-                                        <input
-                                            type="text"
-                                            className="w-full text-sm p-2 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                                            value={newRule.trigger === 'key_hold' ? newRule.key : newRule.collisionTargetId}
-                                            onChange={e => {
-                                                if (newRule.trigger === 'key_hold') setNewRule({ ...newRule, key: e.target.value });
-                                                else setNewRule({ ...newRule, collisionTargetId: e.target.value });
-                                            }}
-                                            placeholder={newRule.trigger === 'key_hold' ? "space, w, ArrowUp" : "Leave empty for any"}
-                                        />
-                                    </div>
-                                )}
-
-
-                                <div className="mb-4">
-                                    <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Action</label>
-                                    <div className="space-y-2">
-                                        {(isAdvancedMode ? newRule.actions : [newRule.actions[0]]).map((action, index) => (
-                                            <div key={index} className="flex gap-2">
-                                                <select
-                                                    className="flex-1 text-sm p-2 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                                                    value={action.type}
-                                                    onChange={e => {
-                                                        const type = e.target.value as LogicActionType;
-                                                        const newActions = [...newRule.actions];
-                                                        let defaultValue: any = '';
-
-                                                        if (type === 'set_color') defaultValue = '#EF4444';
-                                                        else if (type === 'random_color') defaultValue = '';
-                                                        else if (type === 'cycle_colors') defaultValue = '#EF4444, #3B82F6, #10B981';
-                                                        else if (type === 'set_velocity') defaultValue = '5';
-                                                        else if (type === 'set_velocity_x' || type === 'set_velocity_y') defaultValue = '5';
-                                                        else if (type === 'add_velocity') defaultValue = '1';
-                                                        else if (type === 'add_velocity_x' || type === 'add_velocity_y') defaultValue = '1';
-                                                        else if (type === 'multiply_velocity') defaultValue = '-1';
-                                                        else if (type === 'set_acceleration') defaultValue = '0.5,0';
-                                                        else if (type === 'set_acceleration_x' || type === 'set_acceleration_y') defaultValue = '0.5';
-                                                        else if (type === 'set_gravity') defaultValue = '0,1';
-                                                        else if (type === 'apply_force') defaultValue = '50,0';
-                                                        else if (type === 'set_variable' || type === 'add_variable') defaultValue = '1';
-                                                        else if (type === 'spawn_object') defaultValue = { type: 'box', x: 0, y: -50, width: 40, height: 40, color: '#10B981' };
-
-                                                        newActions[index] = { ...newActions[index], type, value: defaultValue };
-                                                        setNewRule({ ...newRule, actions: newActions });
-                                                    }}
-                                                >
-                                                    <option value="set_color">🎨 Set Color</option>
-                                                    <option value="random_color">🎲 Random Color</option>
-                                                    <option value="set_velocity_x">➡️ Set Speed X</option>
-                                                    <option value="set_velocity_y">⬇️ Set Speed Y</option>
-                                                    <option value="flip_velocity_x">↔️ Flip X</option>
-                                                    <option value="flip_velocity_y">↕️ Flip Y</option>
-                                                    <option value="maintain_speed_x">⏩ Keep Speed X</option>
-                                                    <option value="maintain_speed_y">⏬ Keep Speed Y</option>
-                                                    <option value="set_variable">📊 Set Variable</option>
-                                                    <option value="destroy_object">💥 Destroy</option>
-                                                </select>
-                                                <input
-                                                    type="text"
-                                                    className="w-20 text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 transition-all font-mono"
-                                                    value={action.value}
-                                                    onChange={e => {
-                                                        const newActions = [...newRule.actions];
-                                                        newActions[index] = { ...newActions[index], value: e.target.value };
-                                                        setNewRule({ ...newRule, actions: newActions });
-                                                    }}
-                                                    placeholder="value"
-                                                />
+                                    <div className="flex items-center justify-between mb-6 relative z-10">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-500">
+                                                <Sparkles className="w-4 h-4 fill-current" />
                                             </div>
-                                        ))}
+                                            <div>
+                                                <div className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] leading-tight">New Behavior</div>
+                                                <div className="text-[10px] text-slate-400 font-medium">Configure logic rule</div>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => setIsAddingRule(false)}
+                                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl transition-all"
+                                        >
+                                            <X className="w-5 h-5" />
+                                        </button>
                                     </div>
-                                </div>
 
-                                {isAdvancedMode && (
-                                    <button
-                                        onClick={() => setNewRule({ ...newRule, actions: [...newRule.actions, { type: 'set_color', value: '#EF4444', variableName: 'myVar' }] })}
-                                        className="w-full py-1.5 text-[9px] border border-dashed border-slate-200 dark:border-slate-700 text-slate-400 hover:text-indigo-500 rounded-lg transition-all flex items-center justify-center gap-1"
-                                    >
-                                        <Plus className="w-2.5 h-2.5" /> Add Sequence
-                                    </button>
-                                )}
+                                    <div className="space-y-6 relative z-10">
+                                        {/* Step 1: Trigger */}
+                                        <div className="bg-slate-50 dark:bg-slate-950/50 rounded-2xl p-1 border border-slate-100 dark:border-slate-800">
+                                            <div className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                                <div className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[8px] text-slate-500">1</div>
+                                                Event Trigger
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-2 p-2">
+                                                <div className="space-y-1">
+                                                    <select
+                                                        className="w-full text-sm py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 transition-all cursor-pointer font-bold"
+                                                        value={newRule.trigger}
+                                                        onChange={e => setNewRule({ ...newRule, trigger: e.target.value as any })}
+                                                    >
+                                                        <option value="continuous">Continuous</option>
+                                                        <option value="collision_start">On Collision</option>
+                                                        <option value="timer">Timer</option>
+                                                        <option value="key_hold">Key Press</option>
+                                                    </select>
+                                                    <div className="text-[9px] text-slate-400 px-1">Trigger Event</div>
+                                                </div>
 
-                                {isAdvancedMode && (
-                                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
-                                        <label className="flex items-center justify-between mb-2">
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ELSE Clause (Optional)</span>
-                                            <input
-                                                type="checkbox"
-                                                checked={newRule.hasElse}
-                                                onChange={e => setNewRule({ ...newRule, hasElse: e.target.checked })}
-                                                className="w-3 h-3 rounded"
-                                            />
-                                        </label>
+                                                <div className="space-y-1">
+                                                    {newRule.trigger === 'continuous' ? (
+                                                        <select
+                                                            className="w-full text-sm py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 transition-all cursor-pointer font-bold"
+                                                            value={newRule.property}
+                                                            onChange={e => setNewRule({ ...newRule, property: e.target.value as any })}
+                                                        >
+                                                            <option value="position.x">X Position</option>
+                                                            <option value="position.y">Y Position</option>
+                                                            <option value="velocity.x">Speed X</option>
+                                                            <option value="velocity.y">Speed Y</option>
+                                                        </select>
+                                                    ) : (
+                                                        <input
+                                                            type="text"
+                                                            className="w-full text-sm py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 transition-all font-mono font-bold"
+                                                            value={newRule.trigger === 'key_hold' ? newRule.key : newRule.trigger === 'timer' ? (newRule as any).interval || '1000' : newRule.collisionTargetId}
+                                                            onChange={e => {
+                                                                if (newRule.trigger === 'key_hold') setNewRule({ ...newRule, key: e.target.value });
+                                                                else if (newRule.trigger === 'timer') setNewRule({ ...newRule, interval: parseInt(e.target.value) || 1000 } as any);
+                                                                else setNewRule({ ...newRule, collisionTargetId: e.target.value });
+                                                            }}
+                                                            placeholder={newRule.trigger === 'key_hold' ? "Key (e.g. Space)" : newRule.trigger === 'timer' ? "ms (e.g. 1000)" : "Filter"}
+                                                        />
+                                                    )}
+                                                    <div className="text-[9px] text-slate-400 px-1">
+                                                        {newRule.trigger === 'continuous' ? 'Monitored Property' :
+                                                            newRule.trigger === 'key_hold' ? 'Key Name' :
+                                                                newRule.trigger === 'timer' ? 'Interval (ms)' : 'Target Label'}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                        {newRule.hasElse && (
-                                            <div className="space-y-1.5">
-                                                {newRule.elseActions.map((action, index) => (
-                                                    <div key={index} className="bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg border border-slate-100 dark:border-slate-700 relative group/else">
-                                                        <div className="grid grid-cols-2 gap-2">
+                                        {/* Step 2: Action */}
+                                        <div className="bg-indigo-50/50 dark:bg-indigo-900/10 rounded-2xl p-1 border border-indigo-100 dark:border-indigo-500/20">
+                                            <div className="px-3 py-2 text-[10px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+                                                <div className="w-4 h-4 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-[8px] text-indigo-500">2</div>
+                                                Execute Action
+                                            </div>
+                                            <div className="p-2 space-y-2">
+                                                {(isAdvancedMode ? newRule.actions : [newRule.actions[0]]).map((action, index) => (
+                                                    <div key={index} className="flex gap-2 items-start">
+                                                        <div className="flex-1 space-y-1">
                                                             <select
-                                                                className="text-[10px] p-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none"
+                                                                className="w-full text-sm py-2.5 px-3 rounded-xl border border-indigo-200 dark:border-indigo-500/30 bg-white dark:bg-slate-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 transition-all cursor-pointer font-bold appearance-none text-indigo-900 dark:text-indigo-100"
                                                                 value={action.type}
                                                                 onChange={e => {
                                                                     const type = e.target.value as LogicActionType;
-                                                                    const newActions = [...newRule.elseActions];
-                                                                    let defaultValue: any = '';
-
+                                                                    const newActions = [...newRule.actions];
+                                                                    let defaultValue: any = '10';
+                                                                    // ... (keep existing default value logic logic)
                                                                     if (type === 'set_color') defaultValue = '#EF4444';
-                                                                    else if (type === 'random_color') defaultValue = '';
-                                                                    else if (type === 'cycle_colors') defaultValue = '#EF4444, #3B82F6, #10B981';
-                                                                    else if (type === 'set_velocity' || type === 'set_velocity_x' || type === 'set_velocity_y') defaultValue = '5';
-                                                                    else if (type === 'add_velocity' || type === 'add_velocity_x' || type === 'add_velocity_y') defaultValue = '1';
-                                                                    else if (type === 'multiply_velocity' || type === 'multiply_velocity_x' || type === 'multiply_velocity_y') defaultValue = '-1';
-                                                                    else if (type === 'set_acceleration' || type === 'set_acceleration_x' || type === 'set_acceleration_y') defaultValue = '0.5';
-                                                                    else if (type === 'set_gravity') defaultValue = '0,1';
-                                                                    else if (type === 'apply_force') defaultValue = '50,0';
-                                                                    else if (type === 'set_variable' || type === 'add_variable' || type === 'multiply_variable') defaultValue = '1';
-                                                                    else if (type === 'spawn_object') defaultValue = { type: 'box', x: 0, y: -50, width: 40, height: 40, color: '#10B981' };
+                                                                    else if (type === 'random_color' || type.includes('flip') || type === 'destroy_object') defaultValue = '';
+                                                                    else if (type.includes('velocity') || type.includes('speed') || type.includes('angular_velocity')) defaultValue = '5';
+                                                                    else if (type === 'set_variable') defaultValue = '1';
+                                                                    else if (type === 'teleport') defaultValue = '400,300';
+                                                                    else if (type === 'explode') defaultValue = { force: 2, radius: 200 };
+                                                                    else if (type === 'apply_torque') defaultValue = '0.05';
+                                                                    else if (type === 'apply_local_force') defaultValue = '0.5';
 
                                                                     newActions[index] = { ...newActions[index], type, value: defaultValue };
-                                                                    setNewRule({ ...newRule, elseActions: newActions });
+                                                                    setNewRule({ ...newRule, actions: newActions });
                                                                 }}
                                                             >
-                                                                <optgroup label="Appearance">
-                                                                    <option value="set_color">Set Color</option>
-                                                                    <option value="random_color">Random Color</option>
-                                                                    <option value="cycle_colors">Cycle Colors</option>
-                                                                </optgroup>
                                                                 <optgroup label="Movement">
-                                                                    <option value="apply_force">Apply Force</option>
-                                                                    <option value="set_acceleration_x">Set Acceleration X</option>
-                                                                    <option value="set_acceleration_y">Set Acceleration Y</option>
-                                                                    <option value="multiply_velocity_x">Multiply Velocity X</option>
-                                                                    <option value="multiply_velocity_y">Multiply Velocity Y</option>
-                                                                    <option value="set_gravity">Set Gravity</option>
-                                                                    <option value="set_velocity_x">Set Velocity X</option>
-                                                                    <option value="set_velocity_y">Set Velocity Y</option>
+                                                                    <option value="set_velocity_x">Set Speed X</option>
+                                                                    <option value="set_velocity_y">Set Speed Y</option>
+                                                                    <option value="maintain_speed_x">Maintain Speed X</option>
+                                                                    <option value="maintain_speed_y">Maintain Speed Y</option>
+                                                                    <option value="apply_local_force">Apply Thrust (Local)</option>
+                                                                    <option value="flip_velocity_x">Bounce X</option>
+                                                                    <option value="flip_velocity_y">Bounce Y</option>
                                                                 </optgroup>
-                                                                <optgroup label="State">
-                                                                    <option value="set_variable">Set Var</option>
-                                                                    <option value="add_variable">Add Var</option>
-                                                                    <option value="multiply_variable">Multiply Var</option>
+                                                                <optgroup label="Rotation">
+                                                                    <option value="apply_torque">Push Spin (Torque)</option>
+                                                                    <option value="set_angular_velocity">Set Spin Speed</option>
+                                                                    <option value="maintain_angular_velocity">Maintain Spin (Motor)</option>
                                                                 </optgroup>
-                                                                <optgroup label="Object">
+                                                                <optgroup label="Special">
+                                                                    <option value="teleport">Teleport</option>
+                                                                    <option value="explode">Explode</option>
+                                                                    <option value="spawn_object">Spawn Object</option>
                                                                     <option value="destroy_object">Destroy</option>
-                                                                    <option value="spawn_object">Spawn</option>
+                                                                </optgroup>
+                                                                <optgroup label="Visuals & Variables">
+                                                                    <option value="set_color">Set Color</option>
+                                                                    <option value="cycle_colors">Cycle Colors</option>
+                                                                    <option value="set_variable">Set Variable</option>
+                                                                    <option value="add_variable">Add Variable</option>
                                                                 </optgroup>
                                                             </select>
-                                                            <div className="flex items-center gap-1">
-                                                                <button
-                                                                    onClick={() => {
-                                                                        const newActions = [...newRule.elseActions];
-                                                                        newActions[index] = { ...newActions[index], useVariableValue: !newActions[index].useVariableValue };
-                                                                        setNewRule({ ...newRule, elseActions: newActions });
-                                                                    }}
-                                                                    className={`p-1.5 rounded-md border transition-all ${action.useVariableValue ? 'bg-indigo-500 text-white border-indigo-600' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-400'}`}
-                                                                    title="Use Variable Value"
-                                                                >
-                                                                    <Activity className="w-3 h-3" />
-                                                                </button>
+                                                        </div>
+
+                                                        {/* Dynamic Input based on Action */}
+                                                        <div className="w-24">
+                                                            {action.type === 'teleport' && (
                                                                 <input
                                                                     type="text"
-                                                                    className="flex-1 text-[10px] p-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 outline-none focus:ring-1 focus:ring-indigo-500"
-                                                                    value={action.useVariableValue ? action.variableName : action.value}
+                                                                    className="w-full text-sm p-2.5 rounded-xl border border-indigo-200 dark:border-indigo-500/30 bg-white dark:bg-slate-900 outline-none focus:border-indigo-400 font-mono font-bold text-center"
+                                                                    value={action.value}
                                                                     onChange={e => {
-                                                                        const newActions = [...newRule.elseActions];
-                                                                        if (action.useVariableValue) {
-                                                                            newActions[index] = { ...newActions[index], variableName: e.target.value };
-                                                                        } else {
-                                                                            newActions[index] = { ...newActions[index], value: e.target.value };
-                                                                        }
-                                                                        setNewRule({ ...newRule, elseActions: newActions });
+                                                                        const newActions = [...newRule.actions];
+                                                                        newActions[index] = { ...newActions[index], value: e.target.value };
+                                                                        setNewRule({ ...newRule, actions: newActions });
                                                                     }}
-                                                                    placeholder={action.useVariableValue ? "Var Name" : "Value"}
+                                                                    placeholder="x,y"
                                                                 />
-                                                            </div>
+                                                            )}
+                                                            {/* Re-use existing explode/default input logic but styled better */}
+                                                            {action.type === 'explode' && (
+                                                                <div className="flex gap-1">
+                                                                    <input
+                                                                        type="number"
+                                                                        className="w-1/2 text-sm p-1 rounded-lg border border-indigo-200 dark:border-indigo-500/30 text-center font-bold"
+                                                                        value={(typeof action.value === 'object' ? action.value.force : 2)}
+                                                                        onChange={e => {
+                                                                            const newActions = [...newRule.actions];
+                                                                            const currentVal = typeof action.value === 'object' ? action.value : { force: 2, radius: 200 };
+                                                                            newActions[index] = { ...newActions[index], value: { ...currentVal, force: parseFloat(e.target.value) } };
+                                                                            setNewRule({ ...newRule, actions: newActions });
+                                                                        }}
+                                                                        placeholder="F"
+                                                                        title="Force"
+                                                                    />
+                                                                    <input
+                                                                        type="number"
+                                                                        className="w-1/2 text-sm p-1 rounded-lg border border-indigo-200 dark:border-indigo-500/30 text-center font-bold"
+                                                                        value={(typeof action.value === 'object' ? action.value.radius : 200)}
+                                                                        onChange={e => {
+                                                                            const newActions = [...newRule.actions];
+                                                                            const currentVal = typeof action.value === 'object' ? action.value : { force: 2, radius: 200 };
+                                                                            newActions[index] = { ...newActions[index], value: { ...currentVal, radius: parseFloat(e.target.value) } };
+                                                                            setNewRule({ ...newRule, actions: newActions });
+                                                                        }}
+                                                                        placeholder="R"
+                                                                        title="Radius"
+                                                                    />
+                                                                </div>
+                                                            )}
+
+                                                            {!['random_color', 'flip_velocity_x', 'flip_velocity_y', 'destroy_object', 'teleport', 'explode'].includes(action.type) && (
+                                                                <input
+                                                                    type="text"
+                                                                    className="w-full text-sm p-2.5 rounded-xl border border-indigo-200 dark:border-indigo-500/30 bg-white dark:bg-slate-900 outline-none focus:border-indigo-400 font-mono font-bold text-center"
+                                                                    value={action.value}
+                                                                    onChange={e => {
+                                                                        const newActions = [...newRule.actions];
+                                                                        newActions[index] = { ...newActions[index], value: e.target.value };
+                                                                        setNewRule({ ...newRule, actions: newActions });
+                                                                    }}
+                                                                    placeholder="Value"
+                                                                />
+                                                            )}
                                                         </div>
                                                     </div>
                                                 ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
 
-                                <button
-                                    onClick={handleAddRule}
-                                    className="w-full py-2.5 bg-indigo-500 text-white rounded-lg text-xs font-bold hover:bg-indigo-600 transition-all shadow-lg active:scale-[0.98] mt-4"
-                                >
-                                    Finish & Save Behavior
-                                </button>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Rules List */}
-                    <div className="space-y-2">
-                        {
-                            bodyRules.map(rule => (
-                                <div key={rule.id} className={`flex items-start justify-between p-2 rounded bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm transition-opacity ${!rule.enabled ? 'opacity-50' : ''}`}>
-                                    <div className="flex flex-col gap-1 min-w-0 flex-1">
-                                        <div className="text-[10px] font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2">
-                                            <input
-                                                type="checkbox"
-                                                checked={rule.enabled}
-                                                onChange={(e) => updateRule(rule.id, { enabled: e.target.checked })}
-                                                className="w-3 h-3 rounded border-slate-300 text-indigo-500 focus:ring-indigo-500"
-                                            />
-                                            <Activity className={`w-3 h-3 ${rule.enabled ? 'text-indigo-400' : 'text-slate-400'}`} />
-                                            <div className="truncate">
-                                                {rule.trigger === 'continuous' ? (
-                                                    <span>
-                                                        If <span className="font-bold text-indigo-500">
-                                                            {rule.condition.property === 'variable' ? `'${rule.condition.variableName}'` : rule.condition.property}
-                                                        </span> <span className="text-slate-400 mx-0.5">{rule.condition.operator}</span> <span className="font-bold">{rule.condition.value}</span>
-                                                        {rule.condition.mode === 'pulse' && <span className="ml-1 px-1 bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 rounded-[2px] text-[8px] uppercase tracking-tighter font-bold">Pulse</span>}
-                                                    </span>
-                                                ) : rule.trigger === 'key_hold' ? (
-                                                    <span>On Key Hold <span className="font-bold text-indigo-500">'{rule.key}'</span></span>
-                                                ) : (
-                                                    <span>On Collision {rule.collisionTargetId ? `with ID ${rule.collisionTargetId}` : ''}</span>
+                                                {isAdvancedMode && (
+                                                    <button
+                                                        onClick={() => setNewRule({ ...newRule, actions: [...newRule.actions, { type: 'set_color', value: '#EF4444', variableName: 'myVar' }] })}
+                                                        className="w-full py-2 text-[10px] font-bold text-indigo-400 hover:text-indigo-600 border border-dashed border-indigo-200 dark:border-indigo-500/30 rounded-xl transition-all flex items-center justify-center gap-1 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                                                    >
+                                                        <Plus className="w-3 h-3" /> Add Step
+                                                    </button>
                                                 )}
                                             </div>
                                         </div>
 
-                                        <div className="text-[10px] text-slate-500 pl-5 space-y-1">
-                                            {(rule.actions || []).map((action, i) => (
-                                                <div key={i} className="flex items-center gap-1">
-                                                    <span className="text-indigo-400 font-bold uppercase text-[8px]">Then</span>
-                                                    <span className="text-slate-700 dark:text-slate-300">
-                                                        {action.type === 'set_color' && <span className="flex items-center gap-1">Set Color to <span className="w-2 h-2 rounded-full border border-black/10" style={{ backgroundColor: action.value }} /> {action.value}</span>}
-                                                        {action.type === 'random_color' && <span className="flex items-center gap-1 italic text-indigo-500 font-medium">Set Random Color</span>}
-                                                        {action.type === 'cycle_colors' && <span className="flex items-center gap-1">Cycle colors: <span className="font-mono text-[8px] bg-slate-100 dark:bg-slate-700 px-1 rounded">{action.value}</span></span>}
-                                                        {action.type === 'multiply_velocity' && <span className="flex items-center gap-1">Multiply Velocity by <span className="font-bold text-indigo-500">{action.value}x</span></span>}
-                                                        {action.type === 'add_velocity' && <span className="flex items-center gap-1">Add Velocity <span className="font-bold text-indigo-500">({action.value})</span></span>}
-                                                        {action.type === 'add_velocity_x' && <span className="flex items-center gap-1">Add Velocity X <span className="font-bold text-indigo-500">({action.value})</span></span>}
-                                                        {action.type === 'add_velocity_y' && <span className="flex items-center gap-1">Add Velocity Y <span className="font-bold text-indigo-500">({action.value})</span></span>}
-                                                        {action.type === 'set_acceleration' && <span className="flex items-center gap-1">Set Acceleration <span className="font-bold text-indigo-500">({action.value})</span></span>}
-                                                        {action.type === 'set_acceleration_x' && <span className="flex items-center gap-1">Set Acceleration X <span className="font-bold text-indigo-500">({action.value})</span></span>}
-                                                        {action.type === 'set_acceleration_y' && <span className="flex items-center gap-1">Set Acceleration Y <span className="font-bold text-indigo-500">({action.value})</span></span>}
-                                                        {action.type === 'spawn_object' && `Spawn ${action.value.type} (+${action.value.x}, +${action.value.y})`}
-                                                        {['set_variable', 'add_variable', 'multiply_variable'].includes(action.type) && `${action.type === 'set_variable' ? 'Set' : action.type === 'add_variable' ? 'Add to' : 'Multiply'} '${action.variableName}' ${action.value}`}
-                                                        {action.type === 'apply_force' && `Apply Force ${typeof action.value === 'string' ? action.value : `(${action.value.x}, ${action.value.y})`}`}
-                                                        {action.type === 'set_velocity' && `Set Velocity (${typeof action.value === 'object' ? `${action.value.x}, ${action.value.y}` : action.value})`}
-                                                        {action.type === 'set_velocity_x' && `Set Velocity X (${action.value})`}
-                                                        {action.type === 'set_velocity_y' && `Set Velocity Y (${action.value})`}
-                                                        {action.type === 'set_gravity' && `Set Gravity (${typeof action.value === 'object' ? `${action.value.x}, ${action.value.y}` : action.value})`}
-                                                        {action.type === 'destroy_object' && 'Destroy Object'}
-                                                        {!['set_color', 'random_color', 'cycle_colors', 'multiply_velocity', 'add_velocity', 'add_velocity_x', 'add_velocity_y', 'set_acceleration', 'set_acceleration_x', 'set_acceleration_y', 'spawn_object', 'set_variable', 'add_variable', 'multiply_variable', 'apply_force', 'set_velocity', 'set_velocity_x', 'set_velocity_y', 'set_gravity', 'destroy_object'].includes(action.type) && `${action.type} ${typeof action.value === 'object' ? JSON.stringify(action.value) : action.value}`}
-                                                    </span>
-                                                </div>
-                                            ))}
-                                        </div>
+                                        <button
+                                            onClick={handleAddRule}
+                                            className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:shadow-lg hover:shadow-indigo-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
+                                        >
+                                            <Zap className="w-4 h-4 fill-white/20" />
+                                            Deploy Behavior
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
-                                        {rule.elseActions && rule.elseActions.length > 0 && (
-                                            <div className="text-[10px] text-slate-500 pl-5 border-l border-slate-100 dark:border-slate-700 ml-1.5 mt-0.5 space-y-1">
-                                                {(rule.elseActions || []).map((action, i) => (
-                                                    <div key={i} className="flex items-center gap-1">
-                                                        <span className="text-slate-400 font-bold uppercase text-[8px]">Else</span>
-                                                        <span className="text-slate-600 dark:text-slate-400">
-                                                            {action.type === 'set_color' && <span className="flex items-center gap-1">Set Color to <span className="w-2 h-2 rounded-full border border-black/10" style={{ backgroundColor: action.value }} /> {action.value}</span>}
-                                                            {action.type === 'random_color' && <span className="italic text-slate-400 font-medium">Set Random Color</span>}
-                                                            {['set_variable', 'add_variable'].includes(action.type) && `${action.type === 'set_variable' ? 'Set' : 'Add to'} '${action.variableName}' ${action.value}`}
-                                                            {action.type === 'apply_force' && `Apply Force ${action.value}`}
-                                                            {action.type === 'destroy_object' && 'Destroy Object'}
-                                                            {!['set_color', 'random_color', 'set_variable', 'add_variable', 'apply_force', 'destroy_object'].includes(action.type) && `${action.type} ${JSON.stringify(action.value)}`}
+                        <div className="space-y-4 pt-4">
+                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-2 flex items-center gap-2">
+                                <Activity className="w-4 h-4" />
+                                Active Behaviors
+                            </div>
+
+                            {(bodyRules || []).length > 0 ? (
+                                <div className="space-y-3 pb-12">
+                                    {bodyRules.map(rule => (
+                                        <div key={rule.id} className={`group flex flex-col p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:shadow-md ${!rule.enabled ? 'opacity-50' : ''}`}>
+                                            <div className="flex items-start justify-between mb-4">
+                                                <div className="flex items-center gap-4">
+                                                    <label className="relative inline-flex items-center cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={rule.enabled}
+                                                            onChange={(e) => updateRule(rule.id, { enabled: e.target.checked })}
+                                                            className="sr-only peer"
+                                                        />
+                                                        <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-500 rounded-full" />
+                                                    </label>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] font-black text-indigo-500 uppercase tracking-tighter">
+                                                            {rule.trigger === 'continuous' ? 'IF Condition' : rule.trigger === 'key_hold' ? 'ON Key Press' : 'ON Collision'}
+                                                        </span>
+                                                        <span className="text-xs font-black text-slate-700 dark:text-slate-200">
+                                                            {rule.trigger === 'continuous' ? `${rule.condition.property} ${rule.condition.operator} ${rule.condition.value}` : rule.trigger === 'key_hold' ? `'${rule.key}'` : 'Contact Detected'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => removeRule(rule.id)}
+                                                    className="p-2.5 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-2xl transition-all opacity-0 group-hover:opacity-100"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                            </div>
+
+                                            <div className="space-y-2 pt-3 border-t border-slate-50 dark:border-slate-800">
+                                                {(rule.actions || []).map((action, i) => (
+                                                    <div key={i} className="flex items-center gap-3 text-[10px]">
+                                                        <Zap className="w-4 h-4 text-amber-500 fill-amber-500/10" />
+                                                        <span className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tight">
+                                                            {action.type.replace(/_/g, ' ')}: <span className="text-indigo-500 dark:text-indigo-400 font-mono font-black">{typeof action.value === 'object' ? 'Config' : action.value}</span>
                                                         </span>
                                                     </div>
                                                 ))}
                                             </div>
-                                        )}
-                                    </div>
+                                        </div>
+                                    ))}
+
                                     <button
-                                        onClick={() => removeRule(rule.id)}
-                                        className="p-1 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded transition-all shrink-0 ml-2"
-                                        title="Delete Rule"
+                                        onClick={() => confirm('Clear all rules?') && clearBodyRules(body!.id)}
+                                        className="w-full py-4 text-[10px] font-black text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-3xl transition-all uppercase tracking-widest"
                                     >
-                                        <Trash2 className="w-3 h-3" />
+                                        Clear All Logic
                                     </button>
                                 </div>
-                            ))
-                        }
-
-                        {
-                            bodyRules.length > 0 && (
-                                <button
-                                    onClick={() => {
-                                        if (confirm('Clear all rules for this object?')) {
-                                            clearBodyRules(body!.id);
-                                        }
-                                    }}
-                                    className="w-full py-1 text-[9px] text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 border border-dashed border-slate-200 dark:border-slate-800 rounded transition-all flex items-center justify-center gap-1"
-                                >
-                                    <Trash2 className="w-2.5 h-2.5" />
-                                    Clear All Rules
-                                </button>
-                            )
-                        }
-
-                        {
-                            bodyRules.length === 0 && !isAddingRule && (
-                                <div className="text-center py-4 px-2 rounded-lg border-2 border-dashed border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 italic">
-                                    No active rules. Click "Add Logic" above to define behaviors.
+                            ) : (
+                                <div className="text-center py-16 px-8 rounded-[2rem] border-2 border-dashed border-slate-100 dark:border-slate-800/50 text-slate-400">
+                                    <Activity className="w-12 h-12 mx-auto mb-4 opacity-10" />
+                                    <p className="text-xs font-black uppercase tracking-widest mb-1">Interactive Void</p>
+                                    <p className="text-[10px] opacity-60 italic">Define behaviors to bring this object to life.</p>
                                 </div>
-                            )
-                        }
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
         </div>
     );
 }
+
+export default ObjectInspector;

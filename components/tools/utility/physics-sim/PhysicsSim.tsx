@@ -32,7 +32,11 @@ interface BodyData {
     vars?: Record<string, number>;
 }
 
-export default function PhysicsSim() {
+interface PhysicsSimProps {
+    variant?: 'simulation' | 'creator';
+}
+
+export default function PhysicsSim({ variant = 'simulation' }: PhysicsSimProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const canvasContainerRef = useRef<HTMLDivElement>(null);
     const searchParams = useSearchParams();
@@ -57,9 +61,32 @@ export default function PhysicsSim() {
     const [activeWalls, setActiveWalls] = useState({ top: true, bottom: true, left: true, right: true });
     const [vacuumMode, setVacuumMode] = useState(false);
     const [showGrid, setShowGrid] = useState(false);
+    const [pendingReset, setPendingReset] = useState(false);
+    const [customBlueprints, setCustomBlueprints] = useState<any[]>([]);
 
     // Physics engine hook
     const engine = useMatterEngine({ gravity, timeScale });
+
+    // Cross-tab sync
+    useEffect(() => {
+        const channel = new BroadcastChannel('physics-sim-sync');
+
+        if (variant === 'simulation') {
+            channel.onmessage = (event) => {
+                if (event.data.type === 'spawn_blueprint' && event.data.blueprint) {
+                    engine.spawnBlueprint(event.data.blueprint, 400, 300);
+                    toast.success('Received assembly from Workshop!');
+                }
+            };
+        }
+
+        return () => channel.close();
+    }, [variant, engine]);
+
+    useEffect(() => {
+        const saved = localStorage.getItem('custom_blueprints');
+        if (saved) setCustomBlueprints(JSON.parse(saved));
+    }, []);
 
     // Initialize engine
     useEffect(() => {
@@ -158,6 +185,28 @@ export default function PhysicsSim() {
         }
     }, [engine]);
 
+    const handleSaveBlueprint = useCallback((id: number) => {
+        const blueprint = engine.serializeConnected(id);
+        if (!blueprint) return;
+
+        const name = prompt("Name your blueprint:", "Custom Machine");
+        if (!name) return;
+
+        const newPrefab = {
+            id: `custom-${Date.now()}`,
+            name,
+            description: 'Saved custom assembly',
+            icon: 'Package',
+            color: '#6366f1',
+            data: blueprint
+        };
+
+        const updated = [...customBlueprints, newPrefab];
+        setCustomBlueprints(updated);
+        localStorage.setItem('custom_blueprints', JSON.stringify(updated));
+        toast.success(`'${name}' saved to Things Library!`);
+    }, [engine, customBlueprints]);
+
     const handleSaveScene = useCallback(() => {
         const json = engine.serializeWorld();
         if (json) {
@@ -219,56 +268,76 @@ export default function PhysicsSim() {
         }
     }, [searchParams, isLoaded, engine, renderer]);
 
-    const handleSpawnPrefab = useCallback((prefabId: string) => {
-        const prefab = PREFABS.find(p => p.id === prefabId);
-        if (!prefab) return;
+    // Auto-save to sessionStorage
+    useEffect(() => {
+        if (!isLoaded) return;
 
-        const { bodies, constraints, rules } = prefab.spawn(400, 300); // Default spawn location
-        const idMap = new Map();
-
-        // 1. Spawn Bodies
-        bodies.forEach(b => {
-            const body = engine.spawnBody(b.type, { ...b.options, x: b.x, y: b.y }, b.size);
-            if (body && b.options?.id) {
-                idMap.set(b.options.id, body);
+        const interval = setInterval(() => {
+            const data = engine.serializeWorld();
+            const emptyWorld = '{"bodies":[],"constraints":[],"gravity":{"x":0,"y":1},"rules":[]}';
+            if (data && data !== emptyWorld) {
+                sessionStorage.setItem('physics-sim-autosave', data);
             }
-        });
+        }, 2000);
 
-        // 2. Add Constraints
-        constraints?.forEach(c => {
-            const bodyA = c.bodyAId ? idMap.get(c.bodyAId) : null;
-            const bodyB = c.bodyBId ? idMap.get(c.bodyBId) : null;
+        return () => clearInterval(interval);
+    }, [isLoaded, engine]);
 
-            // Matter.js expects bodies directly for constraints
-            engine.addRawConstraint({
-                bodyA,
-                bodyB,
-                pointA: c.pointA,
-                pointB: c.pointB,
-                stiffness: c.stiffness ?? 1,
-                length: c.length ?? 0,
-                render: { strokeStyle: '#333', lineWidth: 2 }
-            });
-        });
+    // Recover from autosave
+    useEffect(() => {
+        if (isLoaded && !searchParams.get('scene')) {
+            const saved = sessionStorage.getItem('physics-sim-autosave');
+            if (saved) {
+                engine.loadWorld(saved);
+                toast.info('Restored session');
+            }
+        }
+    }, [isLoaded]); // Only run once after engine is ready
 
-        // 3. Add Rules
-        rules?.forEach(r => {
-            // Remap targetBodyId if necessary
-            const actualTargetId = r.targetBodyId ? idMap.get(r.targetBodyId)?.id : undefined;
-            engine.addRule({
-                ...r,
-                targetBodyId: actualTargetId
-            });
-        });
+    const handleExportToSim = useCallback(() => {
+        const bodies = engine.getAllBodies().filter(b => b.label !== 'ground' && b.label !== 'World Boundary');
+        if (bodies.length === 0) {
+            toast.error('Nothing to export!');
+            return;
+        }
 
-        toast.success(`Spawned ${prefab.name}`);
+        // Use the first body as root for relative serialization
+        const blueprint = engine.serializeConnected(bodies[0].id);
+        if (blueprint) {
+            const channel = new BroadcastChannel('physics-sim-sync');
+            channel.postMessage({ type: 'spawn_blueprint', blueprint });
+            channel.close();
+            toast.success('Sent to Simulation tab!');
+        }
     }, [engine]);
 
+    const handleSpawnPrefab = useCallback((prefabId: string) => {
+        const prefab = PREFABS.find(p => p.id === prefabId);
+        if (prefab) {
+            const { bodies, constraints, rules } = prefab.spawn(400, 300);
+            engine.loadWorld(JSON.stringify({ bodies, constraints, rules }), true); // Append mode
+        } else {
+            const custom = customBlueprints.find(p => p.id === prefabId);
+            if (custom && custom.data) {
+                engine.spawnBlueprint(custom.data, 400, 300);
+            }
+        }
+    }, [engine, customBlueprints]);
     const handleReset = useCallback(() => {
+        if (!pendingReset) {
+            setPendingReset(true);
+            toast.warning('Click Reset again to confirm clearing the scene', {
+                duration: 3000,
+                onAutoClose: () => setPendingReset(false)
+            });
+            return;
+        }
+
         engine.loadWorld(JSON.stringify({ bodies: [], constraints: [], gravity: { x: 0, y: 1 } }));
         renderer.clearTrails();
+        setPendingReset(false);
         toast.info('Scene Reset');
-    }, [engine, renderer]);
+    }, [engine, renderer, pendingReset]);
 
     const handleToolSelect = useCallback((tool: string, size?: number) => {
         setActiveTool(current => current === tool ? null : tool);
@@ -324,11 +393,14 @@ export default function PhysicsSim() {
                     e.preventDefault();
                     setShowHUD(prev => !prev);
                     break;
-                case 'l':
+                case 'f': handleToolSelect('fuse'); break;
+                case 'u': handleToolSelect('remove_pin'); break;
+                case 'a': handleToolSelect('axle'); break;
+                case 'o':
                     e.preventDefault();
                     setShowObjectList(prev => !prev);
                     break;
-                case 'f':
+                case 'F': // Shift + F for fullscreen
                     e.preventDefault();
                     toggleFullScreen();
                     break;
@@ -365,7 +437,10 @@ export default function PhysicsSim() {
                 <>
                     {showHUD && (
                         <TopBar
+                            variant={variant}
                             onSpawnPrefab={handleSpawnPrefab}
+                            onExportToSim={handleExportToSim}
+                            customBlueprints={customBlueprints}
                             gravity={gravity}
                             onGravityChange={handleGravityChange}
                             showVectors={showVectors}
@@ -418,6 +493,7 @@ export default function PhysicsSim() {
                             paused={paused}
                             onPausedChange={setPaused}
                             onReset={handleReset}
+                            pendingReset={pendingReset}
                             activeTool={activeTool}
                             onSelectTool={handleToolSelect}
                             onClearTrails={renderer.clearTrails}
@@ -447,7 +523,8 @@ export default function PhysicsSim() {
                             removeRule={engine.removeRule}
                             updateRule={engine.updateRule}
                             clearBodyRules={engine.clearBodyRules}
-                            getAllRules={engine.getAllRules}
+                            getAllRules={() => engine.getAllRules()}
+                            onSaveBlueprint={handleSaveBlueprint}
                         />
                     )}
                 </>

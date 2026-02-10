@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Pause, RotateCcw, Box, Circle, Triangle, Hexagon, Minus, Link, GripHorizontal, MapPin, Eraser, Zap, Pencil, Bomb, Package, Infinity, ChevronUp, PinOff } from 'lucide-react';
+import { Play, Pause, RotateCcw, Box, Circle, Triangle, Hexagon, Minus, Link, GripHorizontal, MapPin, Eraser, Zap, Pencil, Bomb, Package, Infinity, ChevronUp, PinOff, Link2Off, CircleDot, Combine } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MATERIALS } from '../../hooks/useMatterEngine';
 
@@ -14,6 +14,33 @@ interface BottomDockProps {
     onSelectMaterial: (material: string) => void;
     multiSpawnMode: boolean;
     onMultiSpawnModeChange: (enabled: boolean) => void;
+    pendingReset?: boolean;
+}
+
+function Tooltip({ children, content, shortcut }: { children: React.ReactNode, content: string, shortcut?: string }) {
+    const [isVisible, setIsVisible] = useState(false);
+    return (
+        <div className="relative" onMouseEnter={() => setIsVisible(true)} onMouseLeave={() => setIsVisible(false)}>
+            {children}
+            <AnimatePresence>
+                {isVisible && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-slate-900/90 backdrop-blur-md rounded-xl shadow-xl border border-white/10 flex items-center gap-3 whitespace-nowrap pointer-events-none z-[100]"
+                    >
+                        <span className="text-[10px] font-bold text-white tracking-wide">{content}</span>
+                        {shortcut && (
+                            <span className="px-1.5 py-0.5 rounded-md bg-white/20 text-[9px] font-black text-white/80 border border-white/10 uppercase">
+                                {shortcut}
+                            </span>
+                        )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
 }
 
 export function BottomDock({
@@ -26,7 +53,8 @@ export function BottomDock({
     activeMaterial,
     onSelectMaterial,
     multiSpawnMode,
-    onMultiSpawnModeChange
+    onMultiSpawnModeChange,
+    pendingReset
 }: BottomDockProps) {
     const [spawnSize, setSpawnSize] = useState(30);
     const [showMaterials, setShowMaterials] = useState(false);
@@ -61,10 +89,14 @@ export function BottomDock({
             label: 'Links',
             icon: Link,
             tools: [
+                { type: 'connector' as const, icon: Link, label: 'Connector', color: 'hover:text-indigo-500', instruction: 'Drag to connect bodies' },
                 { type: 'spring' as const, icon: Link, label: 'Spring', color: 'hover:text-amber-500', instruction: 'Drag between objects' },
                 { type: 'rod' as const, icon: GripHorizontal, label: 'Rod', color: 'hover:text-indigo-500', instruction: 'Fixed connection' },
+                { type: 'remove_constraint' as const, icon: Link2Off, label: 'Remove Link', color: 'hover:text-amber-600', instruction: 'Click to remove rod/spring' },
+                { type: 'axle' as const, icon: CircleDot, label: 'Axle (A)', color: 'hover:text-indigo-400', instruction: 'Fixed pivot point' },
                 { type: 'pin' as const, icon: MapPin, label: 'Pin', color: 'hover:text-red-500', instruction: 'Pin object to background' },
-                { type: 'remove_pin' as const, icon: PinOff, label: 'Unpin', color: 'hover:text-red-500', instruction: 'Click to unpin' },
+                { type: 'remove_pin' as const, icon: PinOff, label: 'Unpin (U)', color: 'hover:text-red-500', instruction: 'Click to unpin' },
+                { type: 'fuse' as const, icon: Combine, label: 'Fuse (F)', color: 'hover:text-indigo-600', instruction: 'Click two objects to fuse' },
             ]
         },
         forces: {
@@ -99,17 +131,18 @@ export function BottomDock({
                 </div>
 
                 {/* Main Controls (Play/Pause) */}
-                <button
-                    type="button"
-                    onClick={() => onPausedChange(!paused)}
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95 shadow-md ${paused
-                        ? 'bg-emerald-500 text-white'
-                        : 'bg-amber-500 text-white'
-                        }`}
-                    title={paused ? "Play (Space)" : "Pause (Space)"}
-                >
-                    {paused ? <Play className="w-5 h-5 fill-current" /> : <Pause className="w-5 h-5 fill-current" />}
-                </button>
+                <Tooltip content={paused ? "Resume Simulation" : "Pause Simulation"} shortcut="Space">
+                    <button
+                        type="button"
+                        onClick={() => onPausedChange(!paused)}
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95 shadow-md ${paused
+                            ? 'bg-emerald-500 text-white'
+                            : 'bg-amber-500 text-white'
+                            }`}
+                    >
+                        {paused ? <Play className="w-5 h-5 fill-current" /> : <Pause className="w-5 h-5 fill-current" />}
+                    </button>
+                </Tooltip>
 
                 <div className="w-px h-8 bg-slate-200 dark:bg-slate-700 mx-1" />
 
@@ -122,22 +155,23 @@ export function BottomDock({
 
                         return (
                             <div key={key} className="relative">
-                                <button
-                                    onClick={() => setActiveGroup(activeGroup === key ? null : key)}
-                                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95 relative ${isActive
-                                        ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 ring-2 ring-indigo-500/20'
-                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'
-                                        }`}
-                                    title={group.label}
-                                >
-                                    <DisplayIcon className="w-5 h-5" />
-                                    {/* Indicator if active but menu closed */}
-                                    {isActive && !activeGroup && (
-                                        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center">
-                                            <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
-                                        </div>
-                                    )}
-                                </button>
+                                <Tooltip content={activeToolInGroup ? activeToolInGroup.label : group.label} shortcut={activeToolInGroup?.type.slice(0, 1)}>
+                                    <button
+                                        onClick={() => setActiveGroup(activeGroup === key ? null : key)}
+                                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95 relative ${isActive
+                                            ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 ring-2 ring-indigo-500/20'
+                                            : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                            }`}
+                                    >
+                                        <DisplayIcon className="w-5 h-5" />
+                                        {/* Indicator if active but menu closed */}
+                                        {isActive && !activeGroup && (
+                                            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center">
+                                                <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
+                                            </div>
+                                        )}
+                                    </button>
+                                </Tooltip>
 
                                 <AnimatePresence>
                                     {activeGroup === key && (
@@ -176,13 +210,17 @@ export function BottomDock({
 
                 {/* Utils Popover trigger */}
                 <div className="relative">
-                    <button
-                        onClick={() => setActiveGroup(activeGroup === 'utils' ? null : 'utils')}
-                        className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-all active:scale-95"
-                        title="Utilities"
-                    >
-                        <ChevronUp className={`w-5 h-5 transition-transform ${activeGroup === 'utils' ? 'rotate-180' : ''}`} />
-                    </button>
+                    <Tooltip content="Reset & Utilities">
+                        <button
+                            onClick={() => setActiveGroup(activeGroup === 'utils' ? null : 'utils')}
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95 ${activeGroup === 'utils'
+                                ? 'bg-indigo-500 text-white shadow-indigo-500/20 shadow-lg'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                }`}
+                        >
+                            <ChevronUp className={`w-5 h-5 transition-transform ${activeGroup === 'utils' ? 'rotate-180' : ''}`} />
+                        </button>
+                    </Tooltip>
 
                     <AnimatePresence>
                         {activeGroup === 'utils' && (
@@ -196,20 +234,27 @@ export function BottomDock({
 
                                 {/* Reset & Clear */}
                                 <div className="grid grid-cols-2 gap-2">
-                                    <button
-                                        onClick={onReset}
-                                        className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-700 transition-colors"
-                                    >
-                                        <RotateCcw className="w-4 h-4" />
-                                        <span className="text-[10px]">Reset</span>
-                                    </button>
-                                    <button
-                                        onClick={onClearTrails}
-                                        className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-amber-600 transition-colors"
-                                    >
-                                        <Eraser className="w-4 h-4" />
-                                        <span className="text-[10px]">Clear</span>
-                                    </button>
+                                    <Tooltip content={pendingReset ? "Click to Confirm" : "Clear Simulation"} shortcut="R">
+                                        <button
+                                            onClick={onReset}
+                                            className={`w-full flex items-center justify-center gap-2 p-2 rounded-xl transition-all font-bold text-[10px] ${pendingReset
+                                                ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/50'
+                                                : 'bg-red-500/10 text-red-500 hover:bg-red-500/20'
+                                                }`}
+                                        >
+                                            <RotateCcw className={`w-3.5 h-3.5 ${pendingReset ? 'animate-spin' : ''}`} />
+                                            {pendingReset ? 'Confirm?' : 'Reset'}
+                                        </button>
+                                    </Tooltip>
+                                    <Tooltip content="Cleanup Trails">
+                                        <button
+                                            onClick={onClearTrails}
+                                            className="w-full flex items-center justify-center gap-2 p-2 rounded-xl bg-slate-500/10 text-slate-500 hover:bg-slate-500/20 transition-all font-bold text-[10px]"
+                                        >
+                                            <Eraser className="w-3.5 h-3.5" />
+                                            Clear
+                                        </button>
+                                    </Tooltip>
                                 </div>
 
                                 {/* Multi-Spawn Toggle */}

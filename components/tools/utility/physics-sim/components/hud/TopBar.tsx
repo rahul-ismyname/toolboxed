@@ -1,13 +1,21 @@
 'use client';
 
 import React, { useState, Dispatch, SetStateAction } from 'react';
-import { ChevronDown, Wind, Eye, EyeOff, Maximize2, Minimize2, List, BoxSelect, Folder, Save, FolderOpen, Share2, Globe, Monitor, Settings2, ZapOff, Snowflake, Eraser, Zap, Activity, Package } from 'lucide-react';
+import {
+    ChevronDown, Wind, Eye, EyeOff, Maximize2, Minimize2, List, BoxSelect, Folder,
+    Save, FolderOpen, Share2, Globe, Monitor, Settings2, ZapOff, Snowflake,
+    Eraser, Zap, Activity, Package, Search, Clock, ExternalLink, Send, Box, History
+} from 'lucide-react';
 import { PREFABS } from '@/lib/prefabs';
 import { ActiveWalls } from '../../hooks/useMatterEngine';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 
 interface TopBarProps {
+    variant?: 'simulation' | 'creator';
     onSpawnPrefab: (prefabId: string) => void;
+    onExportToSim?: () => void;
+    customBlueprints?: any[];
     gravity: { x: number, y: number };
     onGravityChange: (g: { x: number, y: number }) => void;
     showVectors: boolean;
@@ -35,7 +43,10 @@ interface TopBarProps {
 }
 
 export function TopBar({
+    variant = 'simulation',
     onSpawnPrefab,
+    onExportToSim,
+    customBlueprints = [],
     gravity,
     onGravityChange,
     showVectors,
@@ -64,6 +75,25 @@ export function TopBar({
     // State for the things library and active menus
     const [isLibraryOpen, setIsLibraryOpen] = useState(false);
     const [activeMenu, setActiveMenu] = useState<'scene' | 'world' | 'view' | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [recentIds, setRecentIds] = useState<string[]>([]);
+
+    React.useEffect(() => {
+        const saved = localStorage.getItem('recent_prefabs');
+        if (saved) {
+            try {
+                setRecentIds(JSON.parse(saved));
+            } catch (e) {
+                console.error('Failed to parse recent prefabs', e);
+            }
+        }
+    }, []);
+
+    const addToRecent = (id: string) => {
+        const newRecent = [id, ...recentIds.filter(i => i !== id)].slice(0, 4);
+        setRecentIds(newRecent);
+        localStorage.setItem('recent_prefabs', JSON.stringify(newRecent));
+    };
 
     const menuRef = React.useRef<HTMLDivElement>(null);
 
@@ -105,41 +135,144 @@ export function TopBar({
                 </button>
 
                 {isLibraryOpen && (
-                    <div className="absolute top-full left-0 mt-2 w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden py-2 z-50">
-                        <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800 mb-2">
-                            <span className="text-[10px] uppercase font-black tracking-widest text-slate-400">Spawn Anything</span>
-                        </div>
-                        <div className="max-h-[60vh] overflow-y-auto custom-scrollbar">
-                            {PREFABS.map((prefab) => {
-                                // Dynamic icon selection
-                                const Icon = prefab.id === 'logic-bouncer' ? Zap :
-                                    prefab.id === 'chaos-pendulum' ? Activity :
-                                        Package;
+                    <div className="flex items-center gap-1.5 bg-slate-900/50 backdrop-blur-md border border-white/10 p-1 rounded-xl shadow-2xl relative">
+                        {variant === 'simulation' ? (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 border border-indigo-500/20 rounded-lg flex items-center gap-2 h-9 px-4"
+                                onClick={() => window.open('/physics-sim/creator', '_blank')}
+                            >
+                                <ExternalLink className="w-4 h-4" />
+                                <span className="font-medium">Creative Workshop</span>
+                            </Button>
+                        ) : (
+                            <>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="bg-green-500/10 hover:bg-green-500/20 text-green-400 hover:text-green-300 border border-green-500/20 rounded-lg flex items-center gap-2 h-9 px-4"
+                                    onClick={onExportToSim}
+                                >
+                                    <Send className="w-4 h-4" />
+                                    <span className="font-medium">Sync to Simulation</span>
+                                </Button>
 
-                                return (
-                                    <button
-                                        key={prefab.id}
-                                        onClick={() => {
-                                            onSpawnPrefab(prefab.id);
-                                            setIsLibraryOpen(false);
-                                        }}
-                                        className="w-full px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-start gap-4"
-                                    >
-                                        <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0" style={{ color: prefab.color }}>
-                                            <Icon className="w-5 h-5" />
-                                        </div>
-                                        <div className="flex flex-col min-w-0">
-                                            <div className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">
-                                                {prefab.name}
+                                <button
+                                    onClick={() => setIsLibraryOpen(!isLibraryOpen)}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all ${isLibraryOpen
+                                            ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30'
+                                            : 'bg-white/5 hover:bg-white/10 text-slate-400 dark:text-slate-300'
+                                        }`}
+                                >
+                                    <Box className="w-4 h-4" />
+                                    <span className="text-xs font-bold tracking-wider">Parts Library</span>
+                                    <ChevronDown className={`w-3 h-3 transition-transform ${isLibraryOpen ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {isLibraryOpen && (
+                                    <div className="absolute top-full right-0 mt-2 w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden flex flex-col z-50">
+                                        <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-[10px] uppercase font-black tracking-widest text-slate-400">Spawn Anything</span>
                                             </div>
-                                            <div className="text-[10px] text-slate-500 mt-0.5 line-clamp-2 leading-tight">
-                                                {prefab.description}
+                                            <div className="relative">
+                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                                                <input
+                                                    autoFocus
+                                                    type="text"
+                                                    placeholder="Search parts & blueprints..."
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                    className="w-full pl-9 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-medium"
+                                                />
                                             </div>
                                         </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
+                                        <div className="max-h-[60vh] overflow-y-auto custom-scrollbar py-2">
+                                            {/* Recent Section */}
+                                            {!searchQuery && recentIds.length > 0 && (
+                                                <div className="mb-2">
+                                                    <div className="px-4 py-1.5 flex items-center gap-2">
+                                                        <History className="w-3 h-3 text-slate-400" />
+                                                        <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400">Recently Used</span>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-2 px-4 py-1">
+                                                        {recentIds.map(id => {
+                                                            const prefab = [...PREFABS, ...customBlueprints].find(p => p.id === id);
+                                                            if (!prefab) return null;
+                                                            const Icon = prefab.id === 'logic-bouncer' ? Zap :
+                                                                prefab.id === 'chaos-pendulum' ? Activity :
+                                                                    Package;
+
+                                                            return (
+                                                                <button
+                                                                    key={id}
+                                                                    onClick={() => {
+                                                                        onSpawnPrefab(id);
+                                                                        setIsLibraryOpen(false);
+                                                                        addToRecent(id);
+                                                                    }}
+                                                                    className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-100 dark:border-slate-700/50"
+                                                                >
+                                                                    <div className="w-6 h-6 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center shrink-0 shadow-sm" style={{ color: prefab.color }}>
+                                                                        <Icon className="w-3 h-3" />
+                                                                    </div>
+                                                                    <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 truncate">{prefab.name}</span>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-2 mx-4" />
+                                                </div>
+                                            )}
+
+                                            {[...PREFABS, ...customBlueprints].filter(p =>
+                                                p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                                p.description.toLowerCase().includes(searchQuery.toLowerCase())
+                                            ).map((prefab) => {
+                                                const Icon = prefab.id === 'logic-bouncer' ? Zap :
+                                                    prefab.id === 'chaos-pendulum' ? Activity :
+                                                        Package;
+
+                                                return (
+                                                    <button
+                                                        key={prefab.id}
+                                                        onClick={() => {
+                                                            onSpawnPrefab(prefab.id);
+                                                            setIsLibraryOpen(false);
+                                                            setSearchQuery('');
+                                                            addToRecent(prefab.id);
+                                                        }}
+                                                        className="w-full px-4 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-4 group"
+                                                    >
+                                                        <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 shadow-sm" style={{ color: prefab.color }}>
+                                                            <Icon className="w-4 h-4 transition-transform group-hover:scale-110" />
+                                                        </div>
+                                                        <div className="flex flex-col min-w-0">
+                                                            <div className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate group-hover:text-indigo-500 transition-colors">
+                                                                {prefab.name}
+                                                            </div>
+                                                            <div className="text-[9px] text-slate-500 mt-0.5 line-clamp-1 leading-tight">
+                                                                {prefab.description}
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
+
+                                            {[...PREFABS, ...customBlueprints].filter(p =>
+                                                p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                                p.description.toLowerCase().includes(searchQuery.toLowerCase())
+                                            ).length === 0 && (
+                                                    <div className="px-4 py-8 text-center text-slate-400 text-xs font-medium">
+                                                        No prefabs found for "{searchQuery}"
+                                                    </div>
+                                                )}
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        )}
                     </div>
                 )}
             </div>

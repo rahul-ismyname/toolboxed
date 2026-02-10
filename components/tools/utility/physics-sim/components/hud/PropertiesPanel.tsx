@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Trash2, X } from 'lucide-react';
+import { Trash2, X, GripVertical, BoxSelect, Package } from 'lucide-react';
 import { ObjectInspector } from '../ObjectInspector';
 import { MATERIALS } from '../../hooks/useMatterEngine';
 import { LogicRule } from '../../logic/LogicSystem';
@@ -31,6 +31,7 @@ interface PropertiesPanelProps {
     updateRule: (id: string, updates: Partial<LogicRule>) => void;
     clearBodyRules: (bodyId: number) => void;
     getAllRules: () => LogicRule[];
+    onSaveBlueprint?: (id: number) => void;
 }
 
 export function PropertiesPanel({
@@ -42,7 +43,8 @@ export function PropertiesPanel({
     removeRule,
     updateRule,
     clearBodyRules,
-    getAllRules
+    getAllRules,
+    onSaveBlueprint
 }: PropertiesPanelProps) {
     const [position, setPosition] = useState({ x: 20, y: 80 }); // Initial adjusted for "top-4 right-4" equivalent if relative
     // Actually simplicity: Let's use fixed positioning based on window size or just initial right corner.
@@ -107,23 +109,39 @@ export function PropertiesPanel({
                 {/* Header */}
                 <div
                     onMouseDown={handleMouseDown}
-                    className={`p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50 cursor-grab active:cursor-grabbing select-none ${isDragging ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''}`}
+                    className={`p-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50 cursor-grab active:cursor-grabbing select-none hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group ${isDragging ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''}`}
                 >
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-500">
-                        Properties
-                    </span>
-                    <button
-                        onClick={onClose}
-                        className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 transition-colors"
-                    >
-                        <X className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <GripVertical className="w-3 h-3 text-slate-300 group-hover:text-slate-400 transition-colors" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                            Properties
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        {onSaveBlueprint && (
+                            <button
+                                onClick={() => onSaveBlueprint(selectedBody.id)}
+                                className="p-1.5 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 text-indigo-500 transition-colors"
+                                title="Save as Blueprint"
+                            >
+                                <Package className="w-4 h-4" />
+                            </button>
+                        )}
+                        <button
+                            onClick={onClose}
+                            className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Content */}
                 <div className="p-4 overflow-y-auto custom-scrollbar">
                     <div className="mb-4">
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Material</label>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2 flex items-center gap-1.5 px-1">
+                            <BoxSelect className="w-3 h-3" /> Material
+                        </label>
                         <select
                             value={selectedBody.material || 'DEFAULT'}
                             onChange={(e) => {

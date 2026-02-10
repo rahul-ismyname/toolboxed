@@ -22,6 +22,7 @@ export interface MatterEngineAPI {
     updateBody: (id: number, updates: any) => void;
     deleteBody: (id: number) => void;
     setGravity: (g: { x: number, y: number } | number) => void;
+    setGravityFromVector: (angle: number, magnitude: number) => void;
     setTimeScale: (scale: number) => void;
     setSubsteps: (s: number) => void;
     setSleeping: (enabled: boolean) => void;
@@ -30,9 +31,12 @@ export interface MatterEngineAPI {
     addConstraint: (bodyA: any, bodyB: any | null, type: 'spring' | 'rod', pointA?: { x: number, y: number }, pointB?: { x: number, y: number }) => void;
     addPin: (body: any, x: number, y: number) => void;
     addRevoluteJoint: (bodyA: any, bodyB: any, pointA: { x: number, y: number }, pointB: { x: number, y: number }) => void;
+    fuseBodies: (bodyIds: number[]) => number | undefined;
     getAllConstraints: () => any[];
     serializeWorld: () => string;
-    loadWorld: (json: string) => void;
+    serializeConnected: (rootBodyId: number) => any | null;
+    spawnBlueprint: (blueprint: any, x: number, y: number) => void;
+    loadWorld: (json: string, append?: boolean) => void;
     isReady: boolean;
     applyExplosionForce: (center: { x: number, y: number }, force: number, radius: number) => void;
     setVacuumMode: (enabled: boolean) => void;
@@ -40,6 +44,7 @@ export interface MatterEngineAPI {
     freezeAllBodies: () => void;
     removeBodyPins: (id: number) => void;
     removePinAt: (x: number, y: number, radius: number) => void;
+    removeConstraintsAt: (x: number, y: number, radius?: number) => void;
     addRule: (rule: LogicRule) => void;
     removeRule: (id: string) => void;
     clearBodyRules: (bodyId: number) => void;
@@ -94,9 +99,9 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         MatterRef.current = Matter;
 
         const engine = Matter.Engine.create({
-            enableSleeping: options.enableSleeping ?? false,
-            positionIterations: 30, // Default 6, increased for extreme precision
-            velocityIterations: 30  // Default 6, increased for extreme precision
+            enableSleeping: options.enableSleeping ?? true,
+            positionIterations: 12, // Reduced for performance (was 30)
+            velocityIterations: 12  // Reduced for performance (was 30)
         });
         if (typeof options.gravity === 'object' && options.gravity !== null) {
             engine.gravity.x = options.gravity.x;
@@ -123,7 +128,7 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         // Pass collisions to Logic Engine
         Matter.Events.on(engine, 'collisionStart', (event: any) => {
             if (logicEngineRef.current) {
-                logicEngineRef.current.handleCollisions(Matter, engine, event.pairs, spawnBody);
+                logicEngineRef.current.handleCollisions(Matter, engine, event.pairs, spawnBody, applyExplosionForce);
             }
         });
 
@@ -172,7 +177,7 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
             // Logic Engine Step
             if (logicEngineRef.current && engineRef.current) {
                 const bodies = Matter.Composite.allBodies(engineRef.current.world);
-                logicEngineRef.current.update(Matter, engineRef.current, bodies, activeKeysRef.current, spawnBody);
+                logicEngineRef.current.update(Matter, engineRef.current, bodies, activeKeysRef.current, spawnBody, applyExplosionForce);
             }
 
             const subDelta = fixedDelta / substepsRef.current;
@@ -233,6 +238,11 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
             body.plugin = body.plugin || {};
             body.plugin.acceleration = { x: 0, y: 0 };
             body.plugin.materialKey = materialKey; // Store material key for reference
+            // Store original material properties for robust restoration (e.g. after Vacuum Mode)
+            body.plugin.originalFriction = material.friction;
+            body.plugin.originalRestitution = material.restitution;
+            body.plugin.originalFrictionAir = 0.01;
+
             body.bodyType = type; // Store type for UI differentiation
             if (type === 'circle') (body as any).circleRadius = s * 0.8;
             Composite.add(engineRef.current.world, body);
@@ -323,6 +333,48 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         if (body && MatterRef.current && engineRef.current) {
             MatterRef.current.Composite.remove(engineRef.current.world, body);
         }
+    }, [getBodyById]);
+
+    const fuseBodies = useCallback((bodyIds: number[]) => {
+        if (!MatterRef.current || !engineRef.current || bodyIds.length < 2) return;
+        const { Body, Composite } = MatterRef.current;
+        const world = engineRef.current.world;
+
+        const bodiesToFuse = bodyIds.map(id => getBodyById(id)).filter(b => b) as any[];
+        if (bodiesToFuse.length < 2) return;
+
+        // Create parts: Matter.js recommends the first part be a new body or one of the existing ones
+        // If we use existing bodies directly, we must remove them from the world first
+        Composite.remove(world, bodiesToFuse);
+
+        // Calculate a centroid for the new body to avoid jumps
+        let centerX = 0;
+        let centerY = 0;
+        bodiesToFuse.forEach(b => {
+            centerX += b.position.x;
+            centerY += b.position.y;
+        });
+        centerX /= bodiesToFuse.length;
+        centerY /= bodiesToFuse.length;
+
+        // In Matter.js, parts are relative to the compound body's center.
+        // But Body.create with parts handles this if we pass them in world coords then it centers them.
+
+        const compound = Body.create({
+            parts: bodiesToFuse.map(b => {
+                // Ensure they aren't static during fusion or they'll break the compound's mass calc
+                // but if all are static, compound is static.
+                return b;
+            }),
+            isStatic: bodiesToFuse.every(b => b.isStatic),
+            label: 'compound'
+        });
+
+        compound.id = Math.floor(Math.random() * 1000000); // Unique ID
+        Composite.add(world, compound);
+
+        console.log('Created compound body:', compound.id);
+        return compound.id;
     }, [getBodyById]);
 
     const setGravity = useCallback((g: { x: number, y: number } | number) => {
@@ -504,6 +556,137 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         }
     }, [options.gravity]);
 
+    const serializeConnected = useCallback((rootBodyId: number) => {
+        if (!engineRef.current || !MatterRef.current) return null;
+        const { Composite } = MatterRef.current;
+        const allBodies = Composite.allBodies(engineRef.current.world);
+        const allConstraints = Composite.allConstraints(engineRef.current.world);
+        const allRules = logicEngineRef.current.getRules();
+
+        const connectedIds = new Set<number>();
+        const stack = [rootBodyId];
+
+        while (stack.length > 0) {
+            const id = stack.pop()!;
+            if (connectedIds.has(id)) continue;
+            connectedIds.add(id);
+
+            const body = allBodies.find((b: any) => b.id === id);
+            if (!body) continue;
+
+            // Parts (compound)
+            if (body.parts && body.parts.length > 1) {
+                body.parts.forEach((p: any) => stack.push(p.id));
+            }
+            // Parent
+            if (body.parent && body.parent.id !== id) {
+                stack.push(body.parent.id);
+            }
+            // Constraints
+            allConstraints.forEach((c: any) => {
+                if (c.bodyA && c.bodyA.id === id && c.bodyB) stack.push(c.bodyB.id);
+                if (c.bodyB && c.bodyB.id === id && c.bodyA) stack.push(c.bodyA.id);
+            });
+        }
+
+        const bodies = allBodies.filter((b: any) => connectedIds.has(b.id) && b.label !== 'ground' && b.label !== 'World Boundary');
+        const constraints = allConstraints.filter((c: any) =>
+            c.bodyA && connectedIds.has(c.bodyA.id) &&
+            (c.bodyB ? connectedIds.has(c.bodyB.id) : true) &&
+            c.label !== 'Mouse Constraint'
+        );
+        const rules = allRules.filter((r: LogicRule) => r.targetBodyId && connectedIds.has(r.targetBodyId));
+
+        const rootBody = allBodies.find((b: any) => b.id === rootBodyId);
+        const refX = rootBody ? rootBody.position.x : 0;
+        const refY = rootBody ? rootBody.position.y : 0;
+
+        return {
+            bodies: bodies.map((b: any) => ({
+                type: b.circleRadius ? 'circle' : 'rectangle',
+                x: b.position.x - refX,
+                y: b.position.y - refY,
+                angle: b.angle,
+                options: {
+                    id: b.id,
+                    render: b.render,
+                    restitution: b.restitution,
+                    friction: b.friction,
+                    density: b.density,
+                    width: b.bounds.max.x - b.bounds.min.x,
+                    height: b.bounds.max.y - b.bounds.min.y,
+                    circleRadius: (b as any).circleRadius,
+                    plugin: b.plugin
+                }
+            })),
+            constraints: constraints.map((c: any) => ({
+                bodyAId: c.bodyA?.id,
+                bodyBId: c.bodyB?.id,
+                pointA: c.pointA,
+                pointB: c.pointB,
+                stiffness: c.stiffness,
+                length: c.length,
+                render: c.render,
+                type: c.render?.type || (c.stiffness === 1 && c.length === 0 ? 'axle' : 'rod')
+            })),
+            rules: rules
+        };
+    }, []);
+
+    const spawnBlueprint = useCallback((blueprint: any, x: number, y: number) => {
+        if (!engineRef.current || !MatterRef.current) return;
+        const { Bodies, Composite, Constraint, Body } = MatterRef.current;
+        const world = engineRef.current.world;
+
+        const idMap: Record<number, number> = {};
+
+        const newBodies = blueprint.bodies.map((b: any) => {
+            const options = { ...b.options };
+            const oldId = options.id;
+            const newId = Math.floor(Math.random() * 1000000);
+            idMap[oldId] = newId;
+            options.id = newId;
+
+            let body;
+            if (b.type === 'circle') {
+                body = Bodies.circle(x + b.x, y + b.y, b.options.circleRadius, options);
+            } else {
+                body = Bodies.rectangle(x + b.x, y + b.y, b.options.width, b.options.height, options);
+            }
+
+            if (b.angle) Body.setAngle(body, b.angle);
+            return body;
+        });
+
+        const newConstraints = (blueprint.constraints || []).map((c: any) => {
+            const bodyA = newBodies.find((b: any) => b.id === idMap[c.bodyAId]);
+            const bodyB = newBodies.find((b: any) => b.id === idMap[c.bodyBId]);
+
+            return Constraint.create({
+                bodyA,
+                bodyB,
+                pointA: c.pointA,
+                pointB: c.bodyBId ? c.pointB : { x: x + c.pointB.x, y: y + c.pointB.y }, // World pin needs offset
+                stiffness: c.stiffness,
+                length: c.length,
+                render: c.render
+            });
+        });
+
+        Composite.add(world, [...newBodies, ...newConstraints]);
+
+        if (blueprint.rules) {
+            blueprint.rules.forEach((r: any) => {
+                const newRule = {
+                    ...r,
+                    id: `rule-${Math.random()}-${Date.now()}`,
+                    targetBodyId: idMap[r.targetBodyId]
+                };
+                logicEngineRef.current.addRule(newRule);
+            });
+        }
+    }, []);
+
     const serializeWorld = useCallback(() => {
         if (!engineRef.current || !MatterRef.current) return '';
         const { Composite } = MatterRef.current;
@@ -537,53 +720,60 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
                 length: c.length,
                 render: c.render
             })),
-            gravity: { x: engineRef.current.gravity.x, y: engineRef.current.gravity.y }
+            gravity: { x: engineRef.current.gravity.x, y: engineRef.current.gravity.y },
+            rules: logicEngineRef.current.getRules()
         };
         return JSON.stringify(data);
     }, []);
 
-    const loadWorld = useCallback((json: string) => {
+    const loadWorld = useCallback((json: string, append: boolean = false) => {
         if (!engineRef.current || !MatterRef.current) return;
+        const { World, Bodies, Composite, Constraint, Body } = MatterRef.current;
+        const world = engineRef.current.world;
 
         try {
             const data = JSON.parse(json);
-            const { World, Bodies, Composite, Constraint } = MatterRef.current;
-
-            // Clear existing world (except bounds)
-            World.clear(engineRef.current.world, false);
-
-            if (worldBoundsRef.current.length > 0) {
-                Composite.add(engineRef.current.world, worldBoundsRef.current);
+            if (!append) {
+                World.clear(world, false);
+                logicEngineRef.current.clearRules();
+                if (worldBoundsRef.current.length > 0) {
+                    Composite.add(world, worldBoundsRef.current);
+                }
             }
 
-            // Restore Bodies
-            const idMap = new Map();
+            const idMap: Record<number, number> = {};
 
-            data.bodies.forEach((bData: any) => {
+            const newBodies = (data.bodies || []).map((bData: any) => {
+                const options = { ...bData.options, id: undefined }; // Let it generate or remap
+                const oldId = bData.id;
+                const newId = Math.floor(Math.random() * 1000000);
+                idMap[oldId] = newId;
+
+                const posX = bData.position?.x ?? bData.x ?? 0;
+                const posY = bData.position?.y ?? bData.y ?? 0;
+
                 let body;
-                body = Bodies.fromVertices(bData.position.x, bData.position.y, [bData.vertices], {
-                    id: bData.id,
-                    isStatic: bData.isStatic,
-                    angle: bData.angle,
-                    restitution: bData.restitution,
-                    friction: bData.friction,
-                    density: bData.density,
-                    render: bData.render,
-                    plugin: bData.plugin
-                }, true);
+                if (bData.type === 'circle') {
+                    body = Bodies.circle(posX, posY, bData.circleRadius || (bData.options && bData.options.circleRadius) || 30, { ...options, id: newId });
+                } else if (bData.vertices && bData.vertices.length > 0) {
+                    body = Bodies.fromVertices(posX, posY, [bData.vertices], { ...options, id: newId }, true);
+                } else {
+                    body = Bodies.rectangle(posX, posY, bData.width || (bData.options && bData.options.width) || 60, bData.height || (bData.options && bData.options.height) || 60, { ...options, id: newId });
+                }
 
                 if (body) {
-                    MatterRef.current.Body.setVelocity(body, bData.velocity);
-                    MatterRef.current.Body.setAngularVelocity(body, bData.angularVelocity);
-                    idMap.set(bData.id, body);
-                    Composite.add(engineRef.current.world, body);
+                    if (bData.angle !== undefined) Body.setAngle(body, bData.angle);
+                    if (bData.velocity) Body.setVelocity(body, bData.velocity);
+                    if (bData.angularVelocity !== undefined) Body.setAngularVelocity(body, bData.angularVelocity);
+                    Composite.add(world, body);
+                    return body;
                 }
-            });
+                return null;
+            }).filter((b: any) => b);
 
-            // Restore Constraints
-            data.constraints.forEach((cData: any) => {
-                const bodyA = cData.bodyAId ? idMap.get(cData.bodyAId) : null;
-                const bodyB = cData.bodyBId ? idMap.get(cData.bodyBId) : null;
+            (data.constraints || []).forEach((cData: any) => {
+                const bodyA = cData.bodyAId ? newBodies.find((b: any) => b.id === idMap[cData.bodyAId]) || getBodyById(cData.bodyAId) : null;
+                const bodyB = cData.bodyBId ? newBodies.find((b: any) => b.id === idMap[cData.bodyBId]) || getBodyById(cData.bodyBId) : null;
 
                 if ((cData.bodyAId && !bodyA) || (cData.bodyBId && !bodyB)) return;
 
@@ -597,22 +787,31 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
                     length: cData.length,
                     render: cData.render
                 });
-                Composite.add(engineRef.current.world, constraint);
+                Composite.add(world, constraint);
             });
 
-            if (data.gravity !== undefined) {
-                if (typeof data.gravity === 'number') {
-                    engineRef.current.gravity.y = data.gravity;
-                } else {
-                    engineRef.current.gravity.x = data.gravity.x;
-                    engineRef.current.gravity.y = data.gravity.y;
-                }
+            if (data.rules) {
+                data.rules.forEach((r: any) => {
+                    logicEngineRef.current.addRule({
+                        ...r,
+                        id: `rule-${Math.random()}-${Date.now()}`,
+                        targetBodyId: idMap[r.targetBodyId] || r.targetBodyId
+                    });
+                });
             }
 
+            if (data.gravity !== undefined && !append) {
+                if (typeof data.gravity === 'number') {
+                    world.gravity.y = data.gravity;
+                } else {
+                    world.gravity.x = data.gravity.x;
+                    world.gravity.y = data.gravity.y;
+                }
+            }
         } catch (e) {
             console.error("Failed to load world:", e);
         }
-    }, []);
+    }, [getBodyById]);
 
     const setVacuumMode = useCallback((enabled: boolean) => {
         vacuumModeRef.current = enabled;
@@ -626,12 +825,11 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
                 body.frictionStatic = 0;
                 body.restitution = 1; // Elastic collisions
             } else {
-                body.frictionAir = 0.01;
-                // Restore defaults roughly (hard to know exact original material, but 0.1/0.5 are reasonable defaults)
-                // If it's a specific material, we might lose that info here, but for "off", returning to "normal" friction is what's expected.
-                // We can check the plugin.materialKey if we wanted to be perfect, but this is a toggle.
-                body.friction = 0.1;
+                // Restore from original properties stored in plugin
+                body.frictionAir = body.plugin?.originalFrictionAir ?? 0.01;
+                body.friction = body.plugin?.originalFriction ?? 0.1;
                 body.frictionStatic = 0.5;
+                body.restitution = body.plugin?.originalRestitution ?? 0.1;
             }
         });
     }, []);
@@ -704,6 +902,62 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         }
     }, []);
 
+    const removeConstraintsAt = useCallback((x: number, y: number, radius: number = 20) => {
+        if (!engineRef.current || !MatterRef.current) return;
+        const Matter = MatterRef.current;
+        const { Composite, Vector } = Matter;
+        const world = engineRef.current.world;
+        const constraints = Composite.allConstraints(world);
+
+        const constraintsToRemove = constraints.filter((c: any) => {
+            if (c.label === "Mouse Constraint") return false;
+
+            const bodyA = c.bodyA;
+            const bodyB = c.bodyB;
+
+            let startX, startY, endX, endY;
+
+            if (bodyA) {
+                const worldPointA = Vector.rotate(c.pointA, bodyA.angle);
+                startX = bodyA.position.x + worldPointA.x;
+                startY = bodyA.position.y + worldPointA.y;
+            } else {
+                startX = c.pointA.x;
+                startY = c.pointA.y;
+            }
+
+            if (bodyB) {
+                const worldPointB = Vector.rotate(c.pointB, bodyB.angle);
+                endX = bodyB.position.x + worldPointB.x;
+                endY = bodyB.position.y + worldPointB.y;
+            } else {
+                endX = c.pointB.x;
+                endY = c.pointB.y;
+            }
+
+            // check if point (x,y) is near start, end or along the line
+            const distStart = Math.hypot(startX - x, startY - y);
+            const distEnd = Math.hypot(endX - x, endY - y);
+
+            if (distStart <= radius || distEnd <= radius) return true;
+
+            // Simplified distance from point to line segment
+            const L2 = (endX - startX) ** 2 + (endY - startY) ** 2;
+            if (L2 === 0) return distStart <= radius;
+            let t = ((x - startX) * (endX - startX) + (y - startY) * (endY - startY)) / L2;
+            t = Math.max(0, Math.min(1, t));
+            const projX = startX + t * (endX - startX);
+            const projY = startY + t * (endY - startY);
+            const distLine = Math.hypot(projX - x, projY - y);
+
+            return distLine <= radius;
+        });
+
+        if (constraintsToRemove.length > 0) {
+            Composite.remove(world, constraintsToRemove);
+        }
+    }, []);
+
     const addRule = useCallback((rule: LogicRule) => {
         logicEngineRef.current.addRule(rule);
     }, []);
@@ -743,8 +997,11 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         addConstraint,
         addPin,
         addRevoluteJoint,
+        fuseBodies,
         getAllConstraints,
         serializeWorld,
+        serializeConnected,
+        spawnBlueprint,
         loadWorld,
         isReady,
         applyExplosionForce,
@@ -754,6 +1011,7 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         freezeAllBodies,
         removeBodyPins,
         removePinAt,
+        removeConstraintsAt,
         addRule,
         removeRule,
         updateRule,

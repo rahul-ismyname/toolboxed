@@ -1,14 +1,16 @@
 export type ComparisonOperator = '>' | '<' | '>=' | '<=' | '==';
 export type LogicProperty = 'position.x' | 'position.y' | 'velocity.x' | 'velocity.y' | 'variable';
-export type LogicActionType = 'set_color' | 'random_color' | 'cycle_colors' | 'set_gravity' | 'apply_force' | 'set_velocity' | 'set_velocity_x' | 'set_velocity_y' | 'add_velocity' | 'add_velocity_x' | 'add_velocity_y' | 'multiply_velocity' | 'multiply_velocity_x' | 'multiply_velocity_y' | 'flip_velocity_x' | 'flip_velocity_y' | 'maintain_speed_x' | 'maintain_speed_y' | 'set_acceleration' | 'set_acceleration_x' | 'set_acceleration_y' | 'set_variable' | 'add_variable' | 'multiply_variable' | 'destroy_object' | 'spawn_object';
+export type LogicActionType = 'set_color' | 'random_color' | 'cycle_colors' | 'set_gravity' | 'apply_force' | 'apply_local_force' | 'apply_torque' | 'set_velocity' | 'set_velocity_x' | 'set_velocity_y' | 'add_velocity' | 'add_velocity_x' | 'add_velocity_y' | 'multiply_velocity' | 'multiply_velocity_x' | 'multiply_velocity_y' | 'flip_velocity_x' | 'flip_velocity_y' | 'maintain_speed_x' | 'maintain_speed_y' | 'set_angular_velocity' | 'add_angular_velocity' | 'maintain_angular_velocity' | 'set_acceleration' | 'set_acceleration_x' | 'set_acceleration_y' | 'set_variable' | 'add_variable' | 'multiply_variable' | 'destroy_object' | 'spawn_object' | 'teleport' | 'explode';
 
-export type LogicTrigger = 'continuous' | 'collision_start' | 'collision_horizontal' | 'collision_vertical' | 'key_hold';
+export type LogicTrigger = 'continuous' | 'collision_start' | 'collision_horizontal' | 'collision_vertical' | 'key_hold' | 'timer';
 
 export interface LogicRule {
     id: string;
     targetBodyId?: number; // If null, global rule (like gravity)
     trigger: LogicTrigger;
     key?: string; // For key_hold trigger
+    interval?: number; // For timer trigger (ms)
+    lastTriggerTime?: number; // For timer trigger
     collisionTargetId?: number; // For collision triggers: which body to collide with? (null = any)
     condition: {
         property: LogicProperty;
@@ -76,13 +78,14 @@ export class LogicEngine {
         return this.rules.map(r => this.migrateRule(r));
     }
 
-    update(Matter: any, engine: any, bodies: any[], activeKeys?: Set<string>, spawnBody?: Function) {
+    update(Matter: any, engine: any, bodies: any[], activeKeys?: Set<string>, spawnBody?: Function, applyExplosionForce?: Function) {
+        const currentTime = Date.now();
+
         this.rules.forEach(rule => {
             if (!rule.enabled) return;
-            // if (rule.trigger !== 'continuous') return; // Only process continuous rules here
 
             // Check Trigger Type
-            if (rule.trigger === 'collision_start') return; // Handled separately
+            if (rule.trigger === 'collision_start' || rule.trigger === 'collision_horizontal' || rule.trigger === 'collision_vertical') return; // Handled separately
 
             // KEY HOLD TRIGGER
             if (rule.trigger === 'key_hold') {
@@ -90,18 +93,23 @@ export class LogicEngine {
                 if (!activeKeys.has(rule.key.toLowerCase())) return; // Key not pressed
             }
 
-            // CONTINUOUS TRIGGER (default path if 'continuous')
-            // If it made it here, trigger is valid (either continuous or key held)
+            // TIMER TRIGGER
+            if (rule.trigger === 'timer') {
+                if (!rule.interval) return;
+                const lastTime = rule.lastTriggerTime || 0;
+                if (currentTime - lastTime < rule.interval) return;
+                // Timer fires! Update value but continue to condition check (often condition is just "always true" for timers, or a var check)
+                rule.lastTriggerTime = currentTime;
+            }
 
-            let checkPassed = false;
+            // CONTINUOUS TRIGGER (default path if 'continuous')
+            // If it made it here, trigger is valid (continuous, key held, or timer fired)
+
             let targetBodies = rule.targetBodyId
                 ? [bodies.find(b => b.id === rule.targetBodyId)].filter(b => b)
                 : bodies;
-            if (!rule.enabled || (rule.trigger !== 'continuous' && rule.trigger !== 'key_hold')) return;
 
-            bodies.forEach(body => {
-                if (rule.targetBodyId !== undefined && body.id !== rule.targetBodyId) return;
-
+            targetBodies.forEach(body => {
                 // 1. Evaluate Condition
                 let checkPassed = false;
                 let propValue = 0;
@@ -125,11 +133,11 @@ export class LogicEngine {
 
                 if (checkPassed) {
                     if (!isPulse || !wasMet) {
-                        rule.actions.forEach(action => this.executeAction(Matter, engine, body, action, spawnBody));
+                        rule.actions.forEach(action => this.executeAction(Matter, engine, body, action, spawnBody, applyExplosionForce));
                     }
                 } else if (rule.elseActions && rule.elseActions.length > 0) {
                     if (!isPulse || wasMet) {
-                        rule.elseActions.forEach(action => this.executeAction(Matter, engine, body, action, spawnBody));
+                        rule.elseActions.forEach(action => this.executeAction(Matter, engine, body, action, spawnBody, applyExplosionForce));
                     }
                 }
 
@@ -138,7 +146,7 @@ export class LogicEngine {
         });
     }
 
-    handleCollisions(Matter: any, engine: any, pairs: any[], spawnBody?: Function) {
+    handleCollisions(Matter: any, engine: any, pairs: any[], spawnBody?: Function, applyExplosionForce?: Function) {
         // Filter for collision rules
         const collisionRules = this.rules.filter(r => r.enabled && (r.trigger === 'collision_start' || r.trigger === 'collision_horizontal' || r.trigger === 'collision_vertical'));
 
@@ -170,7 +178,7 @@ export class LogicEngine {
                 if (rule.trigger === 'collision_vertical' && !isVertical) return;
 
                 // Collision confirmed -> Execute Actions
-                rule.actions.forEach(action => this.executeAction(Matter, engine, actorBody, action, spawnBody));
+                rule.actions.forEach(action => this.executeAction(Matter, engine, actorBody, action, spawnBody, applyExplosionForce));
             });
         });
     }
@@ -186,7 +194,7 @@ export class LogicEngine {
         }
     }
 
-    private executeAction(Matter: any, engine: any, body: any, action: { type: LogicActionType, value: any, variableName?: string, useVariableValue?: boolean }, spawnBody?: Function) {
+    private executeAction(Matter: any, engine: any, body: any, action: { type: LogicActionType, value: any, variableName?: string, useVariableValue?: boolean }, spawnBody?: Function, applyExplosionForce?: Function) {
         const resolveValue = (act: typeof action, b: any) => {
             if (act.useVariableValue && act.variableName && b.vars) {
                 return b.vars[act.variableName] ?? 0;
@@ -372,6 +380,38 @@ export class LogicEngine {
         if (action.type === 'apply_force') {
             Matter.Body.applyForce(body, body.position, action.value);
         }
+        if (action.type === 'apply_local_force') {
+            const force = parseFloat(resolveValue(action, body));
+            if (!isNaN(force)) {
+                const angle = body.angle;
+                const forceVector = {
+                    x: Math.cos(angle) * force * 0.001,
+                    y: Math.sin(angle) * force * 0.001
+                };
+                Matter.Body.applyForce(body, body.position, forceVector);
+            }
+        }
+        if (action.type === 'apply_torque') {
+            const torque = parseFloat(resolveValue(action, body));
+            if (!isNaN(torque)) {
+                body.torque += torque * 0.1; // Scale for usability
+            }
+        }
+        if (action.type === 'set_angular_velocity') {
+            const val = parseFloat(resolveValue(action, body));
+            if (!isNaN(val)) Matter.Body.setAngularVelocity(body, val);
+        }
+        if (action.type === 'add_angular_velocity') {
+            const val = parseFloat(resolveValue(action, body));
+            if (!isNaN(val)) Matter.Body.setAngularVelocity(body, body.angularVelocity + val);
+        }
+        if (action.type === 'maintain_angular_velocity') {
+            const speed = parseFloat(resolveValue(action, body));
+            if (!isNaN(speed)) {
+                const sign = Math.abs(body.angularVelocity) < 0.01 ? 1 : (body.angularVelocity >= 0 ? 1 : -1);
+                Matter.Body.setAngularVelocity(body, sign * speed);
+            }
+        }
         if (action.type === 'set_gravity') {
             engine.gravity.x = action.value.x;
             engine.gravity.y = action.value.y;
@@ -404,6 +444,34 @@ export class LogicEngine {
             const { type, x, y, options } = action.value;
             if (spawnBody) {
                 spawnBody(type, { x, y, ...options });
+            }
+        }
+
+        if (action.type === 'teleport') {
+            let x = body.position.x;
+            let y = body.position.y;
+
+            // Simple parse of "x,y" string or object
+            if (typeof action.value === 'string') {
+                const cleaned = action.value.replace(/[()]/g, '');
+                if (cleaned.includes(',')) {
+                    const parts = cleaned.split(',');
+                    x = parseFloat(parts[0]) || x;
+                    y = parseFloat(parts[1]) || y;
+                }
+            } else if (typeof action.value === 'object') {
+                x = action.value.x ?? x;
+                y = action.value.y ?? y;
+            }
+
+            Matter.Body.setPosition(body, { x, y });
+        }
+
+        if (action.type === 'explode') {
+            if (applyExplosionForce) {
+                const force = action.value.force || 0.5;
+                const radius = action.value.radius || 200;
+                applyExplosionForce(body.position, force, radius);
             }
         }
     }

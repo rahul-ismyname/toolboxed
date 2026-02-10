@@ -44,7 +44,7 @@ export function StatsMonitor({ engine, bodyCount }: StatsMonitorProps) {
     };
 
     return (
-        <div className="absolute top-4 left-16 z-30 pointer-events-none fade-in">
+        <div className="absolute bottom-6 left-6 z-50 pointer-events-none fade-in">
             <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-white/20 rounded-xl shadow-sm px-3 py-1.5 flex items-center gap-3">
                 <div className="flex items-center gap-1.5">
                     <Activity className="w-3 h-3 text-slate-400" />

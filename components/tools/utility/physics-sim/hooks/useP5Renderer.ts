@@ -155,10 +155,21 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                         return;
                     }
 
-                    if (tool === 'spring' || tool === 'rod') {
+                    if (tool === 'remove_constraint') {
+                        engine.removeConstraintsAt(p.mouseX, p.mouseY, 20);
+                        return;
+                    }
+
+                    if (tool === 'spring' || tool === 'rod' || tool === 'axle' || tool === 'fuse') {
                         if (clicked) {
-                            constraintStartBody = clicked;
-                            constraintStartPos = snap;
+                            if (tool === 'fuse' && constraintStartBody && constraintStartBody !== clicked) {
+                                engine.fuseBodies([constraintStartBody.id, clicked.id]);
+                                constraintStartBody = null;
+                                if (onToolUsedRef.current) setTimeout(onToolUsedRef.current, 0);
+                            } else {
+                                constraintStartBody = clicked;
+                                constraintStartPos = snap;
+                            }
                         }
                         return;
                     }
@@ -206,10 +217,16 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                     }
 
                     if (clicked) {
-                        if (tool !== 'thruster') {
-                            setTimeout(function () { onSelectBody(clicked.id); }, 0);
+                        if (tool === 'connector') {
+                            constraintStartBody = clicked;
+                            constraintStartPos = { x: p.mouseX, y: p.mouseY };
+                            // Do NOT set draggedBody for connector
+                        } else {
+                            if (tool !== 'thruster') {
+                                setTimeout(function () { onSelectBody(clicked.id); }, 0);
+                            }
+                            draggedBody = clicked;
                         }
-                        draggedBody = clicked;
                     } else {
                         setTimeout(function () { onSelectBody(null); }, 0);
                         draggedBody = null;
@@ -221,7 +238,7 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
 
                     const activeWalls = activeWallsRef.current; // Unused but available
                     const tool = activeToolRef.current;
-                    if (tool === 'spring' || tool === 'rod' || tool === 'pin' || tool === 'explosion') return;
+                    if (tool === 'spring' || tool === 'rod' || tool === 'axle' || tool === 'pin' || tool === 'explosion') return;
 
                     if (tool === 'thruster' && draggedBody) {
                         const forceMagnitude = 0.002 * draggedBody.mass;
@@ -243,6 +260,8 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                         return;
                     }
 
+
+
                     if (draggedBody) {
                         Matter.Body.setPosition(draggedBody, { x: p.mouseX, y: p.mouseY });
                         Matter.Body.setVelocity(draggedBody, { x: 0, y: 0 });
@@ -253,7 +272,22 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                     const tool = activeToolRef.current;
                     if (tool === 'explosion') return;
 
-                    if ((tool === 'spring' || tool === 'rod') && constraintStartBody && constraintStartPos) {
+                    if (tool === 'connector' && constraintStartBody) {
+                        const bodies = Matter.Composite.allBodies(matterEngine.world);
+                        const endBody = Matter.Query.point(bodies, { x: p.mouseX, y: p.mouseY })[0];
+
+                        if (endBody && endBody !== constraintStartBody) {
+                            engine.addConstraint(constraintStartBody, endBody, 'spring',
+                                constraintStartPos!,
+                                { x: p.mouseX, y: p.mouseY }
+                            );
+                        }
+                        constraintStartBody = null;
+                        constraintStartPos = null;
+                        return;
+                    }
+
+                    if ((tool === 'spring' || tool === 'rod' || tool === 'axle') && constraintStartBody && constraintStartPos) {
                         const bodies = Matter.Composite.allBodies(matterEngine.world);
                         // Search in a small area (15px) for better hit detection
                         const hitRadius = 15;
@@ -266,10 +300,18 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
 
                         if (released && released !== constraintStartBody) {
                             // Body to Body
-                            engine.addConstraint(constraintStartBody, released, tool as any, constraintStartPos, snap);
+                            if (tool === 'axle') {
+                                engine.addRevoluteJoint(constraintStartBody, released, constraintStartPos, snap);
+                            } else {
+                                engine.addConstraint(constraintStartBody, released, tool as any, constraintStartPos, snap);
+                            }
                         } else if (!released) {
                             // Body to World (Pin)
-                            engine.addConstraint(constraintStartBody, null, tool as any, constraintStartPos, { x: p.mouseX, y: p.mouseY });
+                            if (tool === 'axle') {
+                                engine.addPin(constraintStartBody, p.mouseX, p.mouseY);
+                            } else {
+                                engine.addConstraint(constraintStartBody, null, tool as any, constraintStartPos, { x: p.mouseX, y: p.mouseY });
+                            }
                         }
                         if (onToolUsedRef.current) setTimeout(onToolUsedRef.current, 0);
                     }
@@ -314,7 +356,7 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                 };
 
                 const trailHistory = new Map<number, { x: number, y: number }[]>();
-                const MAX_TRAIL_LENGTH = 200;
+                const MAX_TRAIL_LENGTH = 60; // Reduced from 200 for FPS boost
 
                 clearTrailsRef.current = () => {
                     trailHistory.clear();
@@ -402,7 +444,11 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
 
                         // Draw segments for gradient effect
                         p.noFill();
-                        for (let i = 0; i < history.length - 1; i++) {
+
+                        // Performance: Skip rendering if history is too short
+                        if (history.length < 3) return;
+
+                        for (let i = 0; i < history.length - 1; i += 2) { // Skip every other segment for performance
                             const pos1 = history[i];
                             const pos2 = history[i + 1];
 
@@ -410,10 +456,7 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                             const alpha = p.map(progress, 0, 1, 0, 100);
                             const weight = p.map(progress, 0, 1, 0.5, 3);
 
-                            const c = p.color(colorStr); // Clone color
-                            c.setAlpha(alpha);
-
-                            p.stroke(c);
+                            p.stroke(baseColor.levels[0], baseColor.levels[1], baseColor.levels[2], alpha);
                             p.strokeWeight(weight);
                             p.line(pos1.x, pos1.y, pos2.x, pos2.y);
                         }
@@ -423,15 +466,34 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                     const bodies = Matter.Composite.allBodies(matterEngine.world);
                     p.noStroke();
                     bodies.forEach(function (body: any) {
-                        p.fill((body.render && body.render.fillStyle) || '#E8E8E8');
-                        p.beginShape();
-                        body.vertices.forEach(function (v: any) { p.vertex(v.x, v.y); });
-                        p.endShape(p.CLOSE);
+                        // Only draw top-level bodies (renderer will handle parts if compound)
+                        if (body.parent !== body) return;
+
+                        const partsToDraw = body.parts.length > 1 ? body.parts.slice(1) : [body];
+
+                        partsToDraw.forEach((part: any) => {
+                            p.fill((part.render && part.render.fillStyle) || (body.render && body.render.fillStyle) || '#E8E8E8');
+                            p.beginShape();
+                            part.vertices.forEach(function (v: any) { p.vertex(v.x, v.y); });
+                            p.endShape(p.CLOSE);
+                        });
 
                         if (selectedBodyIdRef.current === body.id) {
-                            p.stroke('#6366f1');
-                            p.strokeWeight(3);
+                            // Pulsing Selection Glow
+                            const pulse = (Math.sin(p.frameCount * 0.1) * 0.5 + 0.5); // 0 to 1
+                            const glowAlpha = 50 + pulse * 100;
+                            const glowSize = 4 + pulse * 6;
+
+                            p.stroke(99, 102, 241, glowAlpha);
+                            p.strokeWeight(glowSize);
                             p.noFill();
+                            p.beginShape();
+                            body.vertices.forEach(function (v: any) { p.vertex(v.x, v.y); });
+                            p.endShape(p.CLOSE);
+
+                            // Core selection outline
+                            p.stroke('#6366f1');
+                            p.strokeWeight(2);
                             p.beginShape();
                             body.vertices.forEach(function (v: any) { p.vertex(v.x, v.y); });
                             p.endShape(p.CLOSE);
@@ -506,8 +568,8 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
 
                             for (let i = 1; i < steps; i++) {
                                 const t = i / steps;
-                                const px = p.lerp(startX, endX, t);
-                                const py = p.lerp(startY, endY, t);
+                                const px = startX + dx * t;
+                                const py = startY + dy * t;
                                 const amplitude = 6;
                                 const offset = (i % 2 === 0 ? 1 : -1) * amplitude;
                                 p.vertex(px + nx * offset, py + ny * offset);
@@ -515,26 +577,46 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                             p.vertex(endX, endY);
                             p.endShape();
                         } else {
+                            // Rod / Solid Link Look
+                            p.strokeWeight((c.render && c.render.lineWidth) || 4);
+                            p.stroke((c.render && c.render.strokeStyle) || '#6366F1');
+                            p.line(startX, startY, endX, endY);
+
+                            // Add a shine/highlight for a solid 3D feel
+                            p.strokeWeight(1.5);
+                            p.stroke(255, 255, 255, 100);
                             p.line(startX, startY, endX, endY);
                         }
 
                         p.noStroke();
-                        p.fill((c.render && c.render.strokeStyle) || '#999');
-                        p.circle(startX, startY, 4);
-                        p.circle(endX, endY, 4);
+                        // Draw attachment points
+                        if (c.render && c.render.strokeStyle === '#EF4444') {
+                            // Pin Look: Draw a bolt head
+                            p.fill('#475569'); // Dark slate
+                            p.circle(startX, startY, 10);
+                            p.fill('#94A3B8'); // Metal
+                            p.circle(startX, startY, 6);
+                            p.fill('#CBD5E1'); // Highlight
+                            p.circle(startX - 1, startY - 1, 2);
+                        } else {
+                            p.fill((c.render && c.render.strokeStyle) || '#999');
+                            p.circle(startX, startY, 4);
+                            p.circle(endX, endY, 4);
+                        }
                     });
 
                     // 3. Draw Drag Line
                     if (constraintStartPos) {
                         const tool = activeToolRef.current;
-                        p.stroke(tool === 'spring' ? '#F59E0B' : (tool === 'rod' ? '#6366F1' : '#EF4444'));
+                        const isLinkTool = tool === 'spring' || tool === 'connector';
+                        p.stroke(isLinkTool ? '#F59E0B' : (tool === 'rod' ? '#6366F1' : '#EF4444'));
                         p.strokeWeight(2);
                         p.drawingContext.setLineDash([5, 5]);
                         p.line(constraintStartPos.x, constraintStartPos ? constraintStartPos.y : p.mouseY, p.mouseX, p.mouseY);
                         p.drawingContext.setLineDash([]);
 
                         p.noStroke();
-                        p.fill(tool === 'spring' ? '#F59E0B' : (tool === 'rod' ? '#6366F1' : '#EF4444'));
+                        p.fill(isLinkTool ? '#F59E0B' : (tool === 'rod' ? '#6366F1' : '#EF4444'));
                         p.circle(p.mouseX, p.mouseY, 6);
                     }
 
