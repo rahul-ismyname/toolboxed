@@ -4,9 +4,8 @@ import React, { useState, Dispatch, SetStateAction } from 'react';
 import {
     ChevronDown, Wind, Eye, EyeOff, Maximize2, Minimize2, List, BoxSelect, Folder,
     Save, FolderOpen, Share2, Globe, Monitor, Settings2, ZapOff, Snowflake,
-    Eraser, Zap, Activity, Package, Search, Clock, ExternalLink, Send, Box, History
+    Eraser, Zap, Activity, Send
 } from 'lucide-react';
-import { PREFABS } from '@/lib/prefabs';
 import { ActiveWalls } from '../../hooks/useMatterEngine';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -40,6 +39,13 @@ interface TopBarProps {
     onFreezeAll: () => void;
     showGrid: boolean;
     onShowGridChange: Dispatch<SetStateAction<boolean>>;
+    useAccelerometer: boolean;
+    onUseAccelerometerChange: (enabled: boolean) => void;
+    useHaptics: boolean;
+    onUseHapticsChange: (enabled: boolean) => void;
+    lowPowerMode: boolean;
+    onLowPowerModeChange: (enabled: boolean) => void;
+    isMobile: boolean;
 }
 
 export function TopBar({
@@ -70,30 +76,16 @@ export function TopBar({
     onClearConstraints,
     onFreezeAll,
     showGrid,
-    onShowGridChange
+    onShowGridChange,
+    useAccelerometer,
+    onUseAccelerometerChange,
+    useHaptics,
+    onUseHapticsChange,
+    lowPowerMode,
+    onLowPowerModeChange,
+    isMobile
 }: TopBarProps) {
-    // State for the things library and active menus
-    const [isLibraryOpen, setIsLibraryOpen] = useState(false);
     const [activeMenu, setActiveMenu] = useState<'scene' | 'world' | 'view' | null>(null);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [recentIds, setRecentIds] = useState<string[]>([]);
-
-    React.useEffect(() => {
-        const saved = localStorage.getItem('recent_prefabs');
-        if (saved) {
-            try {
-                setRecentIds(JSON.parse(saved));
-            } catch (e) {
-                console.error('Failed to parse recent prefabs', e);
-            }
-        }
-    }, []);
-
-    const addToRecent = (id: string) => {
-        const newRecent = [id, ...recentIds.filter(i => i !== id)].slice(0, 4);
-        setRecentIds(newRecent);
-        localStorage.setItem('recent_prefabs', JSON.stringify(newRecent));
-    };
 
     const menuRef = React.useRef<HTMLDivElement>(null);
 
@@ -101,7 +93,6 @@ export function TopBar({
         const handleClickOutside = (event: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
                 setActiveMenu(null);
-                setIsLibraryOpen(false);
             }
         };
 
@@ -111,169 +102,22 @@ export function TopBar({
 
     const toggleMenu = (menu: 'scene' | 'world' | 'view') => {
         setActiveMenu(activeMenu === menu ? null : menu);
-        setIsLibraryOpen(false); // Close other menu
     };
 
     return (
-        <div ref={menuRef} className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start pointer-events-none z-40">
-            {/* Things Library Selector (Top Left) */}
+        <div ref={menuRef} className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start pointer-events-none z-50">
+            {/* Things Library Selector (Top Left) - REMOVED per user request */}
             <div className="pointer-events-auto relative">
-                <button
-                    onClick={() => {
-                        setIsLibraryOpen(!isLibraryOpen);
-                        setActiveMenu(null); // Close other menus
-                    }}
-                    className="flex items-center gap-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-white/20 px-4 py-2.5 rounded-2xl shadow-lg hover:bg-white dark:hover:bg-slate-900 transition-all active:scale-95 group"
-                >
-                    <div className="flex flex-col items-start text-left">
-                        <span className="text-[10px] uppercase font-black tracking-widest text-slate-400 group-hover:text-indigo-500 transition-colors">Add Premade</span>
-                        <span className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-                            <Package className="w-4 h-4 text-indigo-500" /> Things Library
-                        </span>
-                    </div>
-                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isLibraryOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                {isLibraryOpen && (
-                    <div className="flex items-center gap-1.5 bg-slate-900/50 backdrop-blur-md border border-white/10 p-1 rounded-xl shadow-2xl relative">
-                        {variant === 'simulation' ? (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 border border-indigo-500/20 rounded-lg flex items-center gap-2 h-9 px-4"
-                                onClick={() => window.open('/physics-sim/creator', '_blank')}
-                            >
-                                <ExternalLink className="w-4 h-4" />
-                                <span className="font-medium">Creative Workshop</span>
-                            </Button>
-                        ) : (
-                            <>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="bg-green-500/10 hover:bg-green-500/20 text-green-400 hover:text-green-300 border border-green-500/20 rounded-lg flex items-center gap-2 h-9 px-4"
-                                    onClick={onExportToSim}
-                                >
-                                    <Send className="w-4 h-4" />
-                                    <span className="font-medium">Sync to Simulation</span>
-                                </Button>
-
-                                <button
-                                    onClick={() => setIsLibraryOpen(!isLibraryOpen)}
-                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all ${isLibraryOpen
-                                            ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30'
-                                            : 'bg-white/5 hover:bg-white/10 text-slate-400 dark:text-slate-300'
-                                        }`}
-                                >
-                                    <Box className="w-4 h-4" />
-                                    <span className="text-xs font-bold tracking-wider">Parts Library</span>
-                                    <ChevronDown className={`w-3 h-3 transition-transform ${isLibraryOpen ? 'rotate-180' : ''}`} />
-                                </button>
-
-                                {isLibraryOpen && (
-                                    <div className="absolute top-full right-0 mt-2 w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden flex flex-col z-50">
-                                        <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 space-y-3">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-[10px] uppercase font-black tracking-widest text-slate-400">Spawn Anything</span>
-                                            </div>
-                                            <div className="relative">
-                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                                                <input
-                                                    autoFocus
-                                                    type="text"
-                                                    placeholder="Search parts & blueprints..."
-                                                    value={searchQuery}
-                                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                                    className="w-full pl-9 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-medium"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="max-h-[60vh] overflow-y-auto custom-scrollbar py-2">
-                                            {/* Recent Section */}
-                                            {!searchQuery && recentIds.length > 0 && (
-                                                <div className="mb-2">
-                                                    <div className="px-4 py-1.5 flex items-center gap-2">
-                                                        <History className="w-3 h-3 text-slate-400" />
-                                                        <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400">Recently Used</span>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-2 px-4 py-1">
-                                                        {recentIds.map(id => {
-                                                            const prefab = [...PREFABS, ...customBlueprints].find(p => p.id === id);
-                                                            if (!prefab) return null;
-                                                            const Icon = prefab.id === 'logic-bouncer' ? Zap :
-                                                                prefab.id === 'chaos-pendulum' ? Activity :
-                                                                    Package;
-
-                                                            return (
-                                                                <button
-                                                                    key={id}
-                                                                    onClick={() => {
-                                                                        onSpawnPrefab(id);
-                                                                        setIsLibraryOpen(false);
-                                                                        addToRecent(id);
-                                                                    }}
-                                                                    className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-100 dark:border-slate-700/50"
-                                                                >
-                                                                    <div className="w-6 h-6 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center shrink-0 shadow-sm" style={{ color: prefab.color }}>
-                                                                        <Icon className="w-3 h-3" />
-                                                                    </div>
-                                                                    <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 truncate">{prefab.name}</span>
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-2 mx-4" />
-                                                </div>
-                                            )}
-
-                                            {[...PREFABS, ...customBlueprints].filter(p =>
-                                                p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                                p.description.toLowerCase().includes(searchQuery.toLowerCase())
-                                            ).map((prefab) => {
-                                                const Icon = prefab.id === 'logic-bouncer' ? Zap :
-                                                    prefab.id === 'chaos-pendulum' ? Activity :
-                                                        Package;
-
-                                                return (
-                                                    <button
-                                                        key={prefab.id}
-                                                        onClick={() => {
-                                                            onSpawnPrefab(prefab.id);
-                                                            setIsLibraryOpen(false);
-                                                            setSearchQuery('');
-                                                            addToRecent(prefab.id);
-                                                        }}
-                                                        className="w-full px-4 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-4 group"
-                                                    >
-                                                        <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 shadow-sm" style={{ color: prefab.color }}>
-                                                            <Icon className="w-4 h-4 transition-transform group-hover:scale-110" />
-                                                        </div>
-                                                        <div className="flex flex-col min-w-0">
-                                                            <div className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate group-hover:text-indigo-500 transition-colors">
-                                                                {prefab.name}
-                                                            </div>
-                                                            <div className="text-[9px] text-slate-500 mt-0.5 line-clamp-1 leading-tight">
-                                                                {prefab.description}
-                                                            </div>
-                                                        </div>
-                                                    </button>
-                                                );
-                                            })}
-
-                                            {[...PREFABS, ...customBlueprints].filter(p =>
-                                                p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                                p.description.toLowerCase().includes(searchQuery.toLowerCase())
-                                            ).length === 0 && (
-                                                    <div className="px-4 py-8 text-center text-slate-400 text-xs font-medium">
-                                                        No prefabs found for "{searchQuery}"
-                                                    </div>
-                                                )}
-                                        </div>
-                                    </div>
-                                )}
-                            </>
-                        )}
-                    </div>
+                {variant !== 'simulation' && onExportToSim && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="bg-green-500/10 hover:bg-green-500/20 text-green-400 hover:text-green-300 border border-green-500/20 rounded-lg flex items-center gap-2 h-9 px-4"
+                        onClick={onExportToSim}
+                    >
+                        <Send className="w-4 h-4" />
+                        <span className="font-medium">Sync to Simulation</span>
+                    </Button>
                 )}
             </div>
 
@@ -299,7 +143,7 @@ export function TopBar({
                                 initial={{ opacity: 0, y: -10, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                                className="absolute top-full right-0 mt-2 w-48 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden py-1 z-50"
+                                className="absolute top-full right-0 mt-2 w-48 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden py-1 z-[60]"
                             >
                                 <button
                                     onClick={() => { onSaveScene(); setActiveMenu(null); }}
@@ -347,7 +191,7 @@ export function TopBar({
                                 initial={{ opacity: 0, y: -10, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                                className="absolute top-full right-0 mt-2 p-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl flex flex-col gap-4 min-w-[240px] z-50"
+                                className={`absolute top-full right-0 mt-2 ${isMobile ? 'p-3 gap-3 min-w-[200px] origin-top-right scale-95' : 'p-4 gap-4 min-w-[240px]'} bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl flex flex-col z-[60]`}
                             >
                                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center border-b border-white/10 pb-2">World Environment</div>
 
@@ -357,9 +201,9 @@ export function TopBar({
                                         <span>Gravity (Direction & Strength)</span>
                                     </div>
 
-                                    <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 flex flex-col items-center gap-3">
+                                    <div className={`bg-slate-50 dark:bg-slate-800 rounded-xl ${isMobile ? 'p-2' : 'p-3'} flex flex-col items-center gap-3`}>
                                         {/* Compass */}
-                                        <div className="relative w-24 h-24 rounded-full border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-inner flex items-center justify-center">
+                                        <div className={`relative ${isMobile ? 'w-20 h-20' : 'w-24 h-24'} rounded-full border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-inner flex items-center justify-center`}>
                                             {/* Cardinal Points */}
                                             <div className="absolute top-1 text-[8px] font-bold text-slate-400">N</div>
                                             <div className="absolute bottom-1 text-[8px] font-bold text-slate-400">S</div>
@@ -469,6 +313,43 @@ export function TopBar({
                                     </div>
                                 </button>
 
+                                {/* Accelerometer / Tilt */}
+                                {isMobile && (
+                                    <>
+                                        <button
+                                            onClick={() => onUseAccelerometerChange(!useAccelerometer)}
+                                            className={`w-full p-2 rounded-xl flex items-center justify-between transition-all ${useAccelerometer
+                                                ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 border border-orange-200 dark:border-orange-800'
+                                                : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500'
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <Activity className="w-4 h-4" />
+                                                <span className="text-xs font-bold">Device Tilt Gravity</span>
+                                            </div>
+                                            <div className={`w-8 h-4 rounded-full relative transition-colors ${useAccelerometer ? 'bg-orange-500' : 'bg-slate-300'}`}>
+                                                <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${useAccelerometer ? 'left-4.5' : 'left-0.5'}`} />
+                                            </div>
+                                        </button>
+
+                                        <button
+                                            onClick={() => onUseHapticsChange(!useHaptics)}
+                                            className={`w-full p-2 rounded-xl flex items-center justify-between transition-all ${useHaptics
+                                                ? 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 border border-pink-200 dark:border-pink-800'
+                                                : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500'
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <Zap className="w-4 h-4" />
+                                                <span className="text-xs font-bold">Haptic Feedback</span>
+                                            </div>
+                                            <div className={`w-8 h-4 rounded-full relative transition-colors ${useHaptics ? 'bg-pink-500' : 'bg-slate-300'}`}>
+                                                <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${useHaptics ? 'left-4.5' : 'left-0.5'}`} />
+                                            </div>
+                                        </button>
+                                    </>
+                                )}
+
                                 <div className="grid grid-cols-2 gap-2 mt-1">
                                     <button
                                         onClick={onFreezeAll}
@@ -536,7 +417,7 @@ export function TopBar({
                                 initial={{ opacity: 0, y: -10, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                                className="absolute top-full right-0 mt-2 w-56 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden py-1 z-50 flex flex-col gap-1 p-2"
+                                className={`absolute top-full right-0 mt-2 ${isMobile ? 'w-48 origin-top-right scale-95' : 'w-56'} bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden py-1 z-[60] flex flex-col gap-1 p-2`}
                             >
                                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center border-b border-white/10 pb-1 mb-1">Display</div>
 
@@ -576,6 +457,19 @@ export function TopBar({
                                     <span className="flex items-center gap-2">
                                         {isFullscreen ? 'Exit FullScreen (F)' : 'Enter FullScreen (F)'}
                                     </span>
+                                </button>
+
+                                <button
+                                    onClick={() => onLowPowerModeChange(!lowPowerMode)}
+                                    className={`w-full px-3 py-2 rounded-xl text-xs text-left flex items-center justify-between group ${lowPowerMode ? 'bg-orange-50 dark:bg-orange-900/30 text-orange-600' : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600'}`}
+                                >
+                                    <span className="flex items-center gap-2">
+                                        <ZapOff className="w-4 h-4" />
+                                        Low Power Rendering
+                                    </span>
+                                    <div className={`w-8 h-4 rounded-full relative transition-colors ${lowPowerMode ? 'bg-orange-500' : 'bg-slate-300'}`}>
+                                        <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${lowPowerMode ? 'left-4.5' : 'left-0.5'}`} />
+                                    </div>
                                 </button>
 
                                 <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />

@@ -32,6 +32,7 @@ interface PropertiesPanelProps {
     clearBodyRules: (bodyId: number) => void;
     getAllRules: () => LogicRule[];
     onSaveBlueprint?: (id: number) => void;
+    isMobile?: boolean;
 }
 
 export function PropertiesPanel({
@@ -44,16 +45,16 @@ export function PropertiesPanel({
     updateRule,
     clearBodyRules,
     getAllRules,
-    onSaveBlueprint
+    onSaveBlueprint,
+    isMobile = false
 }: PropertiesPanelProps) {
-    const [position, setPosition] = useState({ x: 20, y: 80 }); // Initial adjusted for "top-4 right-4" equivalent if relative
-    // Actually simplicity: Let's use fixed positioning based on window size or just initial right corner.
-    // Better: Start with a safe default, maybe `right: 20, top: 20` creates issues with simple x/y transform.
-    // Let's use `top: 0, left: 0` on container and transform translate.
+    const [position, setPosition] = useState({ x: 0, y: 0 }); // Relative transform
+    const [isMinimized, setIsMinimized] = useState(isMobile); // Start minimized on mobile
     const [isDragging, setIsDragging] = useState(false);
     const dragOffset = useRef({ x: 0, y: 0 });
 
     const handleMouseDown = (e: React.MouseEvent) => {
+        if (isMobile) return; // Disable dragging on mobile
         setIsDragging(true);
         dragOffset.current = {
             x: e.clientX - position.x,
@@ -86,22 +87,71 @@ export function PropertiesPanel({
         };
     }, [isDragging]);
 
-    // Initial position effect - CENTER IT or put slightly right
+    // Initial positioning
     useEffect(() => {
-        // Only set initial if at 0,0 default? or just hardcode slightly nicely
-        if (position.x === 20 && position.y === 80) {
+        if (!isMobile && position.x === 0 && position.y === 0) {
             setPosition({ x: window.innerWidth - 320, y: 80 });
         }
-    }, [])
+    }, [isMobile]);
 
     if (!selectedBody) return null;
+
+    if (isMobile) {
+        return (
+            <div className={`fixed bottom-0 left-0 right-0 z-50 flex flex-col transition-transform duration-300 ${isMinimized ? 'translate-y-[calc(100%-3.5rem)]' : ''}`}>
+                {/* Mobile Header / Handle */}
+                <div
+                    onClick={() => setIsMinimized(!isMinimized)}
+                    className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 rounded-t-2xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-3 flex items-center justify-between cursor-pointer active:bg-slate-50 dark:active:bg-slate-800"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto absolute left-1/2 -translate-x-1/2 top-2" />
+                        <span className="text-xs font-black uppercase tracking-widest text-slate-500 mt-2">
+                            {isMinimized ? 'Show Properties' : 'Properties'}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
+                        {onSaveBlueprint && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onSaveBlueprint(selectedBody.id); }}
+                                className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500"
+                            >
+                                <Package className="w-4 h-4" />
+                            </button>
+                        )}
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onClose(); }}
+                            className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Mobile Content */}
+                <div className="bg-white dark:bg-slate-900 p-4 h-[50vh] overflow-y-auto pb-safe">
+                    <PropertiesContent
+                        selectedBody={selectedBody}
+                        onUpdateBody={onUpdateBody}
+                        onDeleteBody={onDeleteBody}
+                        addRule={addRule}
+                        removeRule={removeRule}
+                        updateRule={updateRule}
+                        clearBodyRules={clearBodyRules}
+                        getAllRules={getAllRules}
+                    />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div
             style={{
-                left: position.x,
-                top: position.y,
-                position: 'fixed'
+                transform: `translate(${position.x}px, ${position.y}px)`,
+                position: 'fixed',
+                top: 0,
+                left: 0
             }}
             className="w-72 z-40 flex flex-col items-end transition-shadow duration-75"
         >
@@ -137,37 +187,11 @@ export function PropertiesPanel({
                 </div>
 
                 {/* Content */}
-                <div className="p-4 overflow-y-auto custom-scrollbar">
-                    <div className="mb-4">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2 flex items-center gap-1.5 px-1">
-                            <BoxSelect className="w-3 h-3" /> Material
-                        </label>
-                        <select
-                            value={selectedBody.material || 'DEFAULT'}
-                            onChange={(e) => {
-                                const matKey = e.target.value;
-                                const mat = MATERIALS[matKey];
-                                if (mat) {
-                                    onUpdateBody(selectedBody.id, {
-                                        material: matKey,
-                                        restitution: mat.restitution,
-                                        friction: mat.friction,
-                                        density: mat.density
-                                    });
-                                }
-                            }}
-                            className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-700 dark:text-slate-300"
-                        >
-                            {Object.entries(MATERIALS).map(([key, mat]) => (
-                                <option key={key} value={key}>{mat.name}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <ObjectInspector
-                        body={selectedBody as any}
-                        onUpdate={onUpdateBody}
-                        onDelete={onDeleteBody}
+                <div className="p-4 overflow-y-auto custom-scrollbar max-h-[70vh]">
+                    <PropertiesContent
+                        selectedBody={selectedBody}
+                        onUpdateBody={onUpdateBody}
+                        onDeleteBody={onDeleteBody}
                         addRule={addRule}
                         removeRule={removeRule}
                         updateRule={updateRule}
@@ -177,5 +201,58 @@ export function PropertiesPanel({
                 </div>
             </div>
         </div>
+    );
+}
+
+// Extracted content for reuse
+function PropertiesContent({
+    selectedBody,
+    onUpdateBody,
+    onDeleteBody,
+    addRule,
+    removeRule,
+    updateRule,
+    clearBodyRules,
+    getAllRules
+}: any) {
+    return (
+        <>
+            <div className="mb-4">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2 flex items-center gap-1.5 px-1">
+                    <BoxSelect className="w-3 h-3" /> Material
+                </label>
+                <select
+                    value={selectedBody.material || 'DEFAULT'}
+                    onChange={(e) => {
+                        const matKey = e.target.value;
+                        const mat = MATERIALS[matKey];
+                        if (mat) {
+                            onUpdateBody(selectedBody.id, {
+                                material: matKey,
+                                restitution: mat.restitution,
+                                friction: mat.friction,
+                                density: mat.density
+                            });
+                        }
+                    }}
+                    className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-700 dark:text-slate-300"
+                >
+                    {Object.entries(MATERIALS).map(([key, mat]) => (
+                        <option key={key} value={key}>{mat.name}</option>
+                    ))}
+                </select>
+            </div>
+
+            <ObjectInspector
+                body={selectedBody as any}
+                onUpdate={onUpdateBody}
+                onDelete={onDeleteBody}
+                addRule={addRule}
+                removeRule={removeRule}
+                updateRule={updateRule}
+                clearBodyRules={clearBodyRules}
+                getAllRules={getAllRules}
+            />
+        </>
     );
 }

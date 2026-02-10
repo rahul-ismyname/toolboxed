@@ -63,9 +63,33 @@ export default function PhysicsSim({ variant = 'simulation' }: PhysicsSimProps) 
     const [showGrid, setShowGrid] = useState(false);
     const [pendingReset, setPendingReset] = useState(false);
     const [customBlueprints, setCustomBlueprints] = useState<any[]>([]);
+    const [isMobile, setIsMobile] = useState(false);
+    const [useAccelerometer, setUseAccelerometer] = useState(false);
+    const [useHaptics, setUseHaptics] = useState(false);
+    const [lowPowerMode, setLowPowerMode] = useState(false);
+
+    // Detect mobile device
+    useEffect(() => {
+        const checkMobile = () => {
+            const userAgent = navigator.userAgent || (window as any).vendor || (window as any).opera;
+            const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
+            const mobile = mobileRegex.test(userAgent.toLowerCase()) || window.innerWidth < 768;
+            setIsMobile(mobile);
+
+            // Set mobile defaults if detected
+            if (mobile) {
+                setShowVectors(false);
+                setShowGrid(false);
+                setSpawnSize(40); // Larger default for touch
+                setUseHaptics(true); // Default haptics on for mobile
+                setLowPowerMode(true); // Default low power on for mobile
+            }
+        };
+        checkMobile();
+    }, []);
 
     // Physics engine hook
-    const engine = useMatterEngine({ gravity, timeScale });
+    const engine = useMatterEngine({ gravity, timeScale, useHaptics });
 
     // Cross-tab sync
     useEffect(() => {
@@ -118,7 +142,9 @@ export default function PhysicsSim({ variant = 'simulation' }: PhysicsSimProps) 
         onToolUsed: handleToolUsed,
         activeMaterial,
         activeWalls,
-        showGrid
+        showGrid,
+        isMobile,
+        lowPowerMode
     });
 
     // Handle FullScreen change
@@ -129,6 +155,55 @@ export default function PhysicsSim({ variant = 'simulation' }: PhysicsSimProps) 
         document.addEventListener('fullscreenchange', handleFSChange);
         return () => document.removeEventListener('fullscreenchange', handleFSChange);
     }, []);
+
+    // Accelerometer Gravity Logic
+    useEffect(() => {
+        if (!useAccelerometer || !isMobile) return;
+
+        const handleOrientation = (event: DeviceOrientationEvent) => {
+            const { beta, gamma } = event; // beta: -180 to 180, gamma: -90 to 90
+            if (beta === null || gamma === null) return;
+
+            // Simple conversion to gravity vector
+            // We want positive Y to be down (beta > 0)
+            // We want positive X to be right (gamma > 0)
+            const sensitivity = 0.1;
+            const targetX = Math.min(Math.max(gamma * sensitivity, -1.5), 1.5);
+            const targetY = Math.min(Math.max(beta * sensitivity, -1.5), 1.5);
+
+            setGravity({ x: targetX, y: targetY });
+            engine.setGravity({ x: targetX, y: targetY });
+        };
+
+        const requestPermission = async () => {
+            if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+                try {
+                    const response = await (DeviceOrientationEvent as any).requestPermission();
+                    if (response === 'granted') {
+                        window.addEventListener('deviceorientation', handleOrientation);
+                    } else {
+                        toast.error('Tilt permission denied');
+                        setUseAccelerometer(false);
+                    }
+                } catch (e) {
+                    console.error('Request orientation permission error:', e);
+                }
+            } else {
+                window.addEventListener('deviceorientation', handleOrientation);
+            }
+        };
+
+        requestPermission();
+
+        return () => {
+            window.removeEventListener('deviceorientation', handleOrientation);
+            // Restore default gravity when turning off accelerometer? 
+            // Better to keep it where it was tilted to, or reset to {0,1}?
+            // Let's reset to {0,1} for better user experience.
+            setGravity({ x: 0, y: 1 });
+            engine.setGravity({ x: 0, y: 1 });
+        };
+    }, [useAccelerometer, isMobile, engine]);
 
     // Refresh selected body data periodically
     useEffect(() => {
@@ -416,7 +491,9 @@ export default function PhysicsSim({ variant = 'simulation' }: PhysicsSimProps) 
             ref={containerRef}
             className={`relative overflow-hidden ${isFullscreen
                 ? 'fixed inset-0 w-screen h-screen z-[100] rounded-none border-0 bg-slate-50 dark:bg-slate-900'
-                : 'w-full h-[85vh] rounded-3xl border-8 border-white dark:border-slate-900 shadow-2xl'
+                : isMobile
+                    ? 'w-full h-[100dvh] h-[100vh] rounded-none border-0 shadow-none'
+                    : 'w-full h-[85vh] rounded-3xl border-8 border-white dark:border-slate-900 shadow-2xl'
                 }`}
             style={{ backgroundColor: bgColor }}
         >
@@ -471,6 +548,13 @@ export default function PhysicsSim({ variant = 'simulation' }: PhysicsSimProps) 
                             }}
                             showGrid={showGrid}
                             onShowGridChange={setShowGrid}
+                            useAccelerometer={useAccelerometer}
+                            onUseAccelerometerChange={setUseAccelerometer}
+                            useHaptics={useHaptics}
+                            onUseHapticsChange={setUseHaptics}
+                            lowPowerMode={lowPowerMode}
+                            onLowPowerModeChange={setLowPowerMode}
+                            isMobile={isMobile}
                         />
                     )}
 
@@ -501,6 +585,7 @@ export default function PhysicsSim({ variant = 'simulation' }: PhysicsSimProps) 
                             onSelectMaterial={setActiveMaterial}
                             multiSpawnMode={multiSpawnMode}
                             onMultiSpawnModeChange={setMultiSpawnMode}
+                            isMobile={isMobile}
                         />
                     )}
 
@@ -525,6 +610,7 @@ export default function PhysicsSim({ variant = 'simulation' }: PhysicsSimProps) 
                             clearBodyRules={engine.clearBodyRules}
                             getAllRules={() => engine.getAllRules()}
                             onSaveBlueprint={handleSaveBlueprint}
+                            isMobile={isMobile}
                         />
                     )}
                 </>

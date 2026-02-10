@@ -18,6 +18,8 @@ interface UseP5RendererOptions {
     activeMaterial: string;
     activeWalls: ActiveWalls;
     showGrid: boolean;
+    isMobile: boolean;
+    lowPowerMode: boolean;
 }
 
 export interface P5RendererAPI {
@@ -41,7 +43,9 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
         onToolUsed,
         activeMaterial,
         activeWalls,
-        showGrid
+        showGrid,
+        isMobile,
+        lowPowerMode
     } = options;
 
     const p5Ref = useRef<any>(null);
@@ -61,6 +65,8 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
     const onToolUsedRef = useRef(onToolUsed);
     const activeWallsRef = useRef(activeWalls);
     const showGridRef = useRef(showGrid);
+    const isMobileRef = useRef(isMobile);
+    const lowPowerModeRef = useRef(lowPowerMode);
 
     useEffect(() => { bgColorRef.current = bgColor; }, [bgColor]);
     useEffect(() => { showVectorsRef.current = showVectors; }, [showVectors]);
@@ -72,6 +78,8 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
     useEffect(() => { onToolUsedRef.current = onToolUsed; }, [onToolUsed]);
     useEffect(() => { activeWallsRef.current = activeWalls; }, [activeWalls]);
     useEffect(() => { showGridRef.current = showGrid; }, [showGrid]);
+    useEffect(() => { isMobileRef.current = isMobile; }, [isMobile]);
+    useEffect(() => { lowPowerModeRef.current = lowPowerMode; }, [lowPowerMode]);
 
     useEffect(() => {
         if (!containerRef.current || !engine.engineRef.current || !engine.MatterRef.current) return;
@@ -93,6 +101,15 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
             let constraintStartPos: { x: number, y: number } | null = null;
             let canvasElement: HTMLCanvasElement;
 
+            // Viewport scaling for mobile: zoom out slightly so more fits
+            const viewportScale = isMobileRef.current ? 0.75 : 1.0;
+
+            // Touch handling for tap-to-select
+            let touchStartTime = 0;
+            let touchStartPos = { x: 0, y: 0 };
+            let isTap = false;
+            let lastTapTime = 0;
+
             const sketch = function (p: any) {
                 // Also disable FES on the instance
                 p.disableFriendlyErrors = true;
@@ -109,16 +126,23 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                     canvasElement.style.display = 'block';
 
                     // Add MouseConstraint for physics dragging
+                    const density = p.pixelDensity();
+                    p.pixelDensity(Math.min(density, 2.0)); // Cap for mobile performance
+
                     const mouse = Matter.Mouse.create(canvas.elt);
                     mouse.pixelRatio = p.pixelDensity();
+
+                    // Scale mouse input to match canvas scaling
+                    Matter.Mouse.setScale(mouse, { x: 1 / viewportScale, y: 1 / viewportScale });
+
                     const mouseConstraint = Matter.MouseConstraint.create(matterEngine, {
                         mouse: mouse,
                         constraint: { stiffness: 0.2, render: { visible: false } }
                     });
                     Matter.Composite.add(matterEngine.world, mouseConstraint);
 
-                    // Add world bounds automatically
-                    engine.addWorldBounds(p.width, p.height, 2000, activeWallsRef.current);
+                    // Add world bounds automatically (scaled to virtual size)
+                    engine.addWorldBounds(p.width / viewportScale, p.height / viewportScale, 2000, activeWallsRef.current);
                 };
 
                 // Helper to check for snap
@@ -129,43 +153,47 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                     return { x: mx, y: my };
                 };
 
+                p.touchStarted = function (event: any) {
+                    touchStartTime = Date.now();
+                    const mx = p.mouseX / viewportScale;
+                    const my = p.mouseY / viewportScale;
+                    touchStartPos = { x: mx, y: my };
+                    isTap = true;
+                    p.mousePressed(event);
+                    return false;
+                };
+
                 p.mousePressed = function (event: any) {
-                    // Check if we are clicking the canvas
-                    if (event && event.target && event.target !== canvasElement) {
-                        return;
-                    }
+                    if (event && event.target && event.target !== canvasElement) return;
+
+                    const mx = p.mouseX / viewportScale;
+                    const my = p.mouseY / viewportScale;
 
                     const tool = activeToolRef.current;
                     const bodies = Matter.Composite.allBodies(matterEngine.world);
-                    // Use Query.point to find body under mouse, but prefer center-snap visual
-                    const clicked = Matter.Query.point(bodies, { x: p.mouseX, y: p.mouseY })[0];
-
-                    const snap = getSnapPos(clicked, p.mouseX, p.mouseY);
+                    const clicked = Matter.Query.point(bodies, { x: mx, y: my })[0];
+                    const snap = getSnapPos(clicked, mx, my);
 
                     if (tool === 'pin') {
-                        if (clicked && !clicked.isStatic) {
-                            engine.addPin(clicked, snap.x, snap.y);
-                        }
+                        if (clicked && !clicked.isStatic) engine.addPin(clicked, snap.x, snap.y);
                         return;
                     }
 
                     if (tool === 'remove_pin') {
-                        // try to remove pin near mouse
-                        engine.removePinAt(p.mouseX, p.mouseY, 20);
+                        engine.removePinAt(mx, my, 20);
                         return;
                     }
 
                     if (tool === 'remove_constraint') {
-                        engine.removeConstraintsAt(p.mouseX, p.mouseY, 20);
+                        engine.removeConstraintsAt(mx, my, 20);
                         return;
                     }
 
-                    if (tool === 'spring' || tool === 'rod' || tool === 'axle' || tool === 'fuse') {
+                    if (['spring', 'rod', 'axle', 'fuse'].includes(tool as string)) {
                         if (clicked) {
                             if (tool === 'fuse' && constraintStartBody && constraintStartBody !== clicked) {
                                 engine.fuseBodies([constraintStartBody.id, clicked.id]);
                                 constraintStartBody = null;
-                                if (onToolUsedRef.current) setTimeout(onToolUsedRef.current, 0);
                             } else {
                                 constraintStartBody = clicked;
                                 constraintStartPos = snap;
@@ -174,61 +202,38 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                         return;
                     }
 
-                    if (tool && ['box', 'circle', 'triangle', 'polygon', 'wall'].indexOf(tool) !== -1) {
-                        engine.spawnBody(tool as any, {
-                            x: p.mouseX,
-                            y: p.mouseY,
-                            material: activeMaterialRef.current // Use current material
-                        }, spawnSizeRef.current);
+                    if (tool && ['box', 'circle', 'triangle', 'polygon', 'wall'].includes(tool)) {
+                        engine.spawnBody(tool as any, { x: mx, y: my, material: activeMaterialRef.current }, spawnSizeRef.current);
                         if (onToolUsedRef.current) setTimeout(onToolUsedRef.current, 0);
                         return;
                     }
 
                     if (tool === 'explosion') {
-                        const force = 0.5; // Adjustable explosion strength
-                        const activeWalls = activeWallsRef.current; // access if needed?
-                        const radius = 300; // Adjustable explosion radius
-                        engine.applyExplosionForce({ x: p.mouseX, y: p.mouseY }, force, radius);
-
-                        // Visual feedback (One-off particle system or just a shape)
-                        const explosionColor = p.color('#EF4444');
-                        explosionColor.setAlpha(150);
-
-                        // Simple visual: add a temporary object to a drawing list for a few frames
-                        // We can use a property on the p5 instance to store temporary fx
+                        const radius = 300;
+                        engine.applyExplosionForce({ x: mx, y: my }, 0.5, radius);
                         if (!p.fx) p.fx = [];
-                        p.fx.push({
-                            x: p.mouseX,
-                            y: p.mouseY,
-                            radius: 10,
-                            maxRadius: radius,
-                            life: 1.0,
-                            color: explosionColor
-                        });
-
+                        p.fx.push({ x: mx, y: my, radius: 10, maxRadius: radius, life: 1.0, color: '#EF4444' });
                         if (onToolUsedRef.current) setTimeout(onToolUsedRef.current, 0);
                         return;
                     }
 
                     if (tool === 'draw') {
-                        // Start drawing path
-                        draggedBody = null; // Don't drag bodies while drawing
+                        draggedBody = null;
                         return;
                     }
 
                     if (clicked) {
                         if (tool === 'connector') {
                             constraintStartBody = clicked;
-                            constraintStartPos = { x: p.mouseX, y: p.mouseY };
-                            // Do NOT set draggedBody for connector
+                            constraintStartPos = { x: mx, y: my };
                         } else {
-                            if (tool !== 'thruster') {
-                                setTimeout(function () { onSelectBody(clicked.id); }, 0);
+                            if (tool !== 'thruster' && !isMobileRef.current) {
+                                setTimeout(() => onSelectBody(clicked.id), 0);
                             }
                             draggedBody = clicked;
                         }
-                    } else {
-                        setTimeout(function () { onSelectBody(null); }, 0);
+                    } else if (!isMobileRef.current) {
+                        setTimeout(() => onSelectBody(null), 0);
                         draggedBody = null;
                     }
                 };
@@ -236,489 +241,358 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                 p.mouseDragged = function (event: any) {
                     if (event && event.target && event.target !== canvasElement && !draggedBody) return;
 
-                    const activeWalls = activeWallsRef.current; // Unused but available
+                    const mx = p.mouseX / viewportScale;
+                    const my = p.mouseY / viewportScale;
+                    const pmx = p.pmouseX / viewportScale;
+                    const pmy = p.pmouseY / viewportScale;
+
                     const tool = activeToolRef.current;
-                    if (tool === 'spring' || tool === 'rod' || tool === 'axle' || tool === 'pin' || tool === 'explosion') return;
+                    if (['spring', 'rod', 'axle', 'pin', 'explosion'].includes(tool as string)) return;
 
                     if (tool === 'thruster' && draggedBody) {
                         const forceMagnitude = 0.002 * draggedBody.mass;
-                        const angle = Math.atan2(p.mouseY - draggedBody.position.y, p.mouseX - draggedBody.position.x);
-                        const force = {
+                        const angle = Math.atan2(my - draggedBody.position.y, mx - draggedBody.position.x);
+                        Matter.Body.applyForce(draggedBody, draggedBody.position, {
                             x: Math.cos(angle) * forceMagnitude,
                             y: Math.sin(angle) * forceMagnitude
-                        };
-                        Matter.Body.applyForce(draggedBody, draggedBody.position, force);
+                        });
                         return;
                     }
 
                     if (tool === 'draw') {
-                        const dist = Math.hypot(p.mouseX - p.pmouseX, p.mouseY - p.pmouseY);
-                        if (dist > 5) {
-                            if (!p.drawPath) p.drawPath = [];
-                            p.drawPath.push({ x: p.mouseX, y: p.mouseY });
+                        if (!p.drawPath) p.drawPath = [];
+                        if (Math.hypot(mx - pmx, my - pmy) > 5) {
+                            p.drawPath.push({ x: mx, y: my });
                         }
                         return;
                     }
 
-
-
                     if (draggedBody) {
-                        Matter.Body.setPosition(draggedBody, { x: p.mouseX, y: p.mouseY });
-                        Matter.Body.setVelocity(draggedBody, { x: 0, y: 0 });
+                        Matter.Body.setPosition(draggedBody, { x: mx, y: my });
+                        Matter.Body.setVelocity(draggedBody, { x: mx - pmx, y: my - pmy });
                     }
+                };
+
+                p.touchMoved = function (event: any) {
+                    const mx = p.mouseX / viewportScale;
+                    const my = p.mouseY / viewportScale;
+                    const dist = Math.hypot(mx - touchStartPos.x, my - touchStartPos.y);
+                    if (dist > (isMobileRef.current ? 15 : 10)) isTap = false;
+                    p.mouseDragged(event);
+                    return false;
                 };
 
                 p.mouseReleased = function () {
+                    const mx = p.mouseX / viewportScale;
+                    const my = p.mouseY / viewportScale;
                     const tool = activeToolRef.current;
-                    if (tool === 'explosion') return;
 
                     if (tool === 'connector' && constraintStartBody) {
                         const bodies = Matter.Composite.allBodies(matterEngine.world);
-                        const endBody = Matter.Query.point(bodies, { x: p.mouseX, y: p.mouseY })[0];
-
+                        const endBody = Matter.Query.point(bodies, { x: mx, y: my })[0];
                         if (endBody && endBody !== constraintStartBody) {
-                            engine.addConstraint(constraintStartBody, endBody, 'spring',
-                                constraintStartPos!,
-                                { x: p.mouseX, y: p.mouseY }
-                            );
+                            engine.addConstraint(constraintStartBody, endBody, 'spring', constraintStartPos!, { x: mx, y: my });
                         }
-                        constraintStartBody = null;
-                        constraintStartPos = null;
-                        return;
+                        constraintStartBody = null; constraintStartPos = null;
+                    } else if (['spring', 'rod', 'axle'].includes(tool as string) && constraintStartBody && constraintStartPos) {
+                        const bodies = Matter.Composite.allBodies(matterEngine.world);
+                        const released = Matter.Query.region(bodies, {
+                            min: { x: mx - 15, y: my - 15 },
+                            max: { x: mx + 15, y: my + 15 }
+                        })[0];
+                        const snap = getSnapPos(released, mx, my);
+                        if (released && released !== constraintStartBody) {
+                            if (tool === 'axle') engine.addRevoluteJoint(constraintStartBody, released, constraintStartPos, snap);
+                            else engine.addConstraint(constraintStartBody, released, tool as any, constraintStartPos, snap);
+                        } else if (!released) {
+                            if (tool === 'axle') engine.addPin(constraintStartBody, mx, my);
+                            else engine.addConstraint(constraintStartBody, null, tool as any, constraintStartPos, { x: mx, y: my });
+                        }
+                    } else if (tool === 'draw' && p.drawPath && p.drawPath.length > 1) {
+                        const segments: any[] = [];
+                        for (let i = 0; i < p.drawPath.length - 1; i++) {
+                            const p1 = p.drawPath[i], p2 = p.drawPath[i + 1];
+                            const vec = Matter.Vector.sub(p2, p1), dist = Matter.Vector.magnitude(vec);
+                            if (dist < 2) continue;
+                            const mid = Matter.Vector.add(p1, Matter.Vector.mult(vec, 0.5)), angle = Math.atan2(vec.y, vec.x);
+                            segments.push(Matter.Bodies.rectangle(mid.x, mid.y, dist + 2, 10, { isStatic: true, angle, render: { fillStyle: '#444444' } }));
+                        }
+                        if (segments.length > 0) Matter.Composite.add(matterEngine.world, segments);
+                        p.drawPath = [];
                     }
 
-                    if ((tool === 'spring' || tool === 'rod' || tool === 'axle') && constraintStartBody && constraintStartPos) {
+                    if (isMobileRef.current && isTap && (Date.now() - touchStartTime < 500)) {
+                        const now = Date.now();
+                        const timeSinceLastTap = now - lastTapTime;
+
+                        // Use a small region query for better hit detection on touch
                         const bodies = Matter.Composite.allBodies(matterEngine.world);
-                        // Search in a small area (15px) for better hit detection
-                        const hitRadius = 15;
-                        const released = Matter.Query.region(bodies, {
-                            min: { x: p.mouseX - hitRadius, y: p.mouseY - hitRadius },
-                            max: { x: p.mouseX + hitRadius, y: p.mouseY + hitRadius }
+                        const clicked = Matter.Query.region(bodies, {
+                            min: { x: mx - 10, y: my - 10 },
+                            max: { x: mx + 10, y: my + 10 }
                         })[0];
 
-                        const snap = getSnapPos(released, p.mouseX, p.mouseY);
-
-                        if (released && released !== constraintStartBody) {
-                            // Body to Body
-                            if (tool === 'axle') {
-                                engine.addRevoluteJoint(constraintStartBody, released, constraintStartPos, snap);
-                            } else {
-                                engine.addConstraint(constraintStartBody, released, tool as any, constraintStartPos, snap);
-                            }
-                        } else if (!released) {
-                            // Body to World (Pin)
-                            if (tool === 'axle') {
-                                engine.addPin(constraintStartBody, p.mouseX, p.mouseY);
-                            } else {
-                                engine.addConstraint(constraintStartBody, null, tool as any, constraintStartPos, { x: p.mouseX, y: p.mouseY });
-                            }
+                        // Double tap detection (within 500ms)
+                        if (timeSinceLastTap < 500) {
+                            onSelectBody(clicked ? clicked.id : null);
+                            lastTapTime = 0; // Reset
+                        } else {
+                            // Single tap on empty space still deselects
+                            if (!clicked) onSelectBody(null);
+                            lastTapTime = now;
                         }
-                        if (onToolUsedRef.current) setTimeout(onToolUsedRef.current, 0);
                     }
 
-                    if (tool === 'draw' && p.drawPath && p.drawPath.length > 1) {
-                        // Create static body from path using connected rectangles for smoothness
-                        const segments = [];
-                        const thickness = 10;
+                    draggedBody = null; constraintStartBody = null; constraintStartPos = null;
+                };
 
-                        for (let i = 0; i < p.drawPath.length - 1; i++) {
-                            const p1 = p.drawPath[i];
-                            const p2 = p.drawPath[i + 1];
-
-                            const vec = Matter.Vector.sub(p2, p1);
-                            const dist = Matter.Vector.magnitude(vec);
-
-                            // Skip very small segments
-                            if (dist < 2) continue;
-
-                            const mid = Matter.Vector.add(p1, Matter.Vector.mult(vec, 0.5));
-                            const angle = Math.atan2(vec.y, vec.x);
-
-                            // Rectangle connecting the two points
-                            const segment = Matter.Bodies.rectangle(mid.x, mid.y, dist + 2, thickness, { // +2 overlap to prevent cracks
-                                isStatic: true,
-                                angle: angle,
-                                render: { fillStyle: '#444444' },
-                                chamfer: { radius: 2 } // Round corners slightly for even smoother collisions
-                            });
-                            segments.push(segment);
-                        }
-
-                        if (segments.length > 0) Matter.Composite.add(matterEngine.world, segments);
-
-                        p.drawPath = []; // Clear path
-                        if (onToolUsed) setTimeout(onToolUsed, 0);
-                    }
-
-                    draggedBody = null;
-                    constraintStartBody = null;
-                    constraintStartPos = null;
+                p.touchEnded = function (event: any) {
+                    p.mouseReleased(event);
+                    return false;
                 };
 
                 const trailHistory = new Map<number, { x: number, y: number }[]>();
-                const MAX_TRAIL_LENGTH = 60; // Reduced from 200 for FPS boost
+                const MAX_TRAIL_LENGTH = isMobileRef.current ? 20 : 40;
 
                 clearTrailsRef.current = () => {
                     trailHistory.clear();
                 };
 
+                // Helper function for drawing the grid
+                const drawGrid = (p: any) => {
+                    const gridSize = 50;
+                    p.stroke(0, 0, 0, 10); // Very faint grid lines
+                    p.strokeWeight(1);
+
+                    // Vertical lines
+                    for (let x = 0; x <= p.width; x += gridSize) {
+                        p.line(x, 0, x, p.height);
+                        if (x % 100 === 0) {
+                            p.noStroke();
+                            p.fill(0, 0, 0, 30);
+                            p.textSize(8);
+                            p.text(x, x + 2, 10);
+                            p.stroke(0, 0, 0, 10);
+                        }
+                    }
+
+                    // Horizontal lines
+                    for (let y = 0; y <= p.height; y += gridSize) {
+                        p.line(0, y, p.width, y);
+                        if (y % 100 === 0) {
+                            p.noStroke();
+                            p.fill(0, 0, 0, 30);
+                            p.textSize(8);
+                            p.text(y, 2, y - 2);
+                            p.stroke(0, 0, 0, 10);
+                        }
+                    }
+
+                    // Draw Mouse Coordinates (scaled)
+                    const smx = p.mouseX / viewportScale;
+                    const smy = p.mouseY / viewportScale;
+                    p.noStroke();
+                    p.fill('#6366f1');
+                    p.rect(smx + 10, smy + 10, 80, 20, 4);
+                    p.fill('white');
+                    p.textSize(10);
+                    p.textAlign(p.LEFT, p.CENTER);
+                    p.text(`x: ${Math.round(smx)}, y: ${Math.round(smy)}`, smx + 15, smy + 20);
+                    p.textAlign(p.LEFT, p.BASELINE); // Reset alignment
+                };
+
                 p.draw = function () {
                     if (!pausedRef.current && matterEngine) {
-                        // Resiliency: Handle potential NaN or huge delta on resume
+                        // Dynamic performance: if currentFixedDelta is high (30Hz), we might want to do something, 
+                        // but Matter Engine update is already handled in the loop.
+                        // Render at whatever FPS we can, but simulation is fixed.
+
                         let rawDt = p.deltaTime;
                         if (typeof rawDt !== 'number' || isNaN(rawDt)) rawDt = 16.666;
-
-                        // Clamp to maximum 50ms (approx 3 frames) to prevent instability
                         const dt = Math.min(rawDt, 50);
 
                         engine.update(dt);
-
-                        // Update trail history
-                        const bodies = Matter.Composite.allBodies(matterEngine.world);
-                        bodies.forEach(function (body: any) {
-                            const shouldTrail = !body.isStatic &&
-                                body.label !== 'ground' &&
-                                (body.plugin?.showTrail !== false);
-
-                            if (shouldTrail) {
-                                if (!trailHistory.has(body.id)) trailHistory.set(body.id, []);
-                                const history = trailHistory.get(body.id);
-                                if (history) {
-                                    history.push({ x: body.position.x, y: body.position.y });
-                                    if (history.length > MAX_TRAIL_LENGTH) history.shift();
-                                }
-                            }
-                        });
                     }
 
                     p.background(bgColorRef.current);
 
-                    // Draw Grid if enabled
+                    // Apply viewport scaling
+                    p.push();
+                    p.scale(viewportScale);
+
                     if (showGridRef.current) {
-                        const gridSize = 50;
-                        p.stroke(0, 0, 0, 10); // Very faint grid lines
-                        p.strokeWeight(1);
-
-                        // Vertical lines
-                        for (let x = 0; x <= p.width; x += gridSize) {
-                            p.line(x, 0, x, p.height);
-                            if (x % 100 === 0) {
-                                p.noStroke();
-                                p.fill(0, 0, 0, 30);
-                                p.textSize(8);
-                                p.text(x, x + 2, 10);
-                                p.stroke(0, 0, 0, 10);
-                            }
-                        }
-
-                        // Horizontal lines
-                        for (let y = 0; y <= p.height; y += gridSize) {
-                            p.line(0, y, p.width, y);
-                            if (y % 100 === 0) {
-                                p.noStroke();
-                                p.fill(0, 0, 0, 30);
-                                p.textSize(8);
-                                p.text(y, 2, y - 2);
-                                p.stroke(0, 0, 0, 10);
-                            }
-                        }
-
-                        // Draw Mouse Coordinates
-                        p.noStroke();
-                        p.fill('#6366f1');
-                        p.rect(p.mouseX + 10, p.mouseY + 10, 80, 20, 4);
-                        p.fill('white');
-                        p.textSize(10);
-                        p.textAlign(p.LEFT, p.CENTER);
-                        p.text(`x: ${Math.round(p.mouseX)}, y: ${Math.round(p.mouseY)}`, p.mouseX + 15, p.mouseY + 20);
-                        p.textAlign(p.LEFT, p.BASELINE); // Reset alignment
+                        drawGrid(p);
                     }
 
-                    // Draw Trails
-                    trailHistory.forEach((history, bodyId) => {
-                        const body = engine.getBodyById(bodyId);
-                        if (!body) return;
+                    // Optimization: Skip complex trails in low power mode
+                    if (!lowPowerModeRef.current) {
+                        trailHistory.forEach((history, bodyId) => {
+                            const body = engine.getBodyById(bodyId);
+                            if (!body) return;
 
-                        const colorStr = (body.render && body.render.fillStyle) || '#E8E8E8';
-                        const baseColor = p.color(colorStr);
+                            const colorStr = (body.render && body.render.fillStyle) || '#E8E8E8';
+                            const baseColor = p.color(colorStr);
 
-                        // Draw segments for gradient effect
-                        p.noFill();
-
-                        // Performance: Skip rendering if history is too short
-                        if (history.length < 3) return;
-
-                        for (let i = 0; i < history.length - 1; i += 2) { // Skip every other segment for performance
-                            const pos1 = history[i];
-                            const pos2 = history[i + 1];
-
-                            const progress = i / history.length;
-                            const alpha = p.map(progress, 0, 1, 0, 100);
-                            const weight = p.map(progress, 0, 1, 0.5, 3);
-
-                            p.stroke(baseColor.levels[0], baseColor.levels[1], baseColor.levels[2], alpha);
-                            p.strokeWeight(weight);
-                            p.line(pos1.x, pos1.y, pos2.x, pos2.y);
-                        }
-                    });
+                            p.noFill();
+                            p.stroke(p.red(baseColor), p.green(baseColor), p.blue(baseColor), 100);
+                            p.strokeWeight(2);
+                            p.beginShape();
+                            history.forEach(pos => p.vertex(pos.x, pos.y));
+                            p.endShape();
+                        });
+                    }
 
                     // 1. Draw Bodies
                     const bodies = Matter.Composite.allBodies(matterEngine.world);
                     p.noStroke();
                     bodies.forEach(function (body: any) {
-                        // Only draw top-level bodies (renderer will handle parts if compound)
-                        if (body.parent !== body) return;
-
-                        const partsToDraw = body.parts.length > 1 ? body.parts.slice(1) : [body];
-
-                        partsToDraw.forEach((part: any) => {
-                            p.fill((part.render && part.render.fillStyle) || (body.render && body.render.fillStyle) || '#E8E8E8');
-                            p.beginShape();
-                            part.vertices.forEach(function (v: any) { p.vertex(v.x, v.y); });
-                            p.endShape(p.CLOSE);
-                        });
-
-                        if (selectedBodyIdRef.current === body.id) {
-                            // Pulsing Selection Glow
-                            const pulse = (Math.sin(p.frameCount * 0.1) * 0.5 + 0.5); // 0 to 1
-                            const glowAlpha = 50 + pulse * 100;
-                            const glowSize = 4 + pulse * 6;
-
-                            p.stroke(99, 102, 241, glowAlpha);
-                            p.strokeWeight(glowSize);
-                            p.noFill();
-                            p.beginShape();
-                            body.vertices.forEach(function (v: any) { p.vertex(v.x, v.y); });
-                            p.endShape(p.CLOSE);
-
-                            // Core selection outline
-                            p.stroke('#6366f1');
-                            p.strokeWeight(2);
-                            p.beginShape();
-                            body.vertices.forEach(function (v: any) { p.vertex(v.x, v.y); });
-                            p.endShape(p.CLOSE);
-                            p.noStroke();
+                        // Only update trails if not in low power mode
+                        if (!lowPowerModeRef.current && !pausedRef.current && !body.isStatic && body.speed > 0.1) {
+                            if (!trailHistory.has(body.id)) trailHistory.set(body.id, []);
+                            const history = trailHistory.get(body.id)!;
+                            history.push({ x: body.position.x, y: body.position.y });
+                            if (history.length > MAX_TRAIL_LENGTH) history.shift();
                         }
 
-                        if (showVectorsRef.current && !body.isStatic) {
-                            const position = body.position;
-                            const velocity = body.velocity;
-                            if (Math.abs(velocity.x) > 0.1 || Math.abs(velocity.y) > 0.1) {
-                                p.stroke('#58C4DD');
+                        // Drawing body
+                        const fillColor = (body.render && body.render.fillStyle) || '#E8E8E8';
+                        p.fill(fillColor);
+
+                        p.beginShape();
+                        body.vertices.forEach(function (v: any) { p.vertex(v.x, v.y); });
+                        p.endShape(p.CLOSE);
+
+                        // Selection highlight
+                        if (selectedBodyIdRef.current === body.id) {
+                            if (lowPowerModeRef.current) {
+                                // Simple selection for low power
+                                p.stroke('#6366f1');
                                 p.strokeWeight(2);
-                                p.line(position.x, position.y, position.x + velocity.x * 5, position.y + velocity.y * 5);
+                                p.noFill();
+                                p.beginShape();
+                                body.vertices.forEach(function (v: any) { p.vertex(v.x, v.y); });
+                                p.endShape(p.CLOSE);
+                                p.noStroke();
+                            } else {
+                                // Pulsing Glow
+                                const pulse = (Math.sin(p.frameCount * 0.1) * 0.5 + 0.5);
+                                p.stroke(99, 102, 241, 50 + pulse * 100);
+                                p.strokeWeight(4 + pulse * 6);
+                                p.noFill();
+                                p.beginShape();
+                                body.vertices.forEach(function (v: any) { p.vertex(v.x, v.y); });
+                                p.endShape(p.CLOSE);
+
+                                p.stroke('#6366f1');
+                                p.strokeWeight(2);
+                                p.beginShape();
+                                body.vertices.forEach(function (v: any) { p.vertex(v.x, v.y); });
+                                p.endShape(p.CLOSE);
                                 p.noStroke();
                             }
                         }
 
-                        // Visualize Thruster
+                        // Velocity Vectors
+                        if (showVectorsRef.current && !body.isStatic && body.speed > 0.1) {
+                            p.stroke('#58C4DD');
+                            p.strokeWeight(1.5);
+                            p.line(body.position.x, body.position.y,
+                                body.position.x + body.velocity.x * 5,
+                                body.position.y + body.velocity.y * 5);
+                            p.noStroke();
+                        }
+
+                        // Thruster Visual
                         if (activeToolRef.current === 'thruster' && draggedBody === body && p.mouseIsPressed) {
+                            const smx = p.mouseX / viewportScale;
+                            const smy = p.mouseY / viewportScale;
                             p.stroke('#F59E0B');
-                            p.strokeWeight(4);
-                            p.line(body.position.x, body.position.y, p.mouseX, p.mouseY);
+                            p.strokeWeight(3);
+                            p.line(body.position.x, body.position.y, smx, smy);
                             p.noStroke();
                             p.fill('#F59E0B');
-                            p.circle(p.mouseX, p.mouseY, 6);
+                            p.circle(smx, smy, 5);
                         }
                     });
 
-                    // 2. Draw Constraints (Visible on top of bodies)
+                    // 2. Draw Constraints
                     const constraints = Matter.Composite.allConstraints(matterEngine.world);
                     constraints.forEach(function (c: any) {
                         if (c.label === "Mouse Constraint") return;
-                        const bodyA = c.bodyA;
-                        const bodyB = c.bodyB;
 
-                        const Vector = Matter.Vector;
-
-                        let startX, startY, endX, endY;
-
-                        if (bodyA) {
-                            const worldPointA = Vector.rotate(c.pointA, bodyA.angle);
-                            startX = bodyA.position.x + worldPointA.x;
-                            startY = bodyA.position.y + worldPointA.y;
-                        } else {
-                            startX = c.pointA.x;
-                            startY = c.pointA.y;
-                        }
-
-                        if (bodyB) {
-                            const worldPointB = Vector.rotate(c.pointB, bodyB.angle);
-                            endX = bodyB.position.x + worldPointB.x;
-                            endY = bodyB.position.y + worldPointB.y;
-                        } else {
-                            endX = c.pointB.x;
-                            endY = c.pointB.y;
-                        }
+                        const posA = c.bodyA ? Matter.Vector.add(c.bodyA.position, c.pointA) : c.pointA;
+                        const posB = c.bodyB ? Matter.Vector.add(c.bodyB.position, c.pointB) : c.pointB;
 
                         p.stroke((c.render && c.render.strokeStyle) || '#999');
-                        p.strokeWeight((c.render && c.render.lineWidth) || 2);
+                        const weight = (c.render && c.render.lineWidth) || 2;
+                        p.strokeWeight(weight);
 
-                        if (c.render && c.render.type === 'spring') {
-                            const steps = 14;
-                            p.noFill();
-                            p.beginShape();
-                            p.vertex(startX, startY);
-
-                            const dx = endX - startX;
-                            const dy = endY - startY;
-                            const len = Math.sqrt(dx * dx + dy * dy) || 1;
+                        if (!lowPowerModeRef.current && c.render && c.render.type === 'spring') {
+                            // Coiled spring look
+                            const dx = posB.x - posA.x;
+                            const dy = posB.y - posA.y;
+                            const len = Math.hypot(dx, dy) || 1;
+                            const steps = 12;
                             const nx = -dy / len;
                             const ny = dx / len;
 
+                            p.noFill();
+                            p.beginShape();
+                            p.vertex(posA.x, posA.y);
                             for (let i = 1; i < steps; i++) {
                                 const t = i / steps;
-                                const px = startX + dx * t;
-                                const py = startY + dy * t;
-                                const amplitude = 6;
-                                const offset = (i % 2 === 0 ? 1 : -1) * amplitude;
+                                const px = posA.x + dx * t;
+                                const py = posA.y + dy * t;
+                                const offset = (i % 2 === 0 ? 1 : -1) * 5;
                                 p.vertex(px + nx * offset, py + ny * offset);
                             }
-                            p.vertex(endX, endY);
+                            p.vertex(posB.x, posB.y);
                             p.endShape();
                         } else {
-                            // Rod / Solid Link Look
-                            p.strokeWeight((c.render && c.render.lineWidth) || 4);
-                            p.stroke((c.render && c.render.strokeStyle) || '#6366F1');
-                            p.line(startX, startY, endX, endY);
-
-                            // Add a shine/highlight for a solid 3D feel
-                            p.strokeWeight(1.5);
-                            p.stroke(255, 255, 255, 100);
-                            p.line(startX, startY, endX, endY);
+                            // Simple line for low power or rigid
+                            p.line(posA.x, posA.y, posB.x, posB.y);
                         }
 
-                        p.noStroke();
-                        // Draw attachment points
+                        // Attachment points (Pins)
                         if (c.render && c.render.strokeStyle === '#EF4444') {
-                            // Pin Look: Draw a bolt head
-                            p.fill('#475569'); // Dark slate
-                            p.circle(startX, startY, 10);
-                            p.fill('#94A3B8'); // Metal
-                            p.circle(startX, startY, 6);
-                            p.fill('#CBD5E1'); // Highlight
-                            p.circle(startX - 1, startY - 1, 2);
-                        } else {
-                            p.fill((c.render && c.render.strokeStyle) || '#999');
-                            p.circle(startX, startY, 4);
-                            p.circle(endX, endY, 4);
+                            p.fill('#475569');
+                            p.circle(posA.x, posA.y, 8);
+                            p.fill('#94A3B8');
+                            p.circle(posA.x, posA.y, 4);
                         }
                     });
 
-                    // 3. Draw Drag Line
+                    // 3. Draw Interaction Tools
                     if (constraintStartPos) {
-                        const tool = activeToolRef.current;
-                        const isLinkTool = tool === 'spring' || tool === 'connector';
-                        p.stroke(isLinkTool ? '#F59E0B' : (tool === 'rod' ? '#6366F1' : '#EF4444'));
+                        const smx = p.mouseX / viewportScale;
+                        const smy = p.mouseY / viewportScale;
+                        p.stroke('#F59E0B');
                         p.strokeWeight(2);
-                        p.drawingContext.setLineDash([5, 5]);
-                        p.line(constraintStartPos.x, constraintStartPos ? constraintStartPos.y : p.mouseY, p.mouseX, p.mouseY);
-                        p.drawingContext.setLineDash([]);
-
+                        p.line(constraintStartPos.x, constraintStartPos.y, smx, smy);
                         p.noStroke();
-                        p.fill(isLinkTool ? '#F59E0B' : (tool === 'rod' ? '#6366F1' : '#EF4444'));
-                        p.circle(p.mouseX, p.mouseY, 6);
+                        p.fill('#F59E0B');
+                        p.circle(smx, smy, 5);
                     }
 
-                    // Draw current pencil path
-                    if (activeToolRef.current === 'draw' && (p as any).drawPath && (p as any).drawPath.length > 0) {
-                        p.noFill();
-                        p.stroke('#444444');
-                        p.strokeWeight(10);
-                        if (p.strokeCap) p.strokeCap('round');
-                        if (p.strokeJoin) p.strokeJoin('round');
-                        p.beginShape();
-                        (p as any).drawPath.forEach((pt: any) => p.vertex(pt.x, pt.y));
-                        p.endShape();
-
-                        // Add current mouse pos
-                        const path = (p as any).drawPath;
-                        p.line(path[path.length - 1].x, path[path.length - 1].y, p.mouseX, p.mouseY);
-                    }
-
-                    // 4. Draw FX (Explosions, etc.)
+                    // 4. Draw FX
                     if ((p as any).fx && (p as any).fx.length > 0) {
                         const fxList = (p as any).fx;
                         for (let i = fxList.length - 1; i >= 0; i--) {
                             const fx = fxList[i];
-                            fx.life -= 0.05; // Fade out speed
-                            if (fx.life <= 0) {
-                                fxList.splice(i, 1);
-                                continue;
-                            }
-
-                            // Expand effect
-                            fx.radius += (fx.maxRadius - fx.radius) * 0.15;
-
-                            p.noFill();
-                            // Clone color to avoid mutating the original object if it was shared? 
-                            // properly working with p5 color
-                            const c = p.color(fx.color);
-                            c.setAlpha(p.map(fx.life, 0, 1, 0, 200));
-                            p.stroke(c);
-                            p.strokeWeight(Math.max(1, 10 * fx.life));
-                            p.circle(fx.x, fx.y, fx.radius * 2);
-                        }
-                    }
-
-                    // Visualize Snap Centers for Constraint Tools
-                    const tool = activeToolRef.current;
-                    if (tool === 'spring' || tool === 'rod' || tool === 'pin') {
-                        const bodies = Matter.Composite.allBodies(matterEngine.world);
-                        const snapDist = 20;
-                        bodies.forEach((body: any) => {
-                            if (body.label === 'ground' || body.label === 'World Boundary') return;
-
-                            const px = body.position.x;
-                            const py = body.position.y;
-
-                            // Check distance to mouse
-                            const d = Math.hypot(p.mouseX - px, p.mouseY - py);
-                            const isHover = d < snapDist;
-
-                            p.stroke(isHover ? '#EF4444' : 'rgba(100, 100, 100, 0.5)'); // Red if hover, faint grey otherwise
-                            p.strokeWeight(isHover ? 3 : 1);
-
-                            // Draw Crosshair
-                            const size = isHover ? 8 : 5;
-                            p.line(px - size, py, px + size, py);
-                            p.line(px, py - size, px, py + size);
-
-                            if (isHover) {
-                                p.noFill();
-                                p.stroke('#EF4444');
-                                p.circle(px, py, snapDist * 2);
-                            }
-                        });
-                    }
-
-                    // Render FX
-                    if ((p as any).fx && (p as any).fx.length > 0) {
-                        for (let i = (p as any).fx.length - 1; i >= 0; i--) {
-                            const fx = (p as any).fx[i];
-
-                            p.noFill();
-                            p.stroke(fx.color);
-                            p.strokeWeight(3 * fx.life);
-                            p.circle(fx.x, fx.y, fx.radius);
+                            fx.life -= 0.05;
+                            if (fx.life <= 0) { fxList.splice(i, 1); continue; }
 
                             fx.radius += (fx.maxRadius - fx.radius) * 0.1;
-                            fx.life -= 0.05;
-
-                            if (fx.life <= 0) {
-                                (p as any).fx.splice(i, 1);
-                            }
+                            const c = p.color(fx.color || '#EF4444');
+                            c.setAlpha(fx.life * 150);
+                            p.noFill();
+                            p.stroke(c);
+                            p.strokeWeight(1 + fx.life * 5);
+                            p.circle(fx.x, fx.y, fx.radius);
                         }
                     }
-                };
 
-                p.windowResized = function () {
-                    if (containerRef.current) {
-                        const w = containerRef.current.clientWidth;
-                        const h = containerRef.current.clientHeight;
-                        p.resizeCanvas(w, h);
-                        engine.addWorldBounds(w, h, 2000, activeWallsRef.current);
-                    }
+                    p.pop(); // End viewport scale
                 };
             };
 
@@ -740,8 +614,10 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                 const w = containerRef.current!.clientWidth;
                 const h = containerRef.current!.clientHeight;
                 p.resizeCanvas(w, h);
+
+                const viewportScale = isMobileRef.current ? 0.75 : 1.0;
                 // Use activeWalls directly from closure (dependancy updated) rather than ref to avoid race condition
-                engine.addWorldBounds(w, h, 2000, activeWalls);
+                engine.addWorldBounds(w / viewportScale, h / viewportScale, 2000, activeWalls);
             };
 
             // Immediate resize

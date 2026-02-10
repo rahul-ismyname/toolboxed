@@ -110,6 +110,9 @@ export class LogicEngine {
                 : bodies;
 
             targetBodies.forEach(body => {
+                // Optimization: skip logic for sleeping bodies to save CPU
+                if (body.isSleeping) return;
+
                 // 1. Evaluate Condition
                 let checkPassed = false;
                 let propValue = 0;

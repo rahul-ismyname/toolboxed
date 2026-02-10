@@ -9,6 +9,7 @@ interface UseMatterEngineOptions {
     substeps?: number;
     fixedDelta?: number;
     timeScale?: number;
+    useHaptics?: boolean;
 }
 
 export interface MatterEngineAPI {
@@ -92,6 +93,11 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
     const vacuumModeRef = useRef(false);
     const activeKeysRef = useRef<Set<string>>(new Set());
     const logicEngineRef = useRef<LogicEngine>(new LogicEngine());
+    const useHapticsRef = useRef(options.useHaptics ?? false);
+
+    useEffect(() => {
+        useHapticsRef.current = options.useHaptics ?? false;
+    }, [options.useHaptics]);
 
     const initEngine = useCallback(async () => {
         const MatterModule = await import('matter-js');
@@ -100,8 +106,8 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
 
         const engine = Matter.Engine.create({
             enableSleeping: options.enableSleeping ?? true,
-            positionIterations: 12, // Reduced for performance (was 30)
-            velocityIterations: 12  // Reduced for performance (was 30)
+            positionIterations: 6, // Reduced for mobile (was 8, previously 12/30)
+            velocityIterations: 6  // Reduced for mobile (was 8, previously 12/30)
         });
         if (typeof options.gravity === 'object' && options.gravity !== null) {
             engine.gravity.x = options.gravity.x;
@@ -129,6 +135,20 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         Matter.Events.on(engine, 'collisionStart', (event: any) => {
             if (logicEngineRef.current) {
                 logicEngineRef.current.handleCollisions(Matter, engine, event.pairs, spawnBody, applyExplosionForce);
+            }
+
+            // Haptic feedback on significant collisions
+            if (useHapticsRef.current && typeof navigator !== 'undefined' && navigator.vibrate) {
+                const pairs = event.pairs;
+                const totalImpact = pairs.reduce((acc: number, pair: any) => {
+                    const velocity = Matter.Vector.magnitude(pair.collision.parentA.velocity);
+                    return acc + velocity;
+                }, 0);
+
+                if (totalImpact > 2) {
+                    const intensity = Math.min(Math.floor(totalImpact * 5), 30);
+                    navigator.vibrate(intensity);
+                }
             }
         });
 
@@ -160,10 +180,34 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         template.setup(MatterRef.current, engineRef.current);
     }, []);
 
+    const lastDeltasRef = useRef<number[]>([]);
+    const currentFixedDeltaRef = useRef(fixedDelta);
+
     const update = useCallback((delta: number) => {
         if (!engineRef.current || !MatterRef.current) return;
         const Matter = MatterRef.current;
         const engine = engineRef.current;
+
+        // Dynamic performance adjustment
+        lastDeltasRef.current.push(delta);
+        if (lastDeltasRef.current.length > 60) {
+            lastDeltasRef.current.shift();
+            const avgDelta = lastDeltasRef.current.reduce((a, b) => a + b, 0) / 60;
+
+            // If average frame time is > 25ms (less than 40fps), drop physics to 30Hz
+            if (avgDelta > 25 && currentFixedDeltaRef.current < 30) {
+                currentFixedDeltaRef.current = 1000 / 30; // 30Hz simulation
+                engine.positionIterations = 4;
+                engine.velocityIterations = 4;
+            } else if (avgDelta < 18 && currentFixedDeltaRef.current > 17) {
+                // If performance is good, restore 60Hz
+                currentFixedDeltaRef.current = 1000 / 60;
+                engine.positionIterations = 6;
+                engine.velocityIterations = 6;
+            }
+        }
+
+        const activeFixedDelta = currentFixedDeltaRef.current;
 
         // Apply time scaling
         const scaledDelta = delta * timeScaleRef.current;
@@ -172,19 +216,18 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         if (!Number.isFinite(accumulatorRef.current)) accumulatorRef.current = 0;
         accumulatorRef.current += Math.min(scaledDelta, 100); // Cap delta to avoid "spiral of death"
 
-        while (accumulatorRef.current >= fixedDelta) {
-            // Logic Engine Step
+        while (accumulatorRef.current >= activeFixedDelta) {
             // Logic Engine Step
             if (logicEngineRef.current && engineRef.current) {
                 const bodies = Matter.Composite.allBodies(engineRef.current.world);
                 logicEngineRef.current.update(Matter, engineRef.current, bodies, activeKeysRef.current, spawnBody, applyExplosionForce);
             }
 
-            const subDelta = fixedDelta / substepsRef.current;
+            const subDelta = activeFixedDelta / substepsRef.current;
             for (let i = 0; i < substepsRef.current; i++) {
                 Matter.Engine.update(engine, subDelta);
             }
-            accumulatorRef.current -= fixedDelta;
+            accumulatorRef.current -= activeFixedDelta;
         }
     }, [fixedDelta]);
 
@@ -272,6 +315,11 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
                 MatterRef.current.Body.applyForce(body, body.position, forceVector);
             }
         });
+
+        // Haptic feedback for explosion
+        if (useHapticsRef.current && typeof navigator !== 'undefined' && navigator.vibrate) {
+            navigator.vibrate([40, 30, 60]); // Double thump
+        }
     }, []);
 
     const getBodyById = useCallback((id: number) => {

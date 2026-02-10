@@ -15,10 +15,15 @@ interface BottomDockProps {
     multiSpawnMode: boolean;
     onMultiSpawnModeChange: (enabled: boolean) => void;
     pendingReset?: boolean;
+    isMobile?: boolean;
 }
 
-function Tooltip({ children, content, shortcut }: { children: React.ReactNode, content: string, shortcut?: string }) {
+function Tooltip({ children, content, shortcut, isMobile }: { children: React.ReactNode, content: string, shortcut?: string, isMobile?: boolean }) {
     const [isVisible, setIsVisible] = useState(false);
+
+    // Disable tooltips on mobile because they obscure the UI when tapped
+    if (isMobile) return <>{children}</>;
+
     return (
         <div className="relative" onMouseEnter={() => setIsVisible(true)} onMouseLeave={() => setIsVisible(false)}>
             {children}
@@ -54,7 +59,8 @@ export function BottomDock({
     onSelectMaterial,
     multiSpawnMode,
     onMultiSpawnModeChange,
-    pendingReset
+    pendingReset,
+    isMobile
 }: BottomDockProps) {
     const [spawnSize, setSpawnSize] = useState(30);
     const [showMaterials, setShowMaterials] = useState(false);
@@ -122,7 +128,7 @@ export function BottomDock({
             drag
             dragMomentum={false}
             dragElastic={0}
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-auto cursor-grab active:cursor-grabbing"
+            className={`absolute ${isMobile ? 'bottom-2' : 'bottom-6'} left-1/2 -translate-x-1/2 z-40 pointer-events-auto cursor-grab active:cursor-grabbing`}
         >
             <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-white/20 p-2 rounded-3xl shadow-2xl flex items-center gap-2">
                 {/* Drag Handle */}
@@ -131,7 +137,7 @@ export function BottomDock({
                 </div>
 
                 {/* Main Controls (Play/Pause) */}
-                <Tooltip content={paused ? "Resume Simulation" : "Pause Simulation"} shortcut="Space">
+                <Tooltip isMobile={isMobile} content={paused ? "Resume Simulation" : "Pause Simulation"} shortcut="Space">
                     <button
                         type="button"
                         onClick={() => onPausedChange(!paused)}
@@ -155,7 +161,7 @@ export function BottomDock({
 
                         return (
                             <div key={key} className="relative">
-                                <Tooltip content={activeToolInGroup ? activeToolInGroup.label : group.label} shortcut={activeToolInGroup?.type.slice(0, 1)}>
+                                <Tooltip isMobile={isMobile} content={activeToolInGroup ? activeToolInGroup.label : group.label} shortcut={activeToolInGroup?.type.slice(0, 1)}>
                                     <button
                                         onClick={() => setActiveGroup(activeGroup === key ? null : key)}
                                         className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95 relative ${isActive
@@ -210,7 +216,7 @@ export function BottomDock({
 
                 {/* Utils Popover trigger */}
                 <div className="relative">
-                    <Tooltip content="Reset & Utilities">
+                    <Tooltip isMobile={isMobile} content="Reset & Utilities">
                         <button
                             onClick={() => setActiveGroup(activeGroup === 'utils' ? null : 'utils')}
                             className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95 ${activeGroup === 'utils'
@@ -234,7 +240,7 @@ export function BottomDock({
 
                                 {/* Reset & Clear */}
                                 <div className="grid grid-cols-2 gap-2">
-                                    <Tooltip content={pendingReset ? "Click to Confirm" : "Clear Simulation"} shortcut="R">
+                                    <Tooltip isMobile={isMobile} content={pendingReset ? "Click to Confirm" : "Clear Simulation"} shortcut="R">
                                         <button
                                             onClick={onReset}
                                             className={`w-full flex items-center justify-center gap-2 p-2 rounded-xl transition-all font-bold text-[10px] ${pendingReset
@@ -246,7 +252,7 @@ export function BottomDock({
                                             {pendingReset ? 'Confirm?' : 'Reset'}
                                         </button>
                                     </Tooltip>
-                                    <Tooltip content="Cleanup Trails">
+                                    <Tooltip isMobile={isMobile} content="Cleanup Trails">
                                         <button
                                             onClick={onClearTrails}
                                             className="w-full flex items-center justify-center gap-2 p-2 rounded-xl bg-slate-500/10 text-slate-500 hover:bg-slate-500/20 transition-all font-bold text-[10px]"
