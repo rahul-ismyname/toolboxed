@@ -52,6 +52,7 @@ export interface MatterEngineAPI {
     updateRule: (id: string, updates: Partial<LogicRule>) => void;
     getAllRules: () => LogicRule[];
     addRawConstraint: (options: any) => any;
+    addRope: (startPoint: { x: number, y: number }, endPoint: { x: number, y: number }, segments?: number, options?: any) => void;
 }
 
 export interface ActiveWalls {
@@ -587,6 +588,79 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         Composite.add(engineRef.current.world, constraint);
     }, []);
 
+    const addRope = useCallback((startPoint: { x: number, y: number }, endPoint: { x: number, y: number }, segments: number = 8, options?: any) => {
+        if (!engineRef.current || !MatterRef.current) return;
+        const { Bodies, Composite, Constraint } = MatterRef.current;
+        const world = engineRef.current.world;
+
+        const dx = endPoint.x - startPoint.x;
+        const dy = endPoint.y - startPoint.y;
+        const length = Math.hypot(dx, dy);
+
+        if (length < 10) return; // Too short
+
+        const segmentLength = length / segments;
+        const segmentWidth = Math.min(20, segmentLength * 0.5);
+
+        const angle = Math.atan2(dy, dx);
+
+        const group = MatterRef.current.Body.nextGroup(true);
+        const bodies: any[] = [];
+
+        // Create segments
+        for (let i = 0; i < segments; i++) {
+            const t = (i + 0.5) / segments;
+            const x = startPoint.x + dx * t;
+            const y = startPoint.y + dy * t;
+
+            const body = Bodies.rectangle(x, y, segmentLength, segmentWidth, {
+                collisionFilter: { group },
+                frictionAir: 0.05,
+                density: 0.01,
+                render: { fillStyle: '#D97706' }, // Amber
+                angle: angle
+            });
+            bodies.push(body);
+        }
+
+        Composite.add(world, bodies);
+
+        // Link segments
+        for (let i = 0; i < bodies.length - 1; i++) {
+            const bodyA = bodies[i];
+            const bodyB = bodies[i + 1];
+
+            // Calculate relative points for ends of segments
+            const constraint = Constraint.create({
+                bodyA,
+                bodyB,
+                pointA: { x: segmentLength / 2, y: 0 },
+                pointB: { x: -segmentLength / 2, y: 0 },
+                stiffness: 0.8,
+                length: 2,
+                render: { strokeStyle: '#B45309', lineWidth: 2 }
+            });
+            Composite.add(world, constraint);
+        }
+
+        // Attach start if clicked on a body? (Handled by caller or we can do it here if we pass bodies)
+        // For now, pin the first link to the start point using a constraint
+        const startConstraint = Constraint.create({
+            bodyB: bodies[0],
+            pointB: { x: -segmentLength / 2, y: 0 },
+            pointA: startPoint,
+            stiffness: 0.8,
+            length: 0,
+            render: { visible: true, strokeStyle: '#B45309', lineWidth: 2 }
+        });
+        Composite.add(world, startConstraint);
+
+        // Pin end? usually ropes dangle unless connected. 
+        // If the user dragged to a specific point, maybe they want it pinned there?
+        // Let's decide: if they drag to empty space, it hangs. If they drag to a body, it attaches (handled in UI).
+
+    }, []);
+
     const getAllConstraints = useCallback(() => {
         if (!engineRef.current || !MatterRef.current) return [];
         return MatterRef.current.Composite.allConstraints(engineRef.current.world);
@@ -1065,6 +1139,7 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
         updateRule,
         clearBodyRules,
         getAllRules,
+        addRope,
         addRawConstraint: (options: any) => {
             if (!engineRef.current || !MatterRef.current) return null;
             const { Constraint, Composite } = MatterRef.current;
@@ -1072,5 +1147,5 @@ export function useMatterEngine(options: UseMatterEngineOptions = {}): MatterEng
             Composite.add(engineRef.current.world, constraint);
             return constraint;
         }
-    }), [initEngine, loadTemplate, update, spawnBody, getBodyById, updateBody, deleteBody, setGravity, setTimeScale, setSubsteps, setSleeping, addWorldBounds, getAllBodies, addConstraint, addPin, addRevoluteJoint, getAllConstraints, serializeWorld, loadWorld, isReady, applyExplosionForce, setGravityFromVector, setVacuumMode, clearAllConstraints, freezeAllBodies, removeBodyPins, removePinAt, addRule, removeRule, updateRule, clearBodyRules, getAllRules]);
+    }), [initEngine, loadTemplate, update, spawnBody, getBodyById, updateBody, deleteBody, setGravity, setTimeScale, setSubsteps, setSleeping, addWorldBounds, getAllBodies, addConstraint, addPin, addRevoluteJoint, getAllConstraints, serializeWorld, loadWorld, isReady, applyExplosionForce, setGravityFromVector, setVacuumMode, clearAllConstraints, freezeAllBodies, removeBodyPins, removePinAt, addRule, removeRule, updateRule, clearBodyRules, getAllRules, addRope]);
 }

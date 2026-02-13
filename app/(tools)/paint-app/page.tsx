@@ -1,8 +1,7 @@
 import { DynamicPaintApp } from '@/components/tools/DynamicTools';
-import { TitleSection } from '@/components/shared/TitleSection';
-import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
+import { ToolShell } from '@/components/layout/ToolShell';
 
 export const metadata: Metadata = {
     title: 'Paint App | Free Online Drawing Tool',
@@ -15,18 +14,13 @@ export const metadata: Metadata = {
 
 export default function PaintPage() {
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 transition-colors duration-300">
-            <BackButton />
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-12">
-                <TitleSection
-                    title="Paint App"
-                    description="Create masterpiece directly in your browser."
-                />
-
+        <ToolShell toolId="paint-app" fullWidth noPadding>
+            <div className="h-[calc(100vh-64px)] p-4">
                 <DynamicPaintApp />
             </div>
-
-            <ToolContent slug="paint-app" />
-        </div>
+            <div className="p-8">
+                <ToolContent slug="paint-app" />
+            </div>
+        </ToolShell>
     );
 }

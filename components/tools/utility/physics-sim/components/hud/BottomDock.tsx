@@ -103,6 +103,7 @@ export function BottomDock({
                 { type: 'pin' as const, icon: MapPin, label: 'Pin', color: 'hover:text-red-500', instruction: 'Pin object to background' },
                 { type: 'remove_pin' as const, icon: PinOff, label: 'Unpin (U)', color: 'hover:text-red-500', instruction: 'Click to unpin' },
                 { type: 'fuse' as const, icon: Combine, label: 'Fuse (F)', color: 'hover:text-indigo-600', instruction: 'Click two objects to fuse' },
+                { type: 'rope' as const, icon: Infinity, label: 'Rope', color: 'hover:text-orange-500', instruction: 'Drag to create rope' },
             ]
         },
         forces: {

@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect, useMemo, useState } from 'react';
 import type { MatterEngineAPI, ActiveWalls } from './useMatterEngine';
+import { drawGrid, drawBodies, drawConstraints } from './renderHelpers';
 
 interface UseP5RendererOptions {
     containerRef: React.RefObject<HTMLDivElement | null>;
@@ -189,7 +190,7 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                         return;
                     }
 
-                    if (['spring', 'rod', 'axle', 'fuse'].includes(tool as string)) {
+                    if (['spring', 'rod', 'axle', 'fuse', 'rope'].includes(tool as string)) {
                         if (clicked) {
                             if (tool === 'fuse' && constraintStartBody && constraintStartBody !== clicked) {
                                 engine.fuseBodies([constraintStartBody.id, clicked.id]);
@@ -247,7 +248,7 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                     const pmy = p.pmouseY / viewportScale;
 
                     const tool = activeToolRef.current;
-                    if (['spring', 'rod', 'axle', 'pin', 'explosion'].includes(tool as string)) return;
+                    if (['spring', 'rod', 'axle', 'pin', 'explosion', 'rope'].includes(tool as string)) return;
 
                     if (tool === 'thruster' && draggedBody) {
                         const forceMagnitude = 0.002 * draggedBody.mass;
@@ -294,7 +295,7 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                             engine.addConstraint(constraintStartBody, endBody, 'spring', constraintStartPos!, { x: mx, y: my });
                         }
                         constraintStartBody = null; constraintStartPos = null;
-                    } else if (['spring', 'rod', 'axle'].includes(tool as string) && constraintStartBody && constraintStartPos) {
+                    } else if (['spring', 'rod', 'axle', 'rope'].includes(tool as string) && constraintStartBody && constraintStartPos) {
                         const bodies = Matter.Composite.allBodies(matterEngine.world);
                         const released = Matter.Query.region(bodies, {
                             min: { x: mx - 15, y: my - 15 },
@@ -303,9 +304,11 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                         const snap = getSnapPos(released, mx, my);
                         if (released && released !== constraintStartBody) {
                             if (tool === 'axle') engine.addRevoluteJoint(constraintStartBody, released, constraintStartPos, snap);
+                            else if (tool === 'rope') engine.addRope(constraintStartPos, snap, 8); // Basic rope
                             else engine.addConstraint(constraintStartBody, released, tool as any, constraintStartPos, snap);
                         } else if (!released) {
                             if (tool === 'axle') engine.addPin(constraintStartBody, mx, my);
+                            else if (tool === 'rope') engine.addRope(constraintStartPos, { x: mx, y: my }, 8, {});
                             else engine.addConstraint(constraintStartBody, null, tool as any, constraintStartPos, { x: mx, y: my });
                         }
                     } else if (tool === 'draw' && p.drawPath && p.drawPath.length > 1) {
@@ -358,48 +361,7 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                     trailHistory.clear();
                 };
 
-                // Helper function for drawing the grid
-                const drawGrid = (p: any) => {
-                    const gridSize = 50;
-                    p.stroke(0, 0, 0, 10); // Very faint grid lines
-                    p.strokeWeight(1);
 
-                    // Vertical lines
-                    for (let x = 0; x <= p.width; x += gridSize) {
-                        p.line(x, 0, x, p.height);
-                        if (x % 100 === 0) {
-                            p.noStroke();
-                            p.fill(0, 0, 0, 30);
-                            p.textSize(8);
-                            p.text(x, x + 2, 10);
-                            p.stroke(0, 0, 0, 10);
-                        }
-                    }
-
-                    // Horizontal lines
-                    for (let y = 0; y <= p.height; y += gridSize) {
-                        p.line(0, y, p.width, y);
-                        if (y % 100 === 0) {
-                            p.noStroke();
-                            p.fill(0, 0, 0, 30);
-                            p.textSize(8);
-                            p.text(y, 2, y - 2);
-                            p.stroke(0, 0, 0, 10);
-                        }
-                    }
-
-                    // Draw Mouse Coordinates (scaled)
-                    const smx = p.mouseX / viewportScale;
-                    const smy = p.mouseY / viewportScale;
-                    p.noStroke();
-                    p.fill('#6366f1');
-                    p.rect(smx + 10, smy + 10, 80, 20, 4);
-                    p.fill('white');
-                    p.textSize(10);
-                    p.textAlign(p.LEFT, p.CENTER);
-                    p.text(`x: ${Math.round(smx)}, y: ${Math.round(smy)}`, smx + 15, smy + 20);
-                    p.textAlign(p.LEFT, p.BASELINE); // Reset alignment
-                };
 
                 p.draw = function () {
                     if (!pausedRef.current && matterEngine) {
@@ -421,146 +383,28 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                     p.scale(viewportScale);
 
                     if (showGridRef.current) {
-                        drawGrid(p);
+                        drawGrid(p, p.width, p.height, viewportScale);
                     }
 
-                    // Optimization: Skip complex trails in low power mode
-                    if (!lowPowerModeRef.current) {
-                        trailHistory.forEach((history, bodyId) => {
-                            const body = engine.getBodyById(bodyId);
-                            if (!body) return;
-
-                            const colorStr = (body.render && body.render.fillStyle) || '#E8E8E8';
-                            const baseColor = p.color(colorStr);
-
-                            p.noFill();
-                            p.stroke(p.red(baseColor), p.green(baseColor), p.blue(baseColor), 100);
-                            p.strokeWeight(2);
-                            p.beginShape();
-                            history.forEach(pos => p.vertex(pos.x, pos.y));
-                            p.endShape();
-                        });
-                    }
-
-                    // 1. Draw Bodies
+                    // Draw Bodies & Trails
                     const bodies = Matter.Composite.allBodies(matterEngine.world);
-                    p.noStroke();
-                    bodies.forEach(function (body: any) {
-                        // Only update trails if not in low power mode
-                        if (!lowPowerModeRef.current && !pausedRef.current && !body.isStatic && body.speed > 0.1) {
-                            if (!trailHistory.has(body.id)) trailHistory.set(body.id, []);
-                            const history = trailHistory.get(body.id)!;
-                            history.push({ x: body.position.x, y: body.position.y });
-                            if (history.length > MAX_TRAIL_LENGTH) history.shift();
-                        }
+                    drawBodies(
+                        p,
+                        bodies,
+                        lowPowerModeRef.current,
+                        pausedRef.current,
+                        trailHistory,
+                        MAX_TRAIL_LENGTH,
+                        selectedBodyIdRef.current,
+                        showVectorsRef.current,
+                        activeToolRef.current,
+                        draggedBody,
+                        viewportScale
+                    );
 
-                        // Drawing body
-                        const fillColor = (body.render && body.render.fillStyle) || '#E8E8E8';
-                        p.fill(fillColor);
-
-                        p.beginShape();
-                        body.vertices.forEach(function (v: any) { p.vertex(v.x, v.y); });
-                        p.endShape(p.CLOSE);
-
-                        // Selection highlight
-                        if (selectedBodyIdRef.current === body.id) {
-                            if (lowPowerModeRef.current) {
-                                // Simple selection for low power
-                                p.stroke('#6366f1');
-                                p.strokeWeight(2);
-                                p.noFill();
-                                p.beginShape();
-                                body.vertices.forEach(function (v: any) { p.vertex(v.x, v.y); });
-                                p.endShape(p.CLOSE);
-                                p.noStroke();
-                            } else {
-                                // Pulsing Glow
-                                const pulse = (Math.sin(p.frameCount * 0.1) * 0.5 + 0.5);
-                                p.stroke(99, 102, 241, 50 + pulse * 100);
-                                p.strokeWeight(4 + pulse * 6);
-                                p.noFill();
-                                p.beginShape();
-                                body.vertices.forEach(function (v: any) { p.vertex(v.x, v.y); });
-                                p.endShape(p.CLOSE);
-
-                                p.stroke('#6366f1');
-                                p.strokeWeight(2);
-                                p.beginShape();
-                                body.vertices.forEach(function (v: any) { p.vertex(v.x, v.y); });
-                                p.endShape(p.CLOSE);
-                                p.noStroke();
-                            }
-                        }
-
-                        // Velocity Vectors
-                        if (showVectorsRef.current && !body.isStatic && body.speed > 0.1) {
-                            p.stroke('#58C4DD');
-                            p.strokeWeight(1.5);
-                            p.line(body.position.x, body.position.y,
-                                body.position.x + body.velocity.x * 5,
-                                body.position.y + body.velocity.y * 5);
-                            p.noStroke();
-                        }
-
-                        // Thruster Visual
-                        if (activeToolRef.current === 'thruster' && draggedBody === body && p.mouseIsPressed) {
-                            const smx = p.mouseX / viewportScale;
-                            const smy = p.mouseY / viewportScale;
-                            p.stroke('#F59E0B');
-                            p.strokeWeight(3);
-                            p.line(body.position.x, body.position.y, smx, smy);
-                            p.noStroke();
-                            p.fill('#F59E0B');
-                            p.circle(smx, smy, 5);
-                        }
-                    });
-
-                    // 2. Draw Constraints
+                    // Draw Constraints
                     const constraints = Matter.Composite.allConstraints(matterEngine.world);
-                    constraints.forEach(function (c: any) {
-                        if (c.label === "Mouse Constraint") return;
-
-                        const posA = c.bodyA ? Matter.Vector.add(c.bodyA.position, c.pointA) : c.pointA;
-                        const posB = c.bodyB ? Matter.Vector.add(c.bodyB.position, c.pointB) : c.pointB;
-
-                        p.stroke((c.render && c.render.strokeStyle) || '#999');
-                        const weight = (c.render && c.render.lineWidth) || 2;
-                        p.strokeWeight(weight);
-
-                        if (!lowPowerModeRef.current && c.render && c.render.type === 'spring') {
-                            // Coiled spring look
-                            const dx = posB.x - posA.x;
-                            const dy = posB.y - posA.y;
-                            const len = Math.hypot(dx, dy) || 1;
-                            const steps = 12;
-                            const nx = -dy / len;
-                            const ny = dx / len;
-
-                            p.noFill();
-                            p.beginShape();
-                            p.vertex(posA.x, posA.y);
-                            for (let i = 1; i < steps; i++) {
-                                const t = i / steps;
-                                const px = posA.x + dx * t;
-                                const py = posA.y + dy * t;
-                                const offset = (i % 2 === 0 ? 1 : -1) * 5;
-                                p.vertex(px + nx * offset, py + ny * offset);
-                            }
-                            p.vertex(posB.x, posB.y);
-                            p.endShape();
-                        } else {
-                            // Simple line for low power or rigid
-                            p.line(posA.x, posA.y, posB.x, posB.y);
-                        }
-
-                        // Attachment points (Pins)
-                        if (c.render && c.render.strokeStyle === '#EF4444') {
-                            p.fill('#475569');
-                            p.circle(posA.x, posA.y, 8);
-                            p.fill('#94A3B8');
-                            p.circle(posA.x, posA.y, 4);
-                        }
-                    });
+                    drawConstraints(p, constraints, lowPowerModeRef.current);
 
                     // 3. Draw Interaction Tools
                     if (constraintStartPos) {

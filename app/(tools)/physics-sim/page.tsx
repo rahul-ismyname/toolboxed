@@ -1,9 +1,9 @@
 import { Metadata } from 'next';
 import { PhysicsSimWrapper } from '@/components/tools/utility/PhysicsSimWrapper';
 import { ToolContent } from '@/components/tools/ToolContent';
-import { BackButton } from '@/components/shared/BackButton';
 import { toolContentData } from '@/config/tool-content';
 import { getCombinedTitle } from '@/lib/i18n';
+import { ToolShell } from '@/components/layout/ToolShell';
 
 export async function generateMetadata({ searchParams }: { searchParams: { lang?: string } }): Promise<Metadata> {
     const lang = searchParams.lang || 'en';
@@ -27,13 +27,13 @@ export async function generateMetadata({ searchParams }: { searchParams: { lang?
 
 export default function PhysicsSimPage() {
     return (
-        <div className="min-h-screen bg-white dark:bg-slate-950 py-12 transition-colors duration-300">
-            <BackButton />
-            <div className="max-w-[1920px] mx-auto px-4 sm:px-6 mb-12">
+        <ToolShell toolId="physics-sim" fullWidth noPadding>
+            <div className="h-[calc(100vh-64px)]">
                 <PhysicsSimWrapper />
             </div>
-
-            <ToolContent slug="physics-sim" />
-        </div>
+            <div className="p-8">
+                <ToolContent slug="physics-sim" />
+            </div>
+        </ToolShell>
     );
 }
