@@ -1,10 +1,9 @@
 import { Suspense } from 'react';
 import { APIPlayground } from '@/components/tools/developer/APIPlayground';
-import { TitleSection } from '@/components/shared/TitleSection';
-import { BackButton } from '@/components/shared/BackButton';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
 import { getCombinedTitle } from '@/lib/i18n';
+import { ToolShell } from '@/components/layout/ToolShell';
 
 export async function generateMetadata(): Promise<Metadata> {
     const slug = 'api-playground';
@@ -38,20 +37,13 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function APIPlaygroundPage() {
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 transition-colors duration-300">
-            <BackButton />
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-12">
-                <TitleSection
-                    title="API Playground"
-                    description="Professional HTTP client for testing and debugging APIs directly in your browser."
-                />
-
-                <Suspense fallback={<div className="min-h-[600px] animate-pulse bg-slate-100 dark:bg-slate-800 rounded-3xl" />}>
-                    <APIPlayground />
-                </Suspense>
+        <ToolShell toolId="api-playground" fullWidth>
+            <Suspense fallback={<div className="min-h-[600px] animate-pulse bg-slate-100 dark:bg-slate-800 rounded-3xl" />}>
+                <APIPlayground />
+            </Suspense>
+            <div className="mt-12">
+                <ToolContent slug="api-playground" />
             </div>
-
-            <ToolContent slug="api-playground" />
-        </div>
+        </ToolShell>
     );
 }

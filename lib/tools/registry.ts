@@ -1,4 +1,4 @@
-import { LucideIcon, PenTool, Activity, Calculator, FileText, Image, Code, Palette, Grid, Box, Zap, Lock, Wand2 } from 'lucide-react';
+import { LucideIcon, PenTool, Activity, Calculator, FileText, Image, Code, Palette, Grid, Box, Zap, Lock, Wand2, Terminal } from 'lucide-react';
 
 export type ToolCategory = 'design' | 'developer' | 'business' | 'utility' | 'health' | 'math' | 'security';
 
@@ -41,6 +41,24 @@ export const tools: ToolDefinition[] = [
         category: 'business',
         path: '/invoice-builder',
         keywords: ['bill', 'receipt', 'payment']
+    },
+    {
+        id: 'resume-builder',
+        name: 'Resume Builder',
+        description: 'ATS-optimized professional resume creator.',
+        icon: FileText,
+        category: 'business',
+        path: '/resume-builder',
+        keywords: ['cv', 'career', 'job', 'ats']
+    },
+    {
+        id: 'api-playground',
+        name: 'API Playground',
+        description: 'Professional HTTP client for testing APIs.',
+        icon: Terminal,
+        category: 'developer',
+        path: '/api-playground',
+        keywords: ['http', 'rest', 'api', 'testing']
     },
     // Add more tools as we migrate them...
 ];

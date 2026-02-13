@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { DynamicInvoiceBuilder } from '@/components/tools/DynamicTools';
 import { ToolContent } from '@/components/tools/ToolContent';
 import { Metadata } from 'next';
+import { ToolShell } from '@/components/layout/ToolShell';
 
 export const metadata: Metadata = {
     title: 'Professional Invoice & Proposal Studio | Toolboxed',
@@ -11,11 +12,13 @@ export const metadata: Metadata = {
 
 export default function InvoicePage() {
     return (
-        <>
+        <ToolShell toolId="invoice-builder" fullWidth>
             <Suspense fallback={<div className="min-h-[500px] animate-pulse bg-slate-100 dark:bg-slate-800 rounded-3xl" />}>
                 <DynamicInvoiceBuilder />
             </Suspense>
-            <ToolContent slug="invoice-builder" />
-        </>
+            <div className="mt-12">
+                <ToolContent slug="invoice-builder" />
+            </div>
+        </ToolShell>
     );
 }
