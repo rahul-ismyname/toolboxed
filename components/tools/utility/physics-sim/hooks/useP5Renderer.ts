@@ -125,6 +125,7 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                     canvasElement.style.width = '100%';
                     canvasElement.style.height = '100%';
                     canvasElement.style.display = 'block';
+                    canvasElement.style.touchAction = 'none'; // Critical for mobile
 
                     // Add MouseConstraint for physics dragging
                     const density = p.pixelDensity();

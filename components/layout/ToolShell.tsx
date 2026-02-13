@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Maximize, Minimize, Moon, Sun, Info } from 'lucide-react';
+import { ArrowLeft, Maximize2, Minimize2, Moon, Sun, Info } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { getToolById, tools } from '@/lib/tools/registry'; // Adjust import path if needed
 
@@ -28,6 +28,14 @@ export function ToolShell({ children, toolId, className = '', fullWidth = false,
         if (document.documentElement.classList.contains('dark')) {
             setIsDark(true);
         }
+    }, []);
+
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
     }, []);
 
     const toggleTheme = () => {
@@ -82,7 +90,7 @@ export function ToolShell({ children, toolId, className = '', fullWidth = false,
                         {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                     </button>
                     <button onClick={toggleFullscreen} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500 hidden md:block">
-                        {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
+                        {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
                     </button>
                 </div>
             </header>

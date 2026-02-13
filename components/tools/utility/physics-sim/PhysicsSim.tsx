@@ -13,6 +13,7 @@ import { StatsMonitor } from './components/hud/StatsMonitor';
 import { PREFABS } from '@/lib/prefabs';
 import { savePhysicsScene, getPhysicsScene } from '@/lib/actions';
 import { Settings2 } from 'lucide-react';
+import { WorkshopPanel } from './components/hud/WorkshopPanel';
 
 interface BodyData {
     id: number;
@@ -67,6 +68,7 @@ export default function PhysicsSim({ variant = 'simulation' }: PhysicsSimProps) 
     const [useAccelerometer, setUseAccelerometer] = useState(false);
     const [useHaptics, setUseHaptics] = useState(false);
     const [lowPowerMode, setLowPowerMode] = useState(false);
+    const [showWorkshop, setShowWorkshop] = useState(false);
 
     // Detect mobile device
     useEffect(() => {
@@ -490,21 +492,34 @@ export default function PhysicsSim({ variant = 'simulation' }: PhysicsSimProps) 
                     e.preventDefault();
                     toggleFullScreen();
                     break;
+                case 'w':
+                    e.preventDefault();
+                    setShowWorkshop(prev => !prev);
+                    break;
             }
         };
 
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+
         window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        };
     }, [handleReset, handleToolSelect, handleDeleteBody, selectedBodyId, toggleFullScreen]);
 
     return (
         <div
             ref={containerRef}
-            className={`relative overflow-hidden ${isFullscreen
+            className={`relative overflow-hidden touch-none ${isFullscreen
                 ? 'fixed inset-0 w-screen h-screen z-[100] rounded-none border-0 bg-slate-50 dark:bg-slate-900'
                 : isMobile
-                    ? 'w-full h-[100dvh] h-[100vh] rounded-none border-0 shadow-none'
-                    : 'w-full h-[85vh] rounded-3xl border-8 border-white dark:border-slate-900 shadow-2xl'
+                    ? 'w-full h-[100dvh] h-[100vh] rounded-none border-0 shadow-none z-0'
+                    : 'w-full h-[85vh] rounded-3xl border-8 border-white dark:border-slate-900 shadow-2xl z-0'
                 }`}
             style={{ backgroundColor: bgColor }}
         >
@@ -566,6 +581,7 @@ export default function PhysicsSim({ variant = 'simulation' }: PhysicsSimProps) 
                             lowPowerMode={lowPowerMode}
                             onLowPowerModeChange={setLowPowerMode}
                             isMobile={isMobile}
+                            onToggleWorkshop={() => setShowWorkshop(true)}
                         />
                     )}
 
@@ -624,6 +640,12 @@ export default function PhysicsSim({ variant = 'simulation' }: PhysicsSimProps) 
                             isMobile={isMobile}
                         />
                     )}
+
+                    <WorkshopPanel
+                        isOpen={showWorkshop}
+                        onClose={() => setShowWorkshop(false)}
+                        onSpawn={handleSpawnPrefab}
+                    />
                 </>
             )}
         </div>

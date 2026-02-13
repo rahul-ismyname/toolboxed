@@ -6,6 +6,9 @@ export interface Prefab {
     description: string;
     icon: string; // Lucide icon name or emoji
     color: string;
+    category: 'Vehicles' | 'Machines' | 'Experiments' | 'Basic';
+    tags?: string[];
+    author?: string;
     spawn: (x: number, y: number) => {
         bodies: any[];
         constraints?: any[];
@@ -20,6 +23,9 @@ export const PREFABS: Prefab[] = [
         description: 'A smart box that reverses velocity and changes color on collision.',
         icon: 'Zap',
         color: '#83C167',
+        category: 'Machines',
+        tags: ['logic', 'collision', 'automated'],
+        author: 'Community',
         spawn: (x, y) => {
             const bodyId = Math.floor(Math.random() * 1000000);
             return {
@@ -54,6 +60,9 @@ export const PREFABS: Prefab[] = [
         description: 'A heavy ball with a fixed pivot constraint.',
         icon: 'Link',
         color: '#3B82F6',
+        category: 'Experiments',
+        tags: ['gravity', 'pendulum', 'physics'],
+        author: 'Community',
         spawn: (x, y) => {
             const bodyId = Math.floor(Math.random() * 1000000);
             return {
@@ -72,6 +81,9 @@ export const PREFABS: Prefab[] = [
         description: 'A floating plank with support struts.',
         icon: 'GripHorizontal',
         color: '#8F5C38',
+        category: 'Basic',
+        tags: ['structure', 'wood', 'base'],
+        author: 'Community',
         spawn: (x, y) => {
             const id1 = Math.floor(Math.random() * 1000000);
             return {
@@ -83,10 +95,13 @@ export const PREFABS: Prefab[] = [
     },
     {
         id: 'newton-cradle',
-        name: 'Newton\'s Cradle',
+        name: "Newton's Cradle",
         description: 'Five heavy balls in a momentum transfer chain.',
         icon: 'BoxSelect',
         color: '#94A3B8',
+        category: 'Experiments',
+        tags: ['momentum', 'energy', 'classic'],
+        author: 'Community',
         spawn: (x, y) => {
             const bodies = [];
             const constraints = [];
@@ -113,6 +128,9 @@ export const PREFABS: Prefab[] = [
         description: 'An automated drone that hovers and patrols.',
         icon: 'Zap',
         color: '#F59E0B',
+        category: 'Vehicles',
+        tags: ['automated', 'flight', 'logic'],
+        author: 'Community',
         spawn: (x, y) => {
             const bId = Math.floor(Math.random() * 1000000);
             return {
@@ -163,6 +181,9 @@ export const PREFABS: Prefab[] = [
         description: 'Five double pendulums with 0.001° difference. Watch them diverge.',
         icon: 'Activity',
         color: '#A855F7',
+        category: 'Experiments',
+        tags: ['chaos', 'pendulum', 'math'],
+        author: 'Community',
         spawn: (x, y) => {
             const bodies: any[] = [];
             const constraints: any[] = [];
@@ -238,6 +259,9 @@ export const PREFABS: Prefab[] = [
         description: 'A basic vehicle with motorized wheels and active suspension.',
         icon: 'Car',
         color: '#EF4444',
+        category: 'Vehicles',
+        tags: ['car', 'motorized', 'transport'],
+        author: 'Community',
         spawn: (x, y) => {
             const chassisId = Math.floor(Math.random() * 1000000);
             const wheel1Id = chassisId + 1;
@@ -306,6 +330,9 @@ export const PREFABS: Prefab[] = [
         description: 'A lightweight flyer with a rotating propeller and lift physics.',
         icon: 'Plane',
         color: '#0EA5E9',
+        category: 'Vehicles',
+        tags: ['plane', 'flight', 'motorized'],
+        author: 'Community',
         spawn: (x, y) => {
             const bodyId = Math.floor(Math.random() * 1000000);
             const propId = bodyId + 1;
