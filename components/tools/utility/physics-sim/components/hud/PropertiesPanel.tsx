@@ -98,7 +98,7 @@ export function PropertiesPanel({
 
     if (isMobile) {
         return (
-            <div className={`fixed bottom-0 left-0 right-0 z-50 flex flex-col transition-transform duration-300 ${isMinimized ? 'translate-y-[calc(100%-3.5rem)]' : ''}`}>
+            <div className={`fixed bottom-0 left-0 right-0 z-[110] flex flex-col transition-transform duration-300 ${isMinimized ? 'translate-y-[calc(100%-3.5rem)]' : ''}`}>
                 {/* Mobile Header / Handle */}
                 <div
                     onClick={() => setIsMinimized(!isMinimized)}

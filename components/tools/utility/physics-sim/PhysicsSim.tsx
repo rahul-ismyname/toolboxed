@@ -164,16 +164,27 @@ export default function PhysicsSim({ variant = 'simulation' }: PhysicsSimProps) 
             const { beta, gamma } = event; // beta: -180 to 180, gamma: -90 to 90
             if (beta === null || gamma === null) return;
 
+            // Throttle updates to ~60fps
+            const now = Date.now();
+            if (now - lastUpdate < 16) return;
+            lastUpdate = now;
+
             // Simple conversion to gravity vector
             // We want positive Y to be down (beta > 0)
             // We want positive X to be right (gamma > 0)
             const sensitivity = 0.1;
-            const targetX = Math.min(Math.max(gamma * sensitivity, -1.5), 1.5);
-            const targetY = Math.min(Math.max(beta * sensitivity, -1.5), 1.5);
+            let targetX = Math.min(Math.max(gamma * sensitivity, -1.5), 1.5);
+            let targetY = Math.min(Math.max(beta * sensitivity, -1.5), 1.5);
+
+            // Safety check for NaN or Infinity
+            if (!isFinite(targetX)) targetX = 0;
+            if (!isFinite(targetY)) targetY = 1;
 
             setGravity({ x: targetX, y: targetY });
             engine.setGravity({ x: targetX, y: targetY });
         };
+
+        let lastUpdate = 0;
 
         const requestPermission = async () => {
             if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {

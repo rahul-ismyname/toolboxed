@@ -277,7 +277,7 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                     const mx = p.mouseX / viewportScale;
                     const my = p.mouseY / viewportScale;
                     const dist = Math.hypot(mx - touchStartPos.x, my - touchStartPos.y);
-                    if (dist > (isMobileRef.current ? 15 : 10)) isTap = false;
+                    if (dist > (isMobileRef.current ? 25 : 10)) isTap = false;
                     p.mouseDragged(event);
                     return false;
                 };
@@ -321,7 +321,7 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                         p.drawPath = [];
                     }
 
-                    if (isMobileRef.current && isTap && (Date.now() - touchStartTime < 500)) {
+                    if (isMobileRef.current && isTap && (Date.now() - touchStartTime < 600)) {
                         const now = Date.now();
                         const timeSinceLastTap = now - lastTapTime;
 
@@ -332,12 +332,12 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                             max: { x: mx + 10, y: my + 10 }
                         })[0];
 
-                        // Double tap detection (within 500ms)
-                        if (timeSinceLastTap < 500) {
+                        // Double tap detection (within 600ms, but ignore tiny double-fires < 50ms)
+                        if (timeSinceLastTap > 50 && timeSinceLastTap < 600) {
                             onSelectBody(clicked ? clicked.id : null);
                             lastTapTime = 0; // Reset
-                        } else {
-                            // Single tap on empty space still deselects
+                        } else if (timeSinceLastTap > 600 || lastTapTime === 0) {
+                            // First tap or timed out
                             if (!clicked) onSelectBody(null);
                             lastTapTime = now;
                         }
@@ -346,8 +346,8 @@ export function useP5Renderer(options: UseP5RendererOptions): P5RendererAPI {
                     draggedBody = null; constraintStartBody = null; constraintStartPos = null;
                 };
 
-                p.touchEnded = function (event: any) {
-                    p.mouseReleased(event);
+                p.touchEnded = function () {
+                    // Letting p5 handle mouseReleased automatically to avoid double-firing
                     return false;
                 };
 

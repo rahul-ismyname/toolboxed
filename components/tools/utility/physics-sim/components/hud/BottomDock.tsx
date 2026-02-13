@@ -128,7 +128,7 @@ export function BottomDock({
             drag
             dragMomentum={false}
             dragElastic={0}
-            className={`absolute ${isMobile ? 'bottom-2' : 'bottom-6'} left-1/2 -translate-x-1/2 z-40 pointer-events-auto cursor-grab active:cursor-grabbing`}
+            className={`absolute ${isMobile ? 'bottom-2' : 'bottom-6'} left-1/2 -translate-x-1/2 z-10 pointer-events-auto cursor-grab active:cursor-grabbing`}
         >
             <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-white/20 p-2 rounded-3xl shadow-2xl flex items-center gap-2">
                 {/* Drag Handle */}

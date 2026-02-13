@@ -105,7 +105,7 @@ export function TopBar({
     };
 
     return (
-        <div ref={menuRef} className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start pointer-events-none z-50">
+        <div ref={menuRef} className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start pointer-events-none z-[100]">
             {/* Things Library Selector (Top Left) - REMOVED per user request */}
             <div className="pointer-events-auto relative">
                 {variant !== 'simulation' && onExportToSim && (
